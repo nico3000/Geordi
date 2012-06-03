@@ -25,6 +25,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow)
 {
+#ifdef _DEBUG
+    _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
+#endif
+
     using namespace LostIsland;
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
@@ -36,9 +40,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     g_timer.Init();
 
     // TODO: Static testing stuff goes here and only here.
-    TerrainData terrain;
-    terrain.Init(256);
-    terrain.Test();
 
 	MSG msg;
 	HACCEL hAccelTable;
