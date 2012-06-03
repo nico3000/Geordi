@@ -10,3 +10,8 @@
 *.lai
 *.la
 *.a
+
+# Visual Studio
+Temp/*
+Source/VS2010/ipch
+Source/VS2010/Geordi.suo
