@@ -74,18 +74,20 @@ VOID TerrainData::LoadTerrain(string p_filename)
 {
     std::fstream str;
     str.open(p_filename, std::ios::in | std::ios::binary);
-    //Octree tree;
     if(str.is_open())
     {
+        //Octree tree;
         //tree.Init(str);
+        //std::cout << "equals? " << (tree == *m_pData) << std::endl;
         m_pData->Init(str);
         str.close();
+        
     }
     else
     {
         std::cout << "could not open file " << p_filename << " for loading" << std::endl;
     }
-    //std::cout << "equals? " << (tree == *m_pData) << std::endl;
+    
 }
 
 

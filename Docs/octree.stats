@@ -1,0 +1,22 @@
+pc: nicotopia
+tree size: 512
+generating: 23.191s
+saving: 23.908s
+loading: 6.15s
+ram: 72mb / 164mb
+
+pc: nicotopia
+tree size: 1024
+generating: 202.718s
+saving: 67.231s
+loading: 24.051s
+ram: 288mb / 656mb
+file: 42.2mb
+
+pc: nicotopia
+tree size: 2048
+generating: 1738.66s
+saving: 264.886s
+loading: 96.51s
+ram: 1155mb / 2624mb
+file: 169mb

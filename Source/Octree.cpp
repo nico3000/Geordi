@@ -18,7 +18,7 @@ Octree::~Octree(VOID)
 }
 
 
-VOID Octree::SetValue(INT p_x, INT p_y, INT p_z, CHAR p_value)
+VOID Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value)
 {
     if(this->GetSize() == 1)
     {
@@ -55,7 +55,7 @@ VOID Octree::SetValue(INT p_x, INT p_y, INT p_z, CHAR p_value)
 }
 
 
-CHAR Octree::GetValue(INT p_x, INT p_y, INT p_z) CONST
+CHAR Octree::GetValue(USHORT p_x, USHORT p_y, USHORT p_z) CONST
 {
     if(m_pSons == NULL)
     {
@@ -90,7 +90,7 @@ VOID Octree::CheckSons(VOID)
 }
 
 
-INT Octree::GetSonIndex(INT p_x, INT p_y, INT p_z) CONST
+INT Octree::GetSonIndex(USHORT p_x, USHORT p_y, USHORT p_z) CONST
 {
     INT index = 0;
 #ifdef _DEBUG
@@ -109,7 +109,7 @@ INT Octree::GetSonIndex(INT p_x, INT p_y, INT p_z) CONST
 }
 
 
-BOOL Octree::IsIn(INT p_x, INT p_y, INT p_z) CONST
+BOOL Octree::IsIn(USHORT p_x, USHORT p_y, USHORT p_z) CONST
 {
     return this->GetMinX() <= p_x && p_x < this->GetMaxX() &&
            this->GetMinY() <= p_y && p_y < this->GetMaxY() &&
@@ -120,12 +120,12 @@ BOOL Octree::IsIn(INT p_x, INT p_y, INT p_z) CONST
 VOID Octree::PrintTree(VOID) CONST
 {
     std::cout << "Octree size: " << this->GetSize() << std::endl;
-    for(INT y=this->GetMinY(); y < this->GetMaxY(); ++y) 
+    for(USHORT y=this->GetMinY(); y < this->GetMaxY(); ++y) 
     {
         std::cout << "y=" << y << std::endl;
-        for(INT z=this->GetMinZ(); z < this->GetMaxZ(); ++z) 
+        for(USHORT z=this->GetMinZ(); z < this->GetMaxZ(); ++z) 
         {
-            for(INT x=this->GetMinX(); x < this->GetMaxX(); ++x) 
+            for(USHORT x=this->GetMinX(); x < this->GetMaxX(); ++x) 
             {
                 std::cout << (INT)this->GetValue(x, y, z) << " ";
             }
@@ -193,7 +193,7 @@ ULONG Octree::GetMaxNumNodes(VOID) CONST
 {
     ULONG sum = 0;
     ULONG start = 1;
-    INT size = this->GetSize();
+    USHORT size = this->GetSize();
     while(size > 0)
     {
         sum += start;
@@ -204,7 +204,7 @@ ULONG Octree::GetMaxNumNodes(VOID) CONST
 }
 
 
-VOID Octree::Init(INT p_size)
+VOID Octree::Init(USHORT p_size)
 {
     this->Clear();
     m_size = p_size;
@@ -243,10 +243,10 @@ BOOL Octree::Init(std::fstream& p_stream)
 {
     this->Clear();
 
-    INT size;
+    USHORT size;
     INT numInnerNodes;
     INT numLeafNodes;
-    p_stream.read((CHAR*)&size, sizeof(INT));
+    p_stream.read((CHAR*)&size, sizeof(USHORT));
     p_stream.read((CHAR*)&numInnerNodes, sizeof(INT));
     p_stream.read((CHAR*)&numLeafNodes, sizeof(INT));
     
@@ -266,7 +266,7 @@ BOOL Octree::Init(std::fstream& p_stream)
 
 #define LEAF_SIZE (2 * sizeof(CHAR))
 #define INNER_SIZE (2 * sizeof(CHAR) + 8 * sizeof(INT))
-#define OFFSET (3 * sizeof(INT))
+#define OFFSET (sizeof(USHORT) + 2 * sizeof(INT))
 
 
 BOOL Octree::InitIntern(std::fstream& p_stream, BOOL p_isLeaf, INT p_firstLeafIndex)
@@ -316,10 +316,9 @@ VOID Octree::SaveIntern(std::fstream& p_stream) CONST
     ULONG numNodes = this->GetNumNodes();
     ULONG numLeafs = this->GetNumLeafs();
     ULONG numInner = numNodes - numLeafs;
-    INT size = this->GetSize();
-    std::cout << "size: " << size << std::endl;
+    USHORT size = this->GetSize();
 
-    p_stream.write((CHAR*)&size, sizeof(INT));
+    p_stream.write((CHAR*)&size, sizeof(USHORT));
     p_stream.write((CHAR*)&numInner, sizeof(INT));
     p_stream.write((CHAR*)&numLeafs, sizeof(INT));
 
@@ -358,60 +357,6 @@ VOID Octree::SaveIntern(std::fstream& p_stream) CONST
 }
 
 
-//INT Octree::GetMinX(VOID) CONST
-//{
-//    if(m_pFather == NULL)
-//    {
-//        return 0;
-//    }
-//    else
-//    {
-//        INT minX = m_pFather->GetMinX();
-//        if((m_sonIndex & 1) == 1)
-//        {
-//            minX += this->GetSize();
-//        }
-//        return minX;
-//    }
-//}
-//
-//
-//INT Octree::GetMinY(VOID) CONST
-//{
-//    if(m_pFather == NULL)
-//    {
-//        return 0;
-//    }
-//    else
-//    {
-//        INT minY = m_pFather->GetMinY();
-//        if((m_sonIndex & 2) == 2)
-//        {
-//            minY += this->GetSize();
-//        }
-//        return minY;
-//    }
-//}
-//
-//
-//INT Octree::GetMinZ(VOID) CONST
-//{
-//    if(m_pFather == NULL)
-//    {
-//        return 0;
-//    }
-//    else
-//    {
-//        INT minZ = m_pFather->GetMinZ();
-//        if((m_sonIndex & 4) == 4)
-//        {
-//            minZ += this->GetSize();
-//        }
-//        return minZ;
-//    }
-//}
-
-
 BOOL Octree::operator==(Octree CONST& second) CONST
 {
     if(this->GetSize() != second.GetSize())
@@ -421,17 +366,17 @@ BOOL Octree::operator==(Octree CONST& second) CONST
 #endif
         return FALSE;
     }
-    INT minX = this->GetMinX();
-    INT minY = this->GetMinY();
-    INT minZ = this->GetMinZ();
-    INT secondMinX = second.GetMinX();
-    INT secondMinY = second.GetMinY();
-    INT secondMinZ = second.GetMinZ();
-    for(INT x=0; x < this->GetSize(); ++x)
+    USHORT minX = this->GetMinX();
+    USHORT minY = this->GetMinY();
+    USHORT minZ = this->GetMinZ();
+    USHORT secondMinX = second.GetMinX();
+    USHORT secondMinY = second.GetMinY();
+    USHORT secondMinZ = second.GetMinZ();
+    for(USHORT x=0; x < this->GetSize(); ++x)
     {
-        for(INT y=0; y < this->GetSize(); ++y)
+        for(USHORT y=0; y < this->GetSize(); ++y)
         {
-            for(INT z=0; z < this->GetSize(); ++z)
+            for(USHORT z=0; z < this->GetSize(); ++z)
             {
                 CHAR val1 = this->GetValue(minX + x, minY + y, minZ + z);
                 CHAR val2 = second.GetValue(secondMinX + x, secondMinY + y, secondMinZ + z);
