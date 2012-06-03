@@ -42,7 +42,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     // TODO: Static testing stuff goes here and only here.
     TerrainData terrain;
-    terrain.Init(4096);
+    terrain.Init(512);
     terrain.Test();
     g_continue = FALSE;
 
