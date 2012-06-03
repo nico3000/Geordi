@@ -12,8 +12,11 @@
 *.a
 
 # Visual Studio
-Temp/*
+Temp
+Test
+Game
 Source/VS2010/ipch
 Source/VS2010/Geordi.suo
 *.opensdf
 *.sdf
+*.oct
