@@ -26,6 +26,11 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
  	// TODO: Place code here.
+ 	DebugConsole::Open();
+    DebugConsole::PrintInfo("LostIsland - Codename \"Geordi\"");
+
+    // TODO: Testing stuff goes here and only here.
+
 	MSG msg;
 	HACCEL hAccelTable;
 
@@ -51,6 +56,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 			DispatchMessage(&msg);
 		}
 	}
+
+    DebugConsole::Close();
 
 	return (int) msg.wParam;
 }

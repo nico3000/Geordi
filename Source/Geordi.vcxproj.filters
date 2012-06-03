@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\GameApplicationLayer">
+      <UniqueIdentifier>{4bff61e1-0a53-4689-a7d6-ed01a06ce871}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameApplicationLayer">
+      <UniqueIdentifier>{e6ebb4d0-5a7a-4235-a99c-7569331f553f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -36,6 +42,9 @@
     <ClInclude Include="Geordi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DebugConsole.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -43,6 +52,9 @@
     </ClCompile>
     <ClCompile Include="Geordi.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugConsole.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

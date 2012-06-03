@@ -38,6 +38,7 @@
 using std::wstring;
 using std::string;
 
+#include "DebugConsole.h"
 
 // defines
 #define SCREEN_WIDTH 1280
