@@ -10,6 +10,8 @@
 HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
+GameTimer LostIsland::g_timer;
+BOOL LostIsland::g_continue = TRUE;
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -22,14 +24,17 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                      LPTSTR    lpCmdLine,
                      int       nCmdShow)
 {
+    using namespace LostIsland;
+
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
  	// TODO: Place code here.
  	DebugConsole::Open();
     DebugConsole::PrintInfo("LostIsland - Codename \"Geordi\"");
+    g_timer.Init();
 
-    // TODO: Testing stuff goes here and only here.
+    // TODO: Static testing stuff goes here and only here.
 
 	MSG msg;
 	HACCEL hAccelTable;
@@ -48,13 +53,24 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GEORDI));
 
 	// Main message loop:
-	while (GetMessage(&msg, NULL, 0, 0))
+	while (g_continue)
 	{
-		if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-		{
-			TranslateMessage(&msg);
-			DispatchMessage(&msg);
-		}
+        g_timer.Next();
+
+        while(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+		    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+		    {
+			    TranslateMessage(&msg);
+			    DispatchMessage(&msg);
+		    }
+            if(msg.message == WM_QUIT)
+            {
+                g_continue = FALSE;
+            }
+        }
+        // TODO: Dynamic testing stuff goes here and only here.
+        
 	}
 
     DebugConsole::Close();

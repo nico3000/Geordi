@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DebugConsole.h" />
+    <ClInclude Include="GameTimer.h" />
     <ClInclude Include="Geordi.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="stdafx.h" />
@@ -164,6 +165,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DebugConsole.cpp" />
+    <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="Geordi.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

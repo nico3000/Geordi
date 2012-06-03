@@ -39,6 +39,12 @@ using std::wstring;
 using std::string;
 
 #include "DebugConsole.h"
+#include "GameTimer.h"
+
+namespace LostIsland {
+    extern GameTimer g_timer;
+    extern BOOL g_continue;
+};
 
 // defines
 #define SCREEN_WIDTH 1280
