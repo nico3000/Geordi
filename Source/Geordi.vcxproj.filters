@@ -19,6 +19,12 @@
     <Filter Include="Source Files\GameApplicationLayer">
       <UniqueIdentifier>{e6ebb4d0-5a7a-4235-a99c-7569331f553f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\GameLogic">
+      <UniqueIdentifier>{a989537e-e450-4086-a85d-00f588abcdee}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GameLogic">
+      <UniqueIdentifier>{96220e4c-e8cc-49d3-8c11-71c41174659d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -51,6 +57,12 @@
     <ClInclude Include="MemoryPool.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
+    <ClInclude Include="TerrainData.h">
+      <Filter>Header Files\GameLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="Octree.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -67,6 +79,12 @@
     </ClCompile>
     <ClCompile Include="MemoryPool.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="Octree.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainData.cpp">
+      <Filter>Source Files\GameLogic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

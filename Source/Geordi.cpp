@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "Geordi.h"
+#include "TerrainData.h"
 
 #define MAX_LOADSTRING 100
 
@@ -35,6 +36,9 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     g_timer.Init();
 
     // TODO: Static testing stuff goes here and only here.
+    TerrainData terrain;
+    terrain.Init(256);
+    terrain.Test();
 
 	MSG msg;
 	HACCEL hAccelTable;
