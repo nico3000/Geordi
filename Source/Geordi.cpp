@@ -11,6 +11,7 @@
 HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
+HWND g_hWnd;
 GameTimer LostIsland::g_timer;
 BOOL LostIsland::g_continue = TRUE;
 
@@ -40,6 +41,10 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
     g_timer.Init();
 
     // TODO: Static testing stuff goes here and only here.
+    TerrainData terrain;
+    terrain.Init(4096);
+    terrain.Test();
+    g_continue = FALSE;
 
 	MSG msg;
 	HACCEL hAccelTable;
@@ -77,6 +82,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         // TODO: Dynamic testing stuff goes here and only here.
         
 	}
+
+    DestroyWindow(g_hWnd);
 
     DebugConsole::Close();
 
@@ -131,20 +138,18 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   HWND hWnd;
-
    hInst = hInstance; // Store instance handle in our global variable
 
-   hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+   g_hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
 
-   if (!hWnd)
+   if (!g_hWnd)
    {
       return FALSE;
    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+   ShowWindow(g_hWnd, nCmdShow);
+   UpdateWindow(g_hWnd);
 
    return TRUE;
 }
