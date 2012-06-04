@@ -253,10 +253,10 @@ BOOL Octree::Init(std::fstream& p_stream)
     this->Init(size);
     BOOL result;
 #ifdef _DEBUG_OR_PROFILE
-    std::cout << "loading octree..." << std::endl;
-    INT id = g_timer.Tick(IMMEDIATE);
+    //std::cout << "loading octree..." << std::endl;
+    //INT id = g_timer.Tick(IMMEDIATE);
     result = this->InitIntern(p_stream, numInnerNodes == 0, numInnerNodes);
-    std::cout << "loading took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
+    //std::cout << "loading took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
 #else
     result = this->InitIntern(p_stream, numInnerNodes == 0, numInnerNodes);
 #endif
@@ -300,10 +300,10 @@ static INT g_currentLeaf = 0;
 VOID Octree::Save(std::fstream& p_stream) CONST
 {
 #ifdef _DEBUG_OR_PROFILE
-    std::cout << "saving octree..." << std::endl;
-    INT id = g_timer.Tick(IMMEDIATE);
+    //std::cout << "saving octree..." << std::endl;
+    //INT id = g_timer.Tick(IMMEDIATE);
     this->SaveIntern(p_stream);
-    std::cout << "saving took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
+    //std::cout << "saving took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
 #else
     this->SaveIntern(p_stream);
 #endif

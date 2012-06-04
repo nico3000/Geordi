@@ -4,38 +4,94 @@
 #include <fstream>
 
 using namespace LostIsland;
+#define OCTREE_LOADED 1
+#define TEST_DIR "octree"
 
 TerrainData::TerrainData(VOID):
-    m_pData(NULL), m_size(0)
+    m_ppData(NULL), m_ppLastUsed(NULL), m_octreeSize(0), m_gridSize(0), m_activeOctrees(0)
 {
 }
 
 
 TerrainData::~TerrainData(void)
 {
-    SAFE_DELETE(m_pData);
+    SAFE_DELETE(m_ppData);
 }
 
 
-BOOL TerrainData::Init(INT p_size)
+BOOL TerrainData::Init(USHORT p_octreeSize, USHORT p_gridSize, USHORT p_maxActiveOctrees)
 {
-    BOOL result = Octree::InitMemoryPool(p_size*p_size);
+    BOOL result = Octree::InitMemoryPool(p_octreeSize * p_octreeSize); // TODO: educated guess :P
     if(!result)
     {
         return FALSE;
     }
     else
     {
-        m_size = p_size;
-        m_pData = new Octree();
-        m_pData->Init(m_size);
-        this->SetDimension(-0.5f * UNITS_PER_GRID * (FLOAT)p_size,
-                           -0.5f * UNITS_PER_GRID * (FLOAT)p_size,
-                           -0.5f * UNITS_PER_GRID * (FLOAT)p_size,
-                           +0.5f * UNITS_PER_GRID * (FLOAT)p_size,
-                           +0.5f * UNITS_PER_GRID * (FLOAT)p_size,
-                           +0.5f * UNITS_PER_GRID * (FLOAT)p_size);
+        m_octreeSize = p_octreeSize;
+        m_gridSize = p_gridSize;
+        m_maxActiveOctrees = p_maxActiveOctrees;
+        m_ppLastUsed = new LONGLONG*[p_gridSize];
+        m_ppData = new Octree*[p_gridSize];
+        for(INT i=0; i < p_gridSize; ++i)
+        {
+            m_ppData[i] = new Octree[p_gridSize];
+            m_ppLastUsed[i] = new LONGLONG[p_gridSize];
+            ZeroMemory(m_ppData[i], p_gridSize * sizeof(Octree));
+            ZeroMemory(m_ppLastUsed[i], p_gridSize * sizeof(LONGLONG));
+        }
+        this->SetDimension(-0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSize * p_octreeSize),
+                           -0.5f * UNITS_PER_GRID * (FLOAT)p_octreeSize,
+                           -0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSize * p_octreeSize),
+                           +0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSize * p_octreeSize),
+                           +0.5f * UNITS_PER_GRID * (FLOAT)p_octreeSize,
+                           +0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSize * p_octreeSize));
         return TRUE;
+    }
+}
+
+
+VOID TerrainData::UseTile(INT tileX, INT tileY)
+{
+    if(m_ppData[tileX][tileY].GetFlags() != OCTREE_LOADED)
+    {
+        while(m_activeOctrees >= m_maxActiveOctrees)
+        {
+            INT minX = -1, minY = -1;
+            for(INT x=0; x < m_gridSize; ++x)
+            {
+                for(INT y=0; y < m_gridSize; ++y)
+                {
+                    if((m_ppData[x][y].GetFlags() & OCTREE_LOADED) == OCTREE_LOADED)
+                    {
+                        if(minX == -1 || m_ppLastUsed[x][y] < m_ppLastUsed[minX][minY])
+                        {
+                            minX = x;
+                            minY = y;
+                        }
+                    }
+                }
+            }
+            this->UnuseTile(minX, minY);
+        }
+        this->LoadTileFromDisk(tileX, tileY);
+        m_ppData[tileX][tileY].GetFlags() |= OCTREE_LOADED;
+        ++m_activeOctrees;
+    }
+    static LARGE_INTEGER now;
+    QueryPerformanceCounter(&now);
+    m_ppLastUsed[tileX][tileY] = now.QuadPart;
+}
+
+
+VOID TerrainData::UnuseTile(INT tileX, INT tileY)
+{
+    if((m_ppData[tileX][tileY].GetFlags() & OCTREE_LOADED) == OCTREE_LOADED)
+    {
+        this->SaveTileToDisk(tileX, tileY);
+        m_ppData[tileX][tileY].Clear();
+        m_ppData[tileX][tileY].GetFlags() = 0;
+        --m_activeOctrees;
     }
 }
 
@@ -43,49 +99,62 @@ BOOL TerrainData::Init(INT p_size)
 VOID TerrainData::Test(VOID)
 {
     this->GenerateTestData();
-    this->SaveTerrain("test.oct");
-    this->LoadTerrain("test.oct");
+    this->SaveAllTiles();
     //this->PrintOctFileContents("test.oct");
 
     Octree::GetMemoryPool().PrintInfo();
-    m_pData->PrintUsage();
+    //m_pData->PrintUsage();
     //m_pData->PrintTree();
     //m_pData->PrintStructure();
 }
 
 
-VOID TerrainData::SaveTerrain(string p_filename) CONST
+VOID TerrainData::SaveAllTiles(VOID) CONST
 {
-    std::fstream str;
-    str.open(p_filename, std::ios::out | std::ios::trunc | std::ios::binary);
-    if(str.is_open())
+    for(INT x=0; x < m_gridSize; ++x)
     {
-        m_pData->Save(str);
-        str.close();
-    }
-    else
-    {
-        std::cout << "could not open file " << p_filename << " for saving" << std::endl;
+        for(INT y=0; y < m_gridSize; y++)
+        {
+            this->SaveTileToDisk(x, y);
+        }
     }
 }
 
 
-VOID TerrainData::LoadTerrain(string p_filename)
+VOID TerrainData::SaveTileToDisk(INT x, INT y) CONST
 {
-    std::fstream str;
-    str.open(p_filename, std::ios::in | std::ios::binary);
-    if(str.is_open())
+    std::stringstream strStream;
+    strStream << TEST_DIR << "/r" << x << "." << y << ".oct";
+    std::fstream fileStream;
+    fileStream.open(strStream.str().c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+    if(fileStream.is_open())
     {
-        //Octree tree;
-        //tree.Init(str);
-        //std::cout << "equals? " << (tree == *m_pData) << std::endl;
-        m_pData->Init(str);
-        str.close();
+        m_ppData[x][y].Save(fileStream);
+        fileStream.close();
+    }
+    else
+    {
+        std::cout << "could not open file " << strStream.str() << " for saving" << std::endl;
+    }
+}
+
+
+VOID TerrainData::LoadTileFromDisk(INT x, INT y)
+{
+    std::stringstream strStream;
+    strStream << TEST_DIR << "/r" << x << "." << y << ".oct";
+    std::fstream fileStream;
+    fileStream.open(strStream.str().c_str(), std::ios::in | std::ios::binary);
+    if(fileStream.is_open())
+    {
+        m_ppData[x][y].Init(fileStream);
+        fileStream.close();
         
     }
     else
     {
-        std::cout << "could not open file " << p_filename << " for loading" << std::endl;
+        m_ppData[x][y].Init(m_octreeSize);
+        //std::cout << "could not open file " << strStream.str() << " for loading, creating new one" << std::endl;
     }
     
 }
@@ -99,6 +168,9 @@ VOID TerrainData::SetDimension(FLOAT p_minX, FLOAT p_minY, FLOAT p_minZ, FLOAT p
     m_maxX = p_maxX;
     m_maxY = p_maxY;
     m_maxZ = p_maxZ;
+    std::cout << "x: " << m_minX << " - " << m_maxX << std::endl
+              << "y: " << m_minY << " - " << m_maxY << std::endl
+              << "z: " << m_minZ << " - " << m_maxZ << std::endl;
 }
 
 
@@ -119,23 +191,28 @@ VOID TerrainData::SetDensity(FLOAT p_worldX, FLOAT p_worldY, FLOAT p_worldZ, FLO
 {
     INT x, y, z;
     this->World2Grid(p_worldX, p_worldY, p_worldZ, x, y, z);
-    m_pData->SetValue(x, y, z, this->Density2Value(p_density));
+    INT gridX = x / m_octreeSize;
+    INT gridY = y / m_octreeSize;
+    INT octreeX = x % m_octreeSize;
+    INT octreeY = y % m_octreeSize;
+    this->UseTile(gridX, gridY);
+    m_ppData[gridX][gridY].SetValue(octreeX, octreeY, z, this->Density2Value(p_density));
 }
 
 
 VOID TerrainData::Grid2World(INT p_gridX, INT p_gridY, INT p_gridZ, FLOAT& p_worldX, FLOAT& p_worldY, FLOAT& p_worldZ) CONST
 {
-    p_worldX = m_minX + (m_maxX - m_minX) * LERP((FLOAT)p_gridX, 0.0f, (FLOAT)m_size);
-    p_worldY = m_minY + (m_maxY - m_minY) * LERP((FLOAT)p_gridY, 0.0f, (FLOAT)m_size);
-    p_worldZ = m_minZ + (m_maxZ - m_minZ) * LERP((FLOAT)p_gridZ, 0.0f, (FLOAT)m_size);
+    p_worldX = m_minX + (m_maxX - m_minX) * LERP((FLOAT)p_gridX, 0.0f, (FLOAT)(m_gridSize * m_octreeSize));
+    p_worldY = m_minY + (m_maxY - m_minY) * LERP((FLOAT)p_gridY, 0.0f, (FLOAT)(m_gridSize * m_octreeSize));
+    p_worldZ = m_minZ + (m_maxZ - m_minZ) * LERP((FLOAT)p_gridZ, 0.0f, (FLOAT)m_octreeSize);
 }
 
 
 VOID TerrainData::World2Grid(FLOAT p_worldX, FLOAT p_worldY, FLOAT p_worldZ, INT& p_gridX, INT& p_gridY, INT& p_gridZ) CONST
 {
-    p_gridX = (INT)((FLOAT)m_size * LERP(p_worldX, m_minX, m_maxX));
-    p_gridY = (INT)((FLOAT)m_size * LERP(p_worldY, m_minY, m_maxY));
-    p_gridZ = (INT)((FLOAT)m_size * LERP(p_worldZ, m_minZ, m_maxZ));
+    p_gridX = (INT)((FLOAT)(m_gridSize * m_octreeSize) * LERP(p_worldX, m_minX, m_maxX));
+    p_gridY = (INT)((FLOAT)(m_gridSize * m_octreeSize) * LERP(p_worldY, m_minY, m_maxY));
+    p_gridZ = (INT)((FLOAT)m_octreeSize * LERP(p_worldZ, m_minZ, m_maxZ));
 }
 
 
@@ -147,26 +224,26 @@ VOID TerrainData::GenerateTestData(VOID)
     //m_pData->SetValue(3,3,3,4);
     //return;
 
-    std::cout << "generating " << m_size << "^3 octree..." << std::endl;
+    std::cout << "generating " << (m_gridSize * m_octreeSize) << "^3 octree..." << std::endl;
     INT id = g_timer.Tick(IMMEDIATE);
     LONG lastOutput = 0;
 
     ULONGLONG current = 0;
-    ULONGLONG target = (ULONGLONG)m_size * (ULONGLONG)m_size * (ULONGLONG)m_size;
+    ULONGLONG target = (ULONGLONG)(m_gridSize * m_octreeSize) * (ULONGLONG)(m_gridSize * m_octreeSize) * (ULONGLONG)(m_gridSize * m_octreeSize);
 
     FLOAT worldX = m_minX;
-    FLOAT dx = (m_maxX - m_minX) / (FLOAT)m_size;
-    for(INT x=0; x < m_size; ++x) 
+    FLOAT dx = (m_maxX - m_minX) / (FLOAT)(m_gridSize * m_octreeSize);
+    for(INT x=0; x < (m_gridSize * m_octreeSize); ++x) 
     {
         FLOAT worldY = m_minY;
-        FLOAT dy = (m_maxY - m_minY) / (FLOAT)m_size;
-        for(INT y=0; y < m_size; ++y) 
+        FLOAT dy = (m_maxY - m_minY) / (FLOAT)m_octreeSize;
+        for(INT y=0; y < m_octreeSize; ++y) 
         {
             FLOAT worldZ = m_minZ;
-            FLOAT dz = (m_maxZ - m_minZ) / (FLOAT)m_size;
-            for(INT z=0; z < m_size; ++z) 
+            FLOAT dz = (m_maxZ - m_minZ) / (FLOAT)(m_gridSize * m_octreeSize);
+            for(INT z=0; z < (m_gridSize * m_octreeSize); ++z) 
             {
-                FLOAT density = worldY - sin(worldX)*cos(worldZ);
+                FLOAT density = 1.0f;
                 this->SetDensity(worldX, worldY, worldZ, density);
                 worldZ += dz;
 

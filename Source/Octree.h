@@ -43,6 +43,7 @@ public:
     VOID PrintTree(VOID) CONST;
     VOID PrintStructure(VOID) CONST;
     BOOL operator==(Octree CONST& second) CONST;
+    CHAR& GetFlags(VOID) { return m_flags; }
 
     USHORT GetMinX(VOID) CONST { return m_minX; }
     USHORT GetMinY(VOID) CONST { return m_minY; }
