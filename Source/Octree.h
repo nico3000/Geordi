@@ -17,15 +17,16 @@ private:
     USHORT m_size;
     CHAR m_value;
     CHAR m_flags;
-    CHAR m_sonIndex;
-    CHAR m_level;
+
+    Octree(Octree CONST& toCopy) { /* no copy constructor */ }
 
     INT GetSonIndex(USHORT p_x, USHORT p_y, USHORT p_z) CONST;
     BOOL IsIn(USHORT p_x, USHORT p_y, USHORT p_z) CONST;
     VOID CheckSons(VOID);
-    VOID Init(Octree *p_pFather, CHAR p_sonIndex);
-    BOOL InitIntern(std::fstream& p_stream, BOOL p_isLeaf, INT p_firstLeafIndex);
-    VOID SaveIntern(std::fstream& p_stream) CONST;
+    VOID InitIntern(Octree* p_pFather, CHAR p_sonIndex);
+    BOOL InitIntern(std::fstream &p_stream, Octree* p_pFather, CHAR p_sonIndex);
+    CHAR* SaveIntern(CHAR* pData) CONST;
+    VOID ClearSons(VOID);
 
 public:
     Octree(VOID);
@@ -35,7 +36,7 @@ public:
     BOOL Init(std::fstream& p_stream);
     VOID Save(std::fstream& p_stream) CONST;
     VOID Clear(VOID);
-    VOID SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value);
+    BOOL SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value);
     CHAR GetValue(USHORT p_x, USHORT p_y, USHORT p_z) CONST;
     ULONG GetNumNodes(VOID) CONST;
     ULONG GetMaxNumNodes(VOID) CONST;
@@ -44,6 +45,7 @@ public:
     VOID PrintStructure(VOID) CONST;
     BOOL operator==(Octree CONST& second) CONST;
     CHAR& GetFlags(VOID) { return m_flags; }
+    CHAR CONST& ReadFlag(VOID) CONST { return m_flags; }
 
     USHORT GetMinX(VOID) CONST { return m_minX; }
     USHORT GetMinY(VOID) CONST { return m_minY; }

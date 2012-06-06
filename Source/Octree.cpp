@@ -18,10 +18,12 @@ Octree::~Octree(VOID)
 }
 
 
-VOID Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value)
+BOOL Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value)
 {
+    BOOL changed = FALSE;
     if(this->GetSize() == 1)
     {
+        changed = m_value != p_value;
         m_value = p_value;
     }
     else
@@ -33,25 +35,29 @@ VOID Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value)
                 m_pSons = (Octree*)sm_pool.Alloc();
                 for(INT i=0; i < 8; ++i)
                 {
-                    m_pSons[i].Init(this, i);
+                    m_pSons[i].InitIntern(this, i);
                 }
             }
             else 
             {
-                return;
+                return FALSE;
             }
         }
         INT index = this->GetSonIndex(p_x, p_y, p_z);
-        m_pSons[index].SetValue(p_x, p_y, p_z, p_value);
+        changed = m_pSons[index].SetValue(p_x, p_y, p_z, p_value);
     }
-    if(m_pSons != NULL)
+    if(changed)
     {
-        this->CheckSons();
+        if(!this->IsLeaf())
+        {
+            this->CheckSons();
+        }
+        if(this->IsLeaf() && m_pFather != NULL)
+        {
+            m_pFather->CheckSons();
+        }
     }
-    if(m_pSons == NULL && m_pFather != NULL)
-    {
-        m_pFather->CheckSons();
-    }
+    return changed;
 }
 
 
@@ -84,7 +90,7 @@ VOID Octree::CheckSons(VOID)
         }
         if(collapsable)
         {
-            this->Clear();
+            this->ClearSons();
         }
     }
 }
@@ -207,14 +213,9 @@ ULONG Octree::GetMaxNumNodes(VOID) CONST
 VOID Octree::Init(USHORT p_size)
 {
     this->Clear();
+
     m_size = p_size;
     m_minX = m_minY = m_minZ = 0;
-    m_level = 0;
-    while(p_size > 1)
-    {
-        ++m_level;
-        p_size >>= 1;
-    }
     m_value = DEFAULT_VALUE;
     m_flags = 0;
     m_pFather = NULL;
@@ -222,15 +223,13 @@ VOID Octree::Init(USHORT p_size)
 }
 
 
-VOID Octree::Init(Octree *p_pFather, CHAR p_sonIndex)
+VOID Octree::InitIntern(Octree *p_pFather, CHAR p_sonIndex)
 {
     //std::cout << p_pFather->m_minX << " " << p_pFather->m_minY << " " << p_pFather->m_minZ << " " << p_pFather->m_size << std::endl;
-    m_size = p_pFather->m_size/2;
+    m_size = p_pFather->m_size / 2;
     m_minX = p_pFather->m_minX + (p_sonIndex % 2) * m_size;
     m_minY = p_pFather->m_minY + ((p_sonIndex >> 1) % 2) * m_size;
     m_minZ = p_pFather->m_minZ + ((p_sonIndex >> 2) % 2) * m_size;
-    m_level = p_pFather->m_level - 1;
-    m_sonIndex = p_sonIndex;
     m_value = p_pFather->m_value;
     m_flags = 0;
     m_pFather = p_pFather;
@@ -244,115 +243,105 @@ BOOL Octree::Init(std::fstream& p_stream)
     this->Clear();
 
     USHORT size;
-    INT numInnerNodes;
-    INT numLeafNodes;
-    p_stream.read((CHAR*)&size, sizeof(USHORT));
-    p_stream.read((CHAR*)&numInnerNodes, sizeof(INT));
-    p_stream.read((CHAR*)&numLeafNodes, sizeof(INT));
-    
+    p_stream.read((CHAR*)&size, sizeof(USHORT));    
     this->Init(size);
     BOOL result;
 #ifdef _DEBUG_OR_PROFILE
     //std::cout << "loading octree..." << std::endl;
     //INT id = g_timer.Tick(IMMEDIATE);
-    result = this->InitIntern(p_stream, numInnerNodes == 0, numInnerNodes);
+    result = this->InitIntern(p_stream, NULL, 0);
     //std::cout << "loading took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
 #else
-    result = this->InitIntern(p_stream, numInnerNodes == 0, numInnerNodes);
+    result = this->InitIntern(p_stream, NULL, 0);
 #endif
     return result;
 }
 
 
-#define LEAF_SIZE (2 * sizeof(CHAR))
-#define INNER_SIZE (2 * sizeof(CHAR) + 8 * sizeof(INT))
-#define OFFSET (sizeof(USHORT) + 2 * sizeof(INT))
-
-
-BOOL Octree::InitIntern(std::fstream& p_stream, BOOL p_isLeaf, INT p_firstLeafIndex)
+BOOL Octree::InitIntern(std::fstream &p_stream, Octree* p_pFather, CHAR p_sonIndex)
 {
+    if(p_pFather != NULL)
+    {
+        this->InitIntern(p_pFather, p_sonIndex);
+    }
+
+    if(!p_stream.good())
+    {
+#ifdef _DEBUG_OR_PROFILE
+        ERROR("bad stream");
+#endif
+        return FALSE;
+    }
+    BOOL success = TRUE;
+
     p_stream.read(&m_value, sizeof(CHAR));
     p_stream.read(&m_flags, sizeof(CHAR));
 
-    if(!p_isLeaf)
+    UINT pSons[8];
+    p_stream.read((CHAR*)pSons, sizeof(UINT));
+    if(pSons[0] != 0)
     {
-        INT pSons[8];
-        p_stream.read((CHAR*)pSons, 8 * sizeof(INT));
+        p_stream.read((CHAR*)(pSons + 1), 7 * sizeof(UINT));
         m_pSons = (Octree*)sm_pool.Alloc();
         for(INT i=0; i < 8; ++i)
         {
-            m_pSons[i].Init(this, i);
-            INT innerCount = min(pSons[i], p_firstLeafIndex);
-            INT leafCount = max(0, pSons[i] - innerCount);
-            p_stream.seekg(OFFSET + innerCount * INNER_SIZE + leafCount * LEAF_SIZE, std::ios::beg);
-            m_pSons[i].InitIntern(p_stream, innerCount == p_firstLeafIndex, p_firstLeafIndex);
+            p_stream.seekg(pSons[i], std::ios::beg);
+            success &= m_pSons[i].InitIntern(p_stream, this, i);
         }
     }
-
-    return TRUE;
+    return success;
 }
 
 
-static INT g_currentNode = 0;
-static INT g_currentLeaf = 0;
+#define NODE_SIZE_INNER (2 * sizeof(CHAR) + 8 * sizeof(UINT))
+#define NODE_SIZE_LEAF (2 * sizeof(CHAR))
+#define NODE_SIZE_HEAD (sizeof(USHORT))
 
 
 VOID Octree::Save(std::fstream& p_stream) CONST
 {
+    ULONG numNodes = this->GetNumNodes();
+    ULONG numLeafs = this->GetNumLeafs();
+    UINT dataSize = (UINT)(NODE_SIZE_HEAD + (numNodes - numLeafs) * NODE_SIZE_INNER + numLeafs * NODE_SIZE_LEAF);
+    CHAR* pData = new CHAR[dataSize];
+    ((USHORT*)pData)[0] = m_size;
+    
 #ifdef _DEBUG_OR_PROFILE
-    //std::cout << "saving octree..." << std::endl;
-    //INT id = g_timer.Tick(IMMEDIATE);
-    this->SaveIntern(p_stream);
-    //std::cout << "saving took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
+    std::cout << "saving octree..." << std::endl;
+    INT id = g_timer.Tick(IMMEDIATE);
+    LONG usedSpace = (UINT)(this->SaveIntern(pData + sizeof(USHORT)) - pData);
+    if(usedSpace != dataSize)
+    {
+        std::cout << "miscalculated space: " << usedSpace << " / " << dataSize << std::endl;
+    }
+    std::cout << "saving took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
 #else
     this->SaveIntern(p_stream);
 #endif
-    
+    p_stream.write(pData, dataSize);
+    p_stream.flush();
+    delete pData;
 }
 
 
-VOID Octree::SaveIntern(std::fstream& p_stream) CONST
+CHAR* Octree::SaveIntern(CHAR* p_pData) CONST
 {
-    ULONG numNodes = this->GetNumNodes();
-    ULONG numLeafs = this->GetNumLeafs();
-    ULONG numInner = numNodes - numLeafs;
-    USHORT size = this->GetSize();
-
-    p_stream.write((CHAR*)&size, sizeof(USHORT));
-    p_stream.write((CHAR*)&numInner, sizeof(INT));
-    p_stream.write((CHAR*)&numLeafs, sizeof(INT));
-
-    std::queue<Octree CONST*> innerQueue, leafQueue;
-    (this->IsLeaf() ? leafQueue : innerQueue).push(this);
-    
-    INT qInner = (INT)innerQueue.size();
-    INT qLeaf = (INT)leafQueue.size();
-
-    while(!innerQueue.empty())
+    p_pData[0] = m_value;
+    p_pData[1] = m_flags;
+    if(this->IsLeaf())
     {
-        Octree CONST* pToSave = innerQueue.front();
-        innerQueue.pop();
-
-        p_stream.write(&pToSave->m_value, sizeof(CHAR));
-        p_stream.write(&pToSave->m_flags, sizeof(CHAR));
-
-        INT pSons[8];
+        ((UINT*)(p_pData + 2))[0] = 0;
+        return p_pData + NODE_SIZE_LEAF;
+    }
+    else
+    {        
+        CHAR* pNode = p_pData + NODE_SIZE_INNER;
         for(INT i=0; i < 8; ++i) 
         {
-            Octree CONST* pSon = pToSave->m_pSons + i;
-            (pSon->IsLeaf() ? leafQueue : innerQueue).push(pSon);
-            pSons[i] = pSon->IsLeaf() ? (numInner + qLeaf++) : qInner++;
+            ((UINT*)(p_pData + 2))[i] = (UINT)(pNode - p_pData);
+            pNode = m_pSons[i].SaveIntern(pNode);
         }
-
-        p_stream.write((CHAR*)pSons, 8 * sizeof(INT));
-    }
-    while(!leafQueue.empty())
-    {
-        Octree CONST* pToSave = leafQueue.front();
-        leafQueue.pop();
-
-        p_stream.write(&pToSave->m_value, sizeof(CHAR));
-        p_stream.write(&pToSave->m_flags, sizeof(CHAR));
+        return pNode;
     }
 }
 
@@ -394,16 +383,23 @@ BOOL Octree::operator==(Octree CONST& second) CONST
 }
 
 
-VOID Octree::Clear(VOID)
+VOID Octree::ClearSons(VOID)
 {
     if(!this->IsLeaf())
     {
         for(INT i=0; i < 8; ++i)
         {
-            m_pSons[i].Clear();
+            m_pSons[i].ClearSons();
         }
         sm_pool.Free(m_pSons);
         m_pSons = NULL;
     }
-    
+}
+
+
+VOID Octree::Clear(VOID)
+{
+    this->ClearSons();
+    m_value = DEFAULT_VALUE;
+    m_flags = 0;
 }

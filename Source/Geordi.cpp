@@ -42,7 +42,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     // TODO: Static testing stuff goes here and only here.
     TerrainData terrain;
-    terrain.Init(64, 2, 2);
+    terrain.Init(32, 8, 4, 8, 32);
     terrain.Test();
     g_continue = FALSE;
 
@@ -87,7 +87,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     DebugConsole::Close();
 
-	return (int) msg.wParam;
+	return 0;//(int)msg.wParam;
 }
 
 
