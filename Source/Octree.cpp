@@ -44,6 +44,10 @@ BOOL Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value)
             }
         }
         INT index = this->GetSonIndex(p_x, p_y, p_z);
+        if(index == -1)
+        {
+            return FALSE;
+        }
         changed = m_pSons[index].SetValue(p_x, p_y, p_z, p_value);
     }
     if(changed)
@@ -242,29 +246,6 @@ BOOL Octree::Init(std::fstream& p_stream)
 {
     this->Clear();
 
-    USHORT size;
-    p_stream.read((CHAR*)&size, sizeof(USHORT));    
-    this->Init(size);
-    BOOL result;
-#ifdef _DEBUG_OR_PROFILE
-    //std::cout << "loading octree..." << std::endl;
-    //INT id = g_timer.Tick(IMMEDIATE);
-    result = this->InitIntern(p_stream, NULL, 0);
-    //std::cout << "loading took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
-#else
-    result = this->InitIntern(p_stream, NULL, 0);
-#endif
-    return result;
-}
-
-
-BOOL Octree::InitIntern(std::fstream &p_stream, Octree* p_pFather, CHAR p_sonIndex)
-{
-    if(p_pFather != NULL)
-    {
-        this->InitIntern(p_pFather, p_sonIndex);
-    }
-
     if(!p_stream.good())
     {
 #ifdef _DEBUG_OR_PROFILE
@@ -272,29 +253,49 @@ BOOL Octree::InitIntern(std::fstream &p_stream, Octree* p_pFather, CHAR p_sonInd
 #endif
         return FALSE;
     }
-    BOOL success = TRUE;
+    p_stream.seekg(0, std::ios::end);
+    std::streamoff length = p_stream.tellg();
+    p_stream.seekg(0, std::ios::beg);
+    CHAR* pData = new CHAR[length];
+    p_stream.read(pData, length);
 
-    p_stream.read(&m_value, sizeof(CHAR));
-    p_stream.read(&m_flags, sizeof(CHAR));
+    this->Init(((USHORT*)pData)[0]);
+#ifdef _DEBUG_OR_PROFILE
+    //std::cout << "loading octree..." << std::endl;
+    //INT id = g_timer.Tick(IMMEDIATE);
+    this->InitIntern(pData + sizeof(USHORT), NULL, 0);
+    //std::cout << "loading took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
+#else
+    this->InitIntern(p_stream, NULL, 0);
+#endif
+    SAFE_DELETE_ARRAY(pData);
+    return TRUE;
+}
 
-    UINT pSons[8];
-    p_stream.read((CHAR*)pSons, sizeof(UINT));
-    if(pSons[0] != 0)
+
+VOID Octree::InitIntern(CHAR* p_pData, Octree* p_pFather, CHAR p_sonIndex)
+{
+    if(p_pFather != NULL)
     {
-        p_stream.read((CHAR*)(pSons + 1), 7 * sizeof(UINT));
+        this->InitIntern(p_pFather, p_sonIndex);
+    }
+
+    m_value = p_pData[0];
+    m_flags = p_pData[1];
+    if(((UINT*)(p_pData + 2))[0] != 0)
+    {
         m_pSons = (Octree*)sm_pool.Alloc();
         for(INT i=0; i < 8; ++i)
         {
-            p_stream.seekg(pSons[i], std::ios::beg);
-            success &= m_pSons[i].InitIntern(p_stream, this, i);
+            UINT offset = ((UINT*)(p_pData + 2))[i];
+            m_pSons[i].InitIntern(p_pData + offset, this, i);
         }
     }
-    return success;
 }
 
 
 #define NODE_SIZE_INNER (2 * sizeof(CHAR) + 8 * sizeof(UINT))
-#define NODE_SIZE_LEAF (2 * sizeof(CHAR))
+#define NODE_SIZE_LEAF (2 * sizeof(CHAR) + 1 * sizeof(UINT))
 #define NODE_SIZE_HEAD (sizeof(USHORT))
 
 
@@ -307,19 +308,18 @@ VOID Octree::Save(std::fstream& p_stream) CONST
     ((USHORT*)pData)[0] = m_size;
     
 #ifdef _DEBUG_OR_PROFILE
-    std::cout << "saving octree..." << std::endl;
-    INT id = g_timer.Tick(IMMEDIATE);
+    //std::cout << "saving octree..." << std::endl;
+    //INT id = g_timer.Tick(IMMEDIATE);
     LONG usedSpace = (UINT)(this->SaveIntern(pData + sizeof(USHORT)) - pData);
     if(usedSpace != dataSize)
     {
         std::cout << "miscalculated space: " << usedSpace << " / " << dataSize << std::endl;
     }
-    std::cout << "saving took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
+    //std::cout << "saving took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
 #else
     this->SaveIntern(p_stream);
 #endif
     p_stream.write(pData, dataSize);
-    p_stream.flush();
     delete pData;
 }
 

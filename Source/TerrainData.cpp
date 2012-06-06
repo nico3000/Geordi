@@ -17,8 +17,8 @@ TerrainData::TerrainData(VOID):
 
 TerrainData::~TerrainData(void)
 {
-    //SAFE_DELETE(m_pData);
-    SAFE_DELETE(m_pLastUsed);
+    SAFE_DELETE_ARRAY(m_pData);
+    SAFE_DELETE_ARRAY(m_pLastUsed);
 }
 
 
@@ -106,8 +106,8 @@ BOOL TerrainData::IsTileActive(INT tileX, INT tileY, INT tileZ) CONST
 
 VOID TerrainData::Test(VOID)
 {
-    //this->GenerateTestData();
-    //this->SaveAllTiles();
+    this->GenerateTestData();
+    this->SaveAllTiles();
 
     //std::fstream str;
     //str.open(TEST_DIR + string("/r0.0.oct"), std::ios::binary | std::ios::in);
@@ -119,37 +119,52 @@ VOID TerrainData::Test(VOID)
     //m_pData->PrintStructure();
     
 
-    Octree tree;
-    INT size = 4;
-    tree.Init(size);
-    for(INT x=0; x < size; ++x)
-    {
-        for(INT y=0; y < size; ++y)
-        {
-            for(INT z=0; z < size; ++z)
-            {
-                CHAR val = 0;
-                if(x >= size/2)
-                {
-                    val |= 1;
-                }
-                if(y >= size/2)
-                {
-                    val |= 2;
-                }
-                if(z >= size/2)
-                {
-                    val |= 4;
-                }
-                tree.SetValue(x, y, z, val);
-            }
-        }
-    }
-    tree.PrintTree();
+    //Octree tree;
+    //INT size = 256;
+    //tree.Init(size);
+    //for(INT x=0; x < size; ++x)
+    //{
+    //    for(INT y=0; y < size; ++y)
+    //    {
+    //        for(INT z=0; z < size; ++z)
+    //        {
+    //            CHAR val = 0;
+    //            if(x >= size/2)
+    //            {
+    //                val |= 1;
+    //            }
+    //            if(y >= size/2)
+    //            {
+    //                val |= 2;
+    //            }
+    //            if(z >= size/2)
+    //            {
+    //                val |= 4;
+    //            }
+    //            tree.SetValue(x, y, z, val);
+    //        }
+    //    }
+    //}
+    //tree.SetValue(0, 0, 0, 1);
+    ////tree.PrintTree();
 
-    std::fstream str;
-    str.open(TEST_DIR + string("/test.oct"), std::ios::binary | std::ios::out | std::ios::trunc);
-    tree.Save(str);
+    //std::fstream str;
+    //str.open(TEST_DIR + string("/test.oct"), std::ios::binary | std::ios::out | std::ios::trunc);
+    //if(str.is_open())
+    //{
+    //    tree.Save(str);
+    //    str.close();
+    //}
+
+    //str.open(TEST_DIR + string("/test.oct"), std::ios::binary | std::ios::in);
+    //if(str.is_open())
+    //{
+    //    tree.Init(str);
+    //    str.close();
+    //    //tree.PrintTree();
+    //}
+
+    //this->PrintOctFileContents(TEST_DIR + string("/test.oct"));
 }
 
 
@@ -250,7 +265,7 @@ VOID TerrainData::SetDensity(INT x, INT y, INT z, FLOAT p_density)
     if(tileX < m_pGridSize[0] && tileY < m_pGridSize[1] && tileZ < m_pGridSize[2])
     {
         this->UseTile(tileX, tileY, tileZ);
-        TILE(tileX, tileY, tileZ).SetValue(octreeX, y, octreeZ, this->Density2Value(p_density));
+        TILE(tileX, tileY, tileZ).SetValue(octreeX, octreeY, octreeZ, this->Density2Value(p_density));
     }
 }
 

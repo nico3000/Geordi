@@ -57,6 +57,7 @@ namespace LostIsland {
 
 #define SAFE_RELEASE(_resource){ if((_resource) != NULL) { (_resource)->Release(); (_resource) = NULL; } }
 #define SAFE_DELETE(_ptr) { if((_ptr) != NULL) { delete (_ptr); (_ptr) = NULL; } }
+#define SAFE_DELETE_ARRAY(_ptr) { if((_ptr) != NULL) { delete[] (_ptr); (_ptr) = NULL; } }
 #define RETURN_IF_FAILED(_hr, _errorMsg) { if(FAILED(_hr)) { ERROR(_errorMsg); return hr; } }
 #define ERROR(_msg) { DebugConsole::PrintError(_msg, __FILE__, __LINE__); }
 #define CLAMP(_val, _min, _max) max(_min, min(_val, _max))

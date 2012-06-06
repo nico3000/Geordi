@@ -24,8 +24,8 @@ private:
     BOOL IsIn(USHORT p_x, USHORT p_y, USHORT p_z) CONST;
     VOID CheckSons(VOID);
     VOID InitIntern(Octree* p_pFather, CHAR p_sonIndex);
-    BOOL InitIntern(std::fstream &p_stream, Octree* p_pFather, CHAR p_sonIndex);
-    CHAR* SaveIntern(CHAR* pData) CONST;
+    VOID InitIntern(CHAR* p_pData, Octree* p_pFather, CHAR p_sonIndex);
+    CHAR* SaveIntern(CHAR* p_pData) CONST;
     VOID ClearSons(VOID);
 
 public:
