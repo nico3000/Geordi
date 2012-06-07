@@ -3,7 +3,6 @@
 
 #include "stdafx.h"
 #include "Geordi.h"
-#include "TerrainData.h"
 
 #define MAX_LOADSTRING 100
 
@@ -12,8 +11,6 @@ HINSTANCE hInst;								// current instance
 TCHAR szTitle[MAX_LOADSTRING];					// The title bar text
 TCHAR szWindowClass[MAX_LOADSTRING];			// the main window class name
 HWND g_hWnd;
-GameTimer LostIsland::g_timer;
-BOOL LostIsland::g_continue = TRUE;
 
 // Forward declarations of functions included in this code module:
 ATOM				MyRegisterClass(HINSTANCE hInstance);
@@ -35,16 +32,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
- 	// TODO: Place code here.
- 	DebugConsole::Open();
-    DebugConsole::PrintInfo("LostIsland - Codename \"Geordi\"");
-    g_timer.Init();
-
-    // TODO: Static testing stuff goes here and only here.
-    TerrainData terrain;
-    terrain.Init(128, 8, 4, 8, 32);
-    terrain.Test();
-    g_continue = FALSE;
+    // TODO: Place code here.
 
 	MSG msg;
 	HACCEL hAccelTable;
@@ -55,17 +43,23 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	MyRegisterClass(hInstance);
 
 	// Perform application initialization:
-	if (!InitInstance (hInstance, nCmdShow))
-	{
-		return FALSE;
-	}
+    if (!InitInstance (hInstance, nCmdShow))
+    {
+        return FALSE;
+    }
 
-	hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GEORDI));
+    hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_GEORDI));
+ 
+    GameInitializer initializer;
+    if(!initializer.Init(g_hWnd))
+    {
+        return -1;
+    }
 
 	// Main message loop:
 	while (g_continue)
 	{
-        g_timer.Next();
+        g_pTimer->Next();
 
         while(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
@@ -84,9 +78,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	}
 
     DestroyWindow(g_hWnd);
-
-    DebugConsole::Close();
-
 	return 0;//(int)msg.wParam;
 }
 
@@ -140,8 +131,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
 
-   g_hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, NULL, NULL, hInstance, NULL);
+   g_hWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, 0, SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, hInstance, NULL);
 
    if (!g_hWnd)
    {

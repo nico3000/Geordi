@@ -63,6 +63,9 @@
     <ClInclude Include="Octree.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
+    <ClInclude Include="GameInitializer.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -85,6 +88,9 @@
     </ClCompile>
     <ClCompile Include="TerrainData.cpp">
       <Filter>Source Files\GameLogic</Filter>
+    </ClCompile>
+    <ClCompile Include="GameInitializer.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

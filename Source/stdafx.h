@@ -20,13 +20,17 @@
 #include <memory.h>
 #include <tchar.h>
 
-
 // TODO: reference additional headers your program requires here
 #include <d3d11.h>
 #include <D3DX11.h>
 #include <xnamath.h>
+#include <DxErr.h>
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dx11.lib")
+#pragma comment(lib, "DxErr.lib")
+
+#include <tinyxml2.h>
+#pragma comment(lib, "tinyxml2.lib")
 
 #include <intsafe.h>
 #include <memory>
@@ -43,13 +47,7 @@ using std::string;
 #define new DEBUG_NEW
 #endif
 
-#include "DebugConsole.h"
-#include "GameTimer.h"
-
-namespace LostIsland {
-    extern GameTimer g_timer;
-    extern BOOL g_continue;
-};
+#include "GameInitializer.h"
 
 // defines
 #define SCREEN_WIDTH 1280
@@ -58,7 +56,7 @@ namespace LostIsland {
 #define SAFE_RELEASE(_resource){ if((_resource) != NULL) { (_resource)->Release(); (_resource) = NULL; } }
 #define SAFE_DELETE(_ptr) { if((_ptr) != NULL) { delete (_ptr); (_ptr) = NULL; } }
 #define SAFE_DELETE_ARRAY(_ptr) { if((_ptr) != NULL) { delete[] (_ptr); (_ptr) = NULL; } }
-#define RETURN_IF_FAILED(_hr, _errorMsg) { if(FAILED(_hr)) { ERROR(_errorMsg); return hr; } }
+#define RETURN_IF_FAILED(_hr, _errorMsg) { if(FAILED(_hr)) { ERROR(DXGetErrorStringA(_hr)); DebugConsole::PrintInfo(DXGetErrorDescriptionA(_hr)); return hr; } }
 #define ERROR(_msg) { DebugConsole::PrintError(_msg, __FILE__, __LINE__); }
 #define CLAMP(_val, _min, _max) max(_min, min(_val, _max))
 #define LERP(_val, _min, _max) (((_val) - (_min)) / ((_max) - (_min)))

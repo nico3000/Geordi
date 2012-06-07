@@ -248,7 +248,7 @@ BOOL Octree::Init(std::fstream& p_stream)
 
     if(!p_stream.good())
     {
-#ifdef _DEBUG_OR_PROFILE
+#if defined(_DEBUG) || defined(PROFILE)
         ERROR("bad stream");
 #endif
         return FALSE;
@@ -260,13 +260,13 @@ BOOL Octree::Init(std::fstream& p_stream)
     p_stream.read(pData, length);
 
     this->Init(((USHORT*)pData)[0]);
-#ifdef _DEBUG_OR_PROFILE
+#if defined(_DEBUG) || defined(PROFILE)
     //std::cout << "loading octree..." << std::endl;
-    //INT id = g_timer.Tick(IMMEDIATE);
+    //INT id = g_pTimer->Tick(IMMEDIATE);
     this->InitIntern(pData + sizeof(USHORT), NULL, 0);
-    //std::cout << "loading took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
+    //std::cout << "loading took " << (1e-3 * (DOUBLE)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else
-    this->InitIntern(p_stream, NULL, 0);
+    this->InitIntern(pData + sizeof(USHORT), NULL, 0);
 #endif
     SAFE_DELETE_ARRAY(pData);
     return TRUE;
@@ -307,17 +307,17 @@ VOID Octree::Save(std::fstream& p_stream) CONST
     CHAR* pData = new CHAR[dataSize];
     ((USHORT*)pData)[0] = m_size;
     
-#ifdef _DEBUG_OR_PROFILE
+#if defined(_DEBUG) || defined(PROFILE)
     //std::cout << "saving octree..." << std::endl;
-    //INT id = g_timer.Tick(IMMEDIATE);
+    //INT id = g_pTimer->Tick(IMMEDIATE);
     LONG usedSpace = (UINT)(this->SaveIntern(pData + sizeof(USHORT)) - pData);
     if(usedSpace != dataSize)
     {
         std::cout << "miscalculated space: " << usedSpace << " / " << dataSize << std::endl;
     }
-    //std::cout << "saving took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl;
+    //std::cout << "saving took " << (1e-3 * (DOUBLE)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else
-    this->SaveIntern(p_stream);
+    this->SaveIntern(pData + sizeof(USHORT));
 #endif
     p_stream.write(pData, dataSize);
     delete pData;
@@ -350,7 +350,7 @@ BOOL Octree::operator==(Octree CONST& second) CONST
 {
     if(this->GetSize() != second.GetSize())
     {
-#ifdef _DEBUG_OR_PROFILE
+#if defined(_DEBUG) || defined(PROFILE)
         std::cout << this->GetSize() << " != " << second.GetSize() << std::endl;
 #endif
         return FALSE;
@@ -371,7 +371,7 @@ BOOL Octree::operator==(Octree CONST& second) CONST
                 CHAR val2 = second.GetValue(secondMinX + x, secondMinY + y, secondMinZ + z);
                 if(val1 != val2)
                 {
-#ifdef _DEBUG_OR_PROFILE
+#if defined(_DEBUG) || defined(PROFILE)
                     std::cout << "val mismatch: " << x << " " << y << " " << z << std::endl;
 #endif
                     return FALSE;

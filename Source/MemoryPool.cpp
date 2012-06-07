@@ -13,7 +13,7 @@ m_ppRawMemArray(NULL), m_memArraySize(0), m_pHead(NULL), m_allocated(0)
 
 MemoryPool::~MemoryPool(VOID)
 {
-#ifdef _DEBUG_OR_PROFILE
+#if defined(_DEBUG) || defined(PROFILE)
     if(m_allocated != 0)
     {
         ERROR("remaining allocated space!");

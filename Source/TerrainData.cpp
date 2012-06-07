@@ -40,12 +40,12 @@ BOOL TerrainData::Init(USHORT p_octreeSize, USHORT p_gridSizeX, USHORT p_gridSiz
         m_pLastUsed = new LONGLONG[p_gridSizeX * p_gridSizeY * p_gridSizeZ];
         ZeroMemory(m_pData, p_gridSizeX * p_gridSizeY * p_gridSizeZ * sizeof(Octree));
         ZeroMemory(m_pLastUsed, p_gridSizeX * p_gridSizeY * p_gridSizeZ * sizeof(LONGLONG));
-        this->SetDimension(-0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSizeX * p_octreeSize),
-                           -0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSizeY * p_octreeSize),
-                           -0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSizeZ * p_octreeSize),
-                           +0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSizeX * p_octreeSize),
-                           +0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSizeY * p_octreeSize),
-                           +0.5f * UNITS_PER_GRID * (FLOAT)(p_gridSizeZ * p_octreeSize));
+        this->SetDimension(-0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeX * p_octreeSize),
+                           -0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeY * p_octreeSize),
+                           -0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeZ * p_octreeSize),
+                           +0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeX * p_octreeSize),
+                           +0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeY * p_octreeSize),
+                           +0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeZ * p_octreeSize));
         return TRUE;
     }
 }
@@ -295,7 +295,7 @@ VOID TerrainData::GenerateTestData(VOID)
     //return;
 
     std::cout << "generating " << (m_pGridSize[0] * m_octreeSize) << "x" << (m_pGridSize[1] * m_octreeSize) << "x" << (m_pGridSize[2] * m_octreeSize) << " octree..." << std::endl;
-    INT id = g_timer.Tick(IMMEDIATE);
+    INT id = g_pTimer->Tick(IMMEDIATE);
     LONG lastOutput = 0;
 
     ULONGLONG current = 0;
@@ -314,7 +314,7 @@ VOID TerrainData::GenerateTestData(VOID)
                 this->SetDensity(x, y, z, density);
 
                 current++;
-                LONG elapsed = g_timer.Tock(id, KEEPRUNNING);
+                LONG elapsed = g_pTimer->Tock(id, KEEPRUNNING);
                 if(elapsed > lastOutput)
                 {
                     lastOutput += 250;
@@ -328,7 +328,7 @@ VOID TerrainData::GenerateTestData(VOID)
         }
     }
 
-    std::cout << std::endl << "generation took " << (1e-3 * (DOUBLE)g_timer.Tock(id, ERASE)) << " secs" << std::endl << std::endl;
+    std::cout << std::endl << "generation took " << (1e-3 * (DOUBLE)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl << std::endl;
 }
 
 
