@@ -254,7 +254,7 @@ BOOL Octree::Init(std::fstream& p_stream)
         return FALSE;
     }
     p_stream.seekg(0, std::ios::end);
-    std::streamoff length = p_stream.tellg();
+    UINT length = (UINT)p_stream.tellg();
     p_stream.seekg(0, std::ios::beg);
     CHAR* pData = new CHAR[length];
     p_stream.read(pData, length);

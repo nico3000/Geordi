@@ -234,6 +234,7 @@
     <ClInclude Include="GameInitializer.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="Geordi.h" />
+    <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Resource.h" />
@@ -246,6 +247,7 @@
     <ClCompile Include="GameInitializer.cpp" />
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="Geordi.cpp" />
+    <ClCompile Include="Logger.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="stdafx.cpp">

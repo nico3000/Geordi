@@ -56,6 +56,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return -1;
     }
 
+    OutputDebugStringA("test\n");
+
 	// Main message loop:
 	while (g_continue)
 	{
