@@ -39,6 +39,10 @@
 #include <hash_map>
 #include <queue>
 #include <string>
+#include <iostream>
+#include <streambuf>
+#include <fstream>
+#include <sstream>
 using std::wstring;
 using std::string;
 
@@ -47,6 +51,7 @@ using std::string;
 #define new DEBUG_NEW
 #endif
 
+#include "Logger.h"
 #include "GameInitializer.h"
 
 // defines
@@ -57,7 +62,6 @@ using std::string;
 #define SAFE_DELETE(_ptr) { if((_ptr) != NULL) { delete (_ptr); (_ptr) = NULL; } }
 #define SAFE_DELETE_ARRAY(_ptr) { if((_ptr) != NULL) { delete[] (_ptr); (_ptr) = NULL; } }
 #define RETURN_IF_FAILED(_hr, _errorMsg) { if(FAILED(_hr)) { ERROR(DXGetErrorStringA(_hr)); DebugConsole::PrintInfo(DXGetErrorDescriptionA(_hr)); return hr; } }
-#define ERROR(_msg) { DebugConsole::PrintError(_msg, __FILE__, __LINE__); }
 #define CLAMP(_val, _min, _max) max(_min, min(_val, _max))
 #define LERP(_val, _min, _max) (((_val) - (_min)) / ((_max) - (_min)))
 #define MIX(_val1, _val2, _t) ((1.0f - _t) * (_val1) + (_t) * (_val2))

@@ -48,9 +48,6 @@
     <ClInclude Include="Geordi.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="DebugConsole.h">
-      <Filter>Header Files\GameApplicationLayer</Filter>
-    </ClInclude>
     <ClInclude Include="GameTimer.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
@@ -76,9 +73,6 @@
     </ClCompile>
     <ClCompile Include="Geordi.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="DebugConsole.cpp">
-      <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
     <ClCompile Include="GameTimer.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>

@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "MemoryPool.h"
 
+#define LOGGER_TAG "memorypool"
 
 CONST SIZE_T MemoryPool::CHUNK_HEADER_SIZE = sizeof(UCHAR*);
 
@@ -16,7 +17,7 @@ MemoryPool::~MemoryPool(VOID)
 #if defined(_DEBUG) || defined(PROFILE)
     if(m_allocated != 0)
     {
-        ERROR("remaining allocated space!");
+        LI_WARNING("remaining allocated space!");
     }
 #endif
     for(UINT i=0; i < m_memArraySize; ++i) {
@@ -134,16 +135,16 @@ VOID MemoryPool::Free(VOID* p_pMem)
 
 VOID MemoryPool::PrintInfo(VOID) CONST
 {
-
-    std::cout << "chunk size: " << FormatBytes(this->GetChunkSize()) << std::endl
-              << "system memory used: " << FormatBytes(this->GetSystemAllocatedBytes()) << std::endl
-              << "pool memory used: " << FormatBytes(this->GetPoolAllocatedBytes()) << std::endl
-              << "pool memory free: " << FormatBytes(this->GetPoolFreeBytes()) << std::endl
-              << "usage of allocated system memory: " << (UINT)(100.0 * this->GetPoolUsage()) << "%" << std::endl << std::endl;
+    std::ostringstream str;
+    str << "chunk size: " << FormatBytes(this->GetChunkSize()) << std::endl
+        << "system memory used: " << FormatBytes(this->GetSystemAllocatedBytes()) << std::endl
+        << "pool memory used: " << FormatBytes(this->GetPoolAllocatedBytes()) << std::endl
+        << "pool memory free: " << FormatBytes(this->GetPoolFreeBytes()) << std::endl
+        << "usage of allocated system memory: " << (UINT)(100.0 * this->GetPoolUsage()) << "%" << std::endl << std::endl;
+    LI_INFO(str.str().c_str());
 }
 
 
-#include <sstream>
 string MemoryPool::FormatBytes(SIZE_T p_bytes)
 {
     INT unit = 0;

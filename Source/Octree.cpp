@@ -1,10 +1,9 @@
 #include "StdAfx.h"
 #include "Octree.h"
 
-using namespace LostIsland;
+#define LOGGER_TAG "octree"
 
 MemoryPool Octree::sm_pool;
-
 
 Octree::Octree(VOID):
 m_pFather(NULL), m_pSons(NULL), m_value(DEFAULT_VALUE)
@@ -106,7 +105,7 @@ INT Octree::GetSonIndex(USHORT p_x, USHORT p_y, USHORT p_z) CONST
 #ifdef _DEBUG
     if(!this->IsIn(p_x, p_y, p_z))
     {
-        ERROR("called GetSonIndex() but position is not in tree");
+        LI_ERROR("called GetSonIndex() but position is not in tree");
         std::cerr << "error1: " << m_minX << " " << m_minY << " " << m_minZ << " " << m_size << std::endl;
         std::cerr << "error2: " << p_x << " " << p_y << " " << p_z << " " << std::endl;
         return -1;
@@ -129,26 +128,30 @@ BOOL Octree::IsIn(USHORT p_x, USHORT p_y, USHORT p_z) CONST
 
 VOID Octree::PrintTree(VOID) CONST
 {
-    std::cout << "Octree size: " << this->GetSize() << std::endl;
+    std::ostringstream str;
+    str << "Octree size: " << this->GetSize() << std::endl;
     for(USHORT y=this->GetMinY(); y < this->GetMaxY(); ++y) 
     {
-        std::cout << "y=" << y << std::endl;
+        str << "y=" << y << std::endl;
         for(USHORT z=this->GetMinZ(); z < this->GetMaxZ(); ++z) 
         {
             for(USHORT x=this->GetMinX(); x < this->GetMaxX(); ++x) 
             {
-                std::cout << (INT)this->GetValue(x, y, z) << " ";
+                str << (INT)this->GetValue(x, y, z) << " ";
             }
-            std::cout << std::endl;
+            str << std::endl;
         }
-        std::cout << std::endl;
+        str << std::endl;
     }
+    LI_INFO(str.str().c_str());
 }
 
 
 VOID Octree::PrintStructure(VOID) CONST
 {
-    std::cout << "octree size: " << this->GetSize() << ", x dimension: " << this->GetMinX() << " - " << this->GetMaxX() << ", y dimension: " << this->GetMinY() << " - " << this->GetMaxY() << ", z dimension: " << this->GetMinZ() << " - " << this->GetMaxZ() << std::endl;
+    std::ostringstream str;
+    str << "octree size: " << this->GetSize() << ", x dimension: " << this->GetMinX() << " - " << this->GetMaxX() << ", y dimension: " << this->GetMinY() << " - " << this->GetMaxY() << ", z dimension: " << this->GetMinZ() << " - " << this->GetMaxZ() << std::endl;
+    LI_INFO(str.str().c_str());
     if(!this->IsLeaf())
     {
         for(INT i=0; i < 8; ++i)
@@ -249,7 +252,7 @@ BOOL Octree::Init(std::fstream& p_stream)
     if(!p_stream.good())
     {
 #if defined(_DEBUG) || defined(PROFILE)
-        ERROR("bad stream");
+        LI_ERROR("bad stream");
 #endif
         return FALSE;
     }
@@ -313,7 +316,9 @@ VOID Octree::Save(std::fstream& p_stream) CONST
     LONG usedSpace = (UINT)(this->SaveIntern(pData + sizeof(USHORT)) - pData);
     if(usedSpace != dataSize)
     {
-        std::cout << "miscalculated space: " << usedSpace << " / " << dataSize << std::endl;
+        std::ostringstream str;
+        str << "miscalculated space: " << usedSpace << " / " << dataSize << std::endl;
+        LI_INFO(str.str().c_str());
     }
     //std::cout << "saving took " << (1e-3 * (DOUBLE)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else

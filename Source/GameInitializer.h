@@ -1,5 +1,4 @@
 #pragma once
-#include "DebugConsole.h"
 #include "GameTimer.h"
 
 namespace LostIsland

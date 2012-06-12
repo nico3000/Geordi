@@ -56,8 +56,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return -1;
     }
 
-    OutputDebugStringA("test\n");
-
 	// Main message loop:
 	while (g_continue)
 	{
@@ -80,6 +78,8 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	}
 
     DestroyWindow(g_hWnd);
+
+    new INT[3];
 	return 0;//(int)msg.wParam;
 }
 

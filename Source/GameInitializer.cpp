@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "GameInitializer.h"
-#include "tinyxml2.h"
+#include "TerrainData.h"
 
 namespace LostIsland
 {
@@ -25,27 +25,31 @@ namespace LostIsland
         SAFE_RELEASE(g_pSwapChain);
 
         SAFE_DELETE(g_pTimer);
-        DebugConsole::Close();
     }
 
 
     BOOL GameInitializer::Init(HWND hWnd)
     {
-        DebugConsole::Open();
-        DebugConsole::PrintInfo("LostIsland - Codename \"Geordi\"");
+#ifdef _DEBUG
+        Logger::Init("logging.xml", "debug");
+#elif defined PROFILE
+        Logger::Init("logging.xml", "profile");
+#else
+        Logger::Init("logging.xml", "release");
+#endif
         
         g_pTimer = new GameTimer();
         g_pTimer->Init();
 
         if(!this->InitDirect3D(hWnd))
         {
-            ERROR("Direct3D initialization messed up");
+            LI_TAG_ERROR("general", "Direct3D initialization messed up");
             return FALSE;
-        }        
+        }
 
-        //// TODO: Static testing stuff goes here and only here.
+        // TODO: Static testing stuff goes here and only here.
         //TerrainData terrain;
-        //terrain.Init(128, 32, 8, 32, 32);
+        //terrain.Init(16, 8, 4, 8, 4);
         //terrain.Test();
         //g_continue = FALSE;
         
