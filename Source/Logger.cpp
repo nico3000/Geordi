@@ -1,199 +1,190 @@
 #include "StdAfx.h"
 #include "Logger.h"
 
-#define LOG_ERROR_FALLBACK(_msg) Logger::LogErrorFallback(_msg, __FUNCTION__, __FILE__, __LINE__)
-#define LOGGER_TAG "logger"
+
+#define LOGMGR_TAG_ERROR "ERROR"
+#define LOGMGR_TAG_WARNING "WARNING"
+
 
 namespace Logger
 {
-    MsgHandler g_handler;
-    Tags g_tags;
+    static LogMgr* g_pLogMgr = NULL;
 
 
-    MsgHandler::MsgHandler(VOID):
-    m_initialized(FALSE)
+    ErrorMessenger::ErrorMessenger(VOID):
+    m_enabled(TRUE)
     {
+        g_pLogMgr->AddErrorMessenger(this);
     }
 
-
-    MsgHandler::~MsgHandler(VOID)
+    VOID ErrorMessenger::Show(CONST std::string& p_errorMsg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
     {
-        if(m_file.is_open())
+        if(m_enabled)
         {
-            m_file.close();
-        }
-    }
-
-    BOOL MsgHandler::Init(string p_outFilename)
-    {
-        m_file.open(p_outFilename);
-        return m_initialized = m_file.is_open();
-    }
-
-
-    VOID MsgHandler::LogInfo(string p_tag, string p_msg)
-    {
-        std::ostringstream str;
-        str << "INFO " << p_tag << " ->" << std::endl << " " << p_msg << std::endl;
-        if(g_tags.find(p_tag) != g_tags.end())
-        {
-            if(g_tags[p_tag].toFile)
+            switch(g_pLogMgr->Error(p_errorMsg, p_isFatal, p_function, p_file, p_line))
             {
-                m_file << str.str();
+            case LogMgr::LOGMGR_ERROR_ABORT: break; // TODO
+            case LogMgr::LOGMGR_ERROR_IGNORE: m_enabled = FALSE;
+            case LogMgr::LOGMGR_ERROR_RETRY: break; // do nothing
             }
+
         }
-        else if(p_tag.compare("logger") != 0)
-        {
-            LI_WARNING("unknown tag: " + p_tag);
-        }
-        OutputDebugStringA(str.str().c_str());
     }
 
 
-    VOID MsgHandler::LogWarning(string p_tag, string p_msg, string p_function, string p_file, INT p_line)
+    BOOL Init(CONST CHAR* p_configFile)
     {
-        if(g_tags.find(p_tag) != g_tags.end())
+        g_pLogMgr = new LogMgr;
+        if(g_pLogMgr == NULL)
         {
-            if(!g_tags[p_tag].ignoreWarnings)
-            {
-                std::ostringstream str;
-                str << "WARNING, Tag: " << p_tag << ", function: " << p_function << " ->" << std::endl << " " << p_file << "(" << p_line << ") : " << p_msg << std::endl;
-                if(g_tags[p_tag].toFile)
-                {
-                    m_file << str.str();
-                }
-                if(g_tags[p_tag].toDebug)
-                {
-                    OutputDebugStringA(str.str().c_str());
-                }
-            }
+            return FALSE;
         }
-        else if(p_tag.compare("logger") != 0)
-        {
-            LogWarning("logger", "unknown tag: " + p_tag, p_function, p_file, p_line);
-        }
+        return g_pLogMgr->Init(p_configFile);
     }
 
 
-    VOID MsgHandler::LogError(string p_tag, string p_msg, string p_function, string p_file, INT p_line)
+    VOID Destroy(VOID)
     {
-        if(g_tags.find(p_tag) != g_tags.end())
-        {
-            if(!g_tags[p_tag].ignoreErrors)
-            {
-                std::ostringstream str;
-                str << "ERROR, Tag: " << p_tag << ", function: " << p_function << " ->" << std::endl << " " << p_file << "(" << p_line << ") : " << p_msg << std::endl;
-                if(g_tags[p_tag].toFile)
-                {
-                    m_file << str.str();
-                }
-                if(g_tags[p_tag].toDebug)
-                {
-                    OutputDebugStringA(str.str().c_str());
-                }
-            }
-        }
-        else if(p_tag.compare("logger") != 0)
-        {
-            LogWarning("logger", "unknown tag: " + p_tag, p_function, p_file, p_line);
-        }
+        SAFE_DELETE(g_pLogMgr);
     }
 
-    HWND g_sbHWnd;
-    
-    BOOL Init(HWND hWnd, string p_configXML, string p_configName)
+
+    VOID Log(CONST std::string& p_tag, CONST std::string& p_msg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
+    {
+        g_pLogMgr->Log(p_tag, p_msg, p_isFatal, p_function, p_file, p_line);
+    }
+
+
+    VOID SetDisplayFlags(CONST std::string& p_tag, UCHAR p_flags)
+    {
+        g_pLogMgr->SetDisplayFlags(p_tag, p_flags);
+    }
+
+
+    CONST UCHAR LOGFLAG_WRITE_TO_LOG_FILE = 1 << 0;
+    CONST UCHAR LOGFLAG_WRITE_TO_DEBUGGER = 1 << 1;
+#define LOGMGR_FILE "LostIsland.log"
+
+    LogMgr::LogMgr(VOID)
+    {
+
+    }
+
+
+    LogMgr::~LogMgr(VOID)
+    {
+        for each(ErrorMessenger* pErrorMessenger in m_errorMessengers)
+        {
+            delete pErrorMessenger;
+        }
+        m_errorMessengers.clear();
+    }
+
+
+    BOOL LogMgr::Init(CONST CHAR* p_configFile)
     {
         tinyxml2::XMLDocument doc;
-        INT result = doc.LoadFile(p_configXML.c_str());
+        INT result = doc.LoadFile(p_configFile);
         if(result != tinyxml2::XML_NO_ERROR)
         {
-            LOG_ERROR_FALLBACK("error opening config file for Logger\n");
+            OutputDebugStringA((std::string("error opening ") + p_configFile + '\n').c_str());
             return FALSE;
         }
-        tinyxml2::XMLElement* pLoggingElem = doc.FirstChildElement("logging");
+        tinyxml2::XMLElement* pLoggingElem = doc.FirstChildElement("Logging");
         if(pLoggingElem == NULL)
         {
-            LOG_ERROR_FALLBACK("didn't find \"logging\" element");
+            OutputDebugStringA((std::string("no \"Logging\" element in ") + p_configFile + '\n').c_str());
             return FALSE;
         }
-        tinyxml2::XMLElement* pConfigElem = pLoggingElem->FirstChildElement("config");
-        while(pConfigElem != NULL && pConfigElem->Attribute("name", p_configName.c_str()) == NULL)
-        {
-            pConfigElem = pConfigElem->NextSiblingElement("config");
-        }
-        if(pConfigElem == NULL)
-        {
-            LOG_ERROR_FALLBACK("didn't find config \"" + p_configName + "\"");
-            return FALSE;
-        }
-
-        tinyxml2::XMLElement* pFileElem = pConfigElem->FirstChildElement("file");
-        if(pFileElem == NULL || !g_handler.Init(pFileElem->Attribute("name")))
-        {
-            LOG_ERROR_FALLBACK("error opening output file");
-        }
-
-        tinyxml2::XMLElement* pTagElem = pConfigElem->FirstChildElement("tag");
+        
+        tinyxml2::XMLElement* pTagElem = pLoggingElem->FirstChildElement("Log");
         while(pTagElem != NULL)
         {
-            Tag tag;
-            tag.ignoreErrors = FALSE;
-            tag.ignoreWarnings = FALSE;
-            tag.toDebug = pTagElem->BoolAttribute("toDebug");
-            tag.toFile = pTagElem->BoolAttribute("toFile");
-            g_tags[pTagElem->Attribute("name")] = tag;
+            UCHAR flags = 0;
+            if(pTagElem->BoolAttribute("file"))
+            {
+                flags |= LOGFLAG_WRITE_TO_LOG_FILE;
+            }
+            if(pTagElem->BoolAttribute("debugger"))
+            {
+                flags |= LOGFLAG_WRITE_TO_DEBUGGER;
+            }
+            this->SetDisplayFlags(pTagElem->Attribute("tag"), flags);
 
-            pTagElem = pTagElem->NextSiblingElement("tag");
-
-            //OutputDebugStringA(pTagElem->Attribute("name"));
+            pTagElem = pTagElem->NextSiblingElement("Log");
         }
-
-        LogInfo("logger", "Initialization successful");
         
-        g_sbHWnd = CreateStatusWindowA(WS_CHILD | WS_VISIBLE, "Teststatus", hWnd, 0);
-
+        std::ofstream file(LOGMGR_FILE, std::ios::trunc);
+        file.close();
+        
+        LI_LOG("Logger", "Initialization successful");
+                
+        //g_sbHWnd = CreateStatusWindowA(WS_CHILD | WS_VISIBLE, "Teststatus", hWnd, 0);
+        
         return TRUE;
     }
 
 
-    VOID LogErrorFallback(string p_msg, string p_function, string p_file, INT p_line)
+    VOID LogMgr::Log(CONST std::string& p_tag, CONST std::string& p_msg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
     {
-        std::ostringstream str;
-        str << p_file << "(" << p_line << ") : " << p_function << "; " << p_msg << std::endl;
-        OutputDebugStringA(str.str().c_str());
-    }
+        std::string out;
+        this->GetOutputBuffer(out, p_tag, p_msg, p_function, p_file, p_line);
 
-
-    VOID LogInfo(string p_tag, string p_msg)
-    {
-        if(g_handler.IsInitialized())
+        UCHAR flags = m_tags.find(p_tag) == m_tags.end() ? (LOGFLAG_WRITE_TO_DEBUGGER | LOGFLAG_WRITE_TO_LOG_FILE) : m_tags[p_tag];
+        if(flags & LOGFLAG_WRITE_TO_DEBUGGER)
         {
-            g_handler.LogInfo(p_tag, p_msg);
+            OutputDebugStringA((out + '\n').c_str());
+        }
+        if(flags & LOGFLAG_WRITE_TO_LOG_FILE)
+        {
+            this->WriteToLogFile(out + '\n');
         }
     }
 
 
-    VOID LogWarning(string p_tag, string p_msg, string p_function, string p_file, INT p_line)
+    VOID LogMgr::SetDisplayFlags(CONST std::string& p_tag, UCHAR p_flags)
     {
-        if(g_handler.IsInitialized())
-        {
-            g_handler.LogWarning(p_tag, p_msg, p_function, p_file, p_line);
-        }
+        m_tags[p_tag] = p_flags;
     }
 
 
-    VOID LogError(string p_tag, string p_msg, string p_function, string p_file, INT p_line)
+    VOID LogMgr::AddErrorMessenger(ErrorMessenger* p_pMessenger)
     {
-        if(g_handler.IsInitialized())
-        {
-            g_handler.LogError(p_tag, p_msg, p_function, p_file, p_line);
-        }
+        m_errorMessengers.push_back(p_pMessenger);
     }
 
 
-    VOID ShowStatus(wstring p_text)
+    LogMgr::ErrorDialogResult LogMgr::Error(CONST std::string& p_errorMsg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
     {
-        SendMessageA(g_sbHWnd, SB_SETTEXT, 0, (LPARAM)p_text.c_str());
+        std::string out;
+        this->GetOutputBuffer(out, p_isFatal ? LOGMGR_TAG_ERROR : LOGMGR_TAG_WARNING, p_errorMsg, p_function, p_file, p_line);
+        switch(MessageBoxA(NULL, out.c_str(), LOGMGR_TAG_ERROR, MB_ABORTRETRYIGNORE | (p_isFatal ? MB_ICONERROR : MB_ICONWARNING)))
+        {
+        case IDABORT: return LOGMGR_ERROR_ABORT;
+        case IDRETRY: return LOGMGR_ERROR_RETRY;
+        case IDIGNORE: return LOGMGR_ERROR_IGNORE;
+        }
+        return LOGMGR_ERROR_RETRY; // unreachable... i hope...
+    }
+
+
+    VOID LogMgr::GetOutputBuffer(std::string& p_output, CONST std::string& p_tag, CONST std::string& p_msg, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
+    {
+        std::ostringstream str(p_output);
+        str << "[" << p_tag << "] " << p_msg;
+        if(p_tag.compare(LOGMGR_TAG_ERROR) == 0 || p_tag.compare(LOGMGR_TAG_WARNING) == 0)
+        {
+            str << std::endl << "Function: " << p_function << std::endl << p_file << std::endl << "Line: " << p_line;
+        }
+        p_output = str.str();
+    }
+
+
+    VOID LogMgr::WriteToLogFile(CONST std::string& p_text)
+    {
+        std::ofstream file(LOGMGR_FILE, std::ios::app);
+        file << p_text;
+        file.close();
     }
 }
 

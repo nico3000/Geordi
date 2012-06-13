@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "MemoryPool.h"
 
-#define LOGGER_TAG "memorypool"
+#define LI_LOGGER_TAG "MemoryPool"
 
 CONST SIZE_T MemoryPool::CHUNK_HEADER_SIZE = sizeof(UCHAR*);
 
@@ -17,7 +17,7 @@ MemoryPool::~MemoryPool(VOID)
 #if defined(_DEBUG) || defined(PROFILE)
     if(m_allocated != 0)
     {
-        LI_WARNING("remaining allocated space!");
+        LI_LOG_WITH_TAG("remaining allocated space!");
     }
 #endif
     for(UINT i=0; i < m_memArraySize; ++i) {
@@ -141,7 +141,7 @@ VOID MemoryPool::PrintInfo(VOID) CONST
         << "pool memory used: " << FormatBytes(this->GetPoolAllocatedBytes()) << std::endl
         << "pool memory free: " << FormatBytes(this->GetPoolFreeBytes()) << std::endl
         << "usage of allocated system memory: " << (UINT)(100.0 * this->GetPoolUsage()) << "%" << std::endl << std::endl;
-    LI_INFO(str.str().c_str());
+    LI_LOG_WITH_TAG(str.str().c_str());
 }
 
 

@@ -340,7 +340,7 @@ VOID TerrainData::GenerateTestData(VOID)
                         }
                     }
                     str << " " << (1e-4 * (DOUBLE)(INT)(1e+6 * percentage)) << L"% (time elapsed / remaining: " << (elapsed / 1000) << L"s / " << (estimated / 1000) << L"s)";
-                    Logger::ShowStatus(str.str());
+                    //Logger::ShowStatus(str.str());
                 }
             }
         }

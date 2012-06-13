@@ -1,7 +1,7 @@
 #include "StdAfx.h"
 #include "Octree.h"
 
-#define LOGGER_TAG "octree"
+#define LI_LOGGER_TAG "Octree"
 
 MemoryPool Octree::sm_pool;
 
@@ -143,7 +143,7 @@ VOID Octree::PrintTree(VOID) CONST
         }
         str << std::endl;
     }
-    LI_INFO(str.str().c_str());
+    LI_LOG_WITH_TAG(str.str());
 }
 
 
@@ -151,7 +151,7 @@ VOID Octree::PrintStructure(VOID) CONST
 {
     std::ostringstream str;
     str << "octree size: " << this->GetSize() << ", x dimension: " << this->GetMinX() << " - " << this->GetMaxX() << ", y dimension: " << this->GetMinY() << " - " << this->GetMaxY() << ", z dimension: " << this->GetMinZ() << " - " << this->GetMaxZ() << std::endl;
-    LI_INFO(str.str().c_str());
+    LI_LOG_WITH_TAG(str.str());
     if(!this->IsLeaf())
     {
         for(INT i=0; i < 8; ++i)
@@ -318,7 +318,7 @@ VOID Octree::Save(std::fstream& p_stream) CONST
     {
         std::ostringstream str;
         str << "miscalculated space: " << usedSpace << " / " << dataSize << std::endl;
-        LI_INFO(str.str().c_str());
+        LI_LOG_WITH_TAG(str.str());
     }
     //std::cout << "saving took " << (1e-3 * (DOUBLE)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else

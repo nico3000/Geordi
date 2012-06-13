@@ -80,7 +80,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 
     DestroyWindow(g_hWnd);
 
-    new INT[3];
+    //new INT[3];
 	return 0;//(int)msg.wParam;
 }
 
