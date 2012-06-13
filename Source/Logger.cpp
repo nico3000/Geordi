@@ -99,9 +99,9 @@ namespace Logger
         }
     }
 
-
+    HWND g_sbHWnd;
     
-    BOOL Init(string p_configXML, string p_configName)
+    BOOL Init(HWND hWnd, string p_configXML, string p_configName)
     {
         tinyxml2::XMLDocument doc;
         INT result = doc.LoadFile(p_configXML.c_str());
@@ -150,6 +150,8 @@ namespace Logger
 
         LogInfo("logger", "Initialization successful");
         
+        g_sbHWnd = CreateStatusWindowA(WS_CHILD | WS_VISIBLE, "Teststatus", hWnd, 0);
+
         return TRUE;
     }
 
@@ -186,6 +188,12 @@ namespace Logger
         {
             g_handler.LogError(p_tag, p_msg, p_function, p_file, p_line);
         }
+    }
+
+
+    VOID ShowStatus(wstring p_text)
+    {
+        SendMessageA(g_sbHWnd, SB_SETTEXT, 0, (LPARAM)p_text.c_str());
     }
 }
 

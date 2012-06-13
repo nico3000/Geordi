@@ -29,6 +29,9 @@
 #pragma comment(lib, "d3dx11.lib")
 #pragma comment(lib, "DxErr.lib")
 
+#include <Commctrl.h>
+#pragma comment(lib, "Comctl32.lib")
+
 #include <tinyxml2.h>
 #pragma comment(lib, "tinyxml2.lib")
 

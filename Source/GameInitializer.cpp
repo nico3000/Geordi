@@ -31,11 +31,11 @@ namespace LostIsland
     BOOL GameInitializer::Init(HWND hWnd)
     {
 #ifdef _DEBUG
-        Logger::Init("logging.xml", "debug");
+        Logger::Init(hWnd, "logging.xml", "debug");
 #elif defined PROFILE
-        Logger::Init("logging.xml", "profile");
+        Logger::Init(hWnd, "logging.xml", "profile");
 #else
-        Logger::Init("logging.xml", "release");
+        Logger::Init(hWnd, "logging.xml", "release");
 #endif
         
         g_pTimer = new GameTimer();
@@ -48,9 +48,9 @@ namespace LostIsland
         }
 
         // TODO: Static testing stuff goes here and only here.
-        //TerrainData terrain;
-        //terrain.Init(16, 8, 4, 8, 4);
-        //terrain.Test();
+        TerrainData terrain;
+        terrain.Init(128, 32, 8, 32, 32);
+        terrain.Test();
         //g_continue = FALSE;
         
         return TRUE;

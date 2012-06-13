@@ -321,8 +321,10 @@ VOID TerrainData::GenerateTestData(VOID)
                     DOUBLE percentage = (DOUBLE)current / (DOUBLE)target;
                     DOUBLE progressPerTime = percentage / (DOUBLE)elapsed;
                     INT estimated = (INT)((1.0 - percentage) / progressPerTime);
-                    std::cout << '\r' << (1e-4 * (DOUBLE)(INT)(1e+6 * percentage)) << "% (time elapsed / remaining: " << (elapsed / 1000) << "s / " << (estimated / 1000) << "s)        ";
-                    std::cout.flush();
+
+                    std::wostringstream str;
+                    str << L'\r' << (1e-4 * (DOUBLE)(INT)(1e+6 * percentage)) << L"% (time elapsed / remaining: " << (elapsed / 1000) << L"s / " << (estimated / 1000) << L"s)";
+                    Logger::ShowStatus(str.str());
                 }
             }
         }

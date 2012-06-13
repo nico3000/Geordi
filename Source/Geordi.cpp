@@ -56,10 +56,15 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         return -1;
     }
 
+    MessageBoxA(g_hWnd, "Testtext1", "Title", MB_OK);
+    MessageBoxA(g_hWnd, "Testtext2", "Title", MB_OK);
+    MessageBoxA(g_hWnd, "Testtext3", "Title", MB_OK);
+
 	// Main message loop:
 	while (g_continue)
 	{
         g_pTimer->Next();
+        
 
         while(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
