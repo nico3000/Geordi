@@ -49,7 +49,7 @@ namespace LostIsland
 
         // TODO: Static testing stuff goes here and only here.
         TerrainData terrain;
-        terrain.Init(128, 32, 8, 32, 32);
+        terrain.Init(32, 8, 4, 8, 8);
         terrain.Test();
         //g_continue = FALSE;
         

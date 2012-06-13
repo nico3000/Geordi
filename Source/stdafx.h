@@ -29,6 +29,7 @@
 #pragma comment(lib, "d3dx11.lib")
 #pragma comment(lib, "DxErr.lib")
 
+// used for status bar
 #include <Commctrl.h>
 #pragma comment(lib, "Comctl32.lib")
 

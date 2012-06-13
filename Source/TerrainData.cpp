@@ -296,8 +296,9 @@ VOID TerrainData::GenerateTestData(VOID)
 
     std::cout << "generating " << (m_pGridSize[0] * m_octreeSize) << "x" << (m_pGridSize[1] * m_octreeSize) << "x" << (m_pGridSize[2] * m_octreeSize) << " octree..." << std::endl;
     INT id = g_pTimer->Tick(IMMEDIATE);
-    LONG lastOutput = 0;
 
+    DOUBLE nextPercentageOutput = 0;
+    LONG lastStop = 0;
     ULONGLONG current = 0;
     ULONGLONG target = (ULONGLONG)(m_pGridSize[0] * m_octreeSize) * (m_pGridSize[1] * m_octreeSize) * (m_pGridSize[2] * m_octreeSize);
 
@@ -313,17 +314,32 @@ VOID TerrainData::GenerateTestData(VOID)
                 FLOAT density = 10.0f * sin(6.282f * LERP(worldX, m_minX, m_maxX)) * cos(6.282f * LERP(worldZ, m_minZ, m_maxZ));
                 this->SetDensity(x, y, z, density);
 
-                current++;
+                DOUBLE percentage = (DOUBLE)++current / (DOUBLE)target;
                 LONG elapsed = g_pTimer->Tock(id, KEEPRUNNING);
-                if(elapsed > lastOutput)
+                if(percentage >= nextPercentageOutput || lastStop + 250 < elapsed)
                 {
-                    lastOutput += 250;
-                    DOUBLE percentage = (DOUBLE)current / (DOUBLE)target;
+                    lastStop = elapsed;
                     DOUBLE progressPerTime = percentage / (DOUBLE)elapsed;
                     INT estimated = (INT)((1.0 - percentage) / progressPerTime);
+                    if(percentage >= nextPercentageOutput)
+                    {
+                        nextPercentageOutput = min(nextPercentageOutput + 0.01f, 1.0f);
+                    }
 
                     std::wostringstream str;
-                    str << L'\r' << (1e-4 * (DOUBLE)(INT)(1e+6 * percentage)) << L"% (time elapsed / remaining: " << (elapsed / 1000) << L"s / " << (estimated / 1000) << L"s)";
+                    str << L"Terrain generation: ";
+                    for(INT i=0; i < 20; ++i)
+                    {
+                        if((DOUBLE)i / 20.0 < percentage)
+                        {
+                            str << "*";
+                        }
+                        else
+                        {
+                            str << "-";
+                        }
+                    }
+                    str << " " << (1e-4 * (DOUBLE)(INT)(1e+6 * percentage)) << L"% (time elapsed / remaining: " << (elapsed / 1000) << L"s / " << (estimated / 1000) << L"s)";
                     Logger::ShowStatus(str.str());
                 }
             }
