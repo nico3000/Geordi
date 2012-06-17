@@ -230,24 +230,40 @@
     <None Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="ConstantBuffer.h" />
+    <ClInclude Include="GameApp.h" />
     <ClInclude Include="GameInitializer.h" />
     <ClInclude Include="GameTimer.h" />
     <ClInclude Include="Geordi.h" />
+    <ClInclude Include="GraphicsLayer.h" />
+    <ClInclude Include="IGameLogic.h" />
+    <ClInclude Include="IndexBuffer.h" />
+    <ClInclude Include="InputController.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TerrainData.h" />
+    <ClInclude Include="VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="ConstantBuffer.cpp" />
+    <ClCompile Include="GameApp.cpp" />
     <ClCompile Include="GameInitializer.cpp" />
     <ClCompile Include="GameTimer.cpp" />
     <ClCompile Include="Geordi.cpp" />
+    <ClCompile Include="GraphicsLayer.cpp" />
+    <ClCompile Include="IndexBuffer.cpp" />
+    <ClCompile Include="InputController.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -257,6 +273,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TerrainData.cpp" />
+    <ClCompile Include="VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Geordi.rc" />

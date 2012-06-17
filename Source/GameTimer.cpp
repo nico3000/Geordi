@@ -2,30 +2,30 @@
 #include "GameTimer.h"
 
 
-GameTimer::GameTimer(VOID):
-m_paused(FALSE), m_sysAccumulator(0), m_gameDeltaMillis(0)
+GameTimer::GameTimer(void):
+m_paused(false), m_sysAccumulator(0), m_gameDeltaMillis(0)
 {
 }
 
 
-GameTimer::~GameTimer(VOID)
+GameTimer::~GameTimer(void)
 {
 }
 
 
-BOOL GameTimer::Init(VOID)
+bool GameTimer::Init(void)
 {
     LARGE_INTEGER frequency, now;
-    BOOL success = QueryPerformanceFrequency(&frequency);
-    m_sysFrequency = (DOUBLE)frequency.QuadPart;
+    int success = QueryPerformanceFrequency(&frequency);
+    m_sysFrequency = (double)frequency.QuadPart;
     QueryPerformanceCounter(&now);
     m_lastStop = now.QuadPart;
     this->SetFactor(1.0f);
-    return success;
+    return success != 0;
 }
 
 
-VOID GameTimer::Next(VOID)
+void GameTimer::Next(void)
 {
     static LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
@@ -34,8 +34,8 @@ VOID GameTimer::Next(VOID)
     if(!m_paused)
     {
         LONGLONG sysDeltaTicks = deltaTicks + m_sysAccumulator;
-        m_sysDeltaMillis = (LONG)((DOUBLE)sysDeltaTicks / (1e-3 * m_sysFrequency));
-        m_sysAccumulator = (LONG)(sysDeltaTicks - (LONGLONG)((DOUBLE)m_sysDeltaMillis * (1e-3 * m_sysFrequency)));
+        m_sysDeltaMillis = (LONG)((double)sysDeltaTicks / (1e-3 * m_sysFrequency));
+        m_sysAccumulator = (LONG)(sysDeltaTicks - (LONGLONG)((double)m_sysDeltaMillis * (1e-3 * m_sysFrequency)));
         StopWatchMap::iterator rtend = m_realtime.end();
         for(StopWatchMap::iterator iter = m_realtime.begin(); iter != rtend; ++iter) 
         {
@@ -43,8 +43,8 @@ VOID GameTimer::Next(VOID)
         }
 
         LONGLONG gameDeltaTicks = deltaTicks + m_gameAccumulator;
-        m_gameDeltaMillis = (LONG)((DOUBLE)gameDeltaTicks / (1e-3 * m_gameFrequency));
-        m_gameAccumulator = (LONG)(gameDeltaTicks - (LONGLONG)((DOUBLE)m_gameDeltaMillis * (1e-3 * m_gameFrequency)));
+        m_gameDeltaMillis = (LONG)((double)gameDeltaTicks / (1e-3 * m_gameFrequency));
+        m_gameAccumulator = (LONG)(gameDeltaTicks - (LONGLONG)((double)m_gameDeltaMillis * (1e-3 * m_gameFrequency)));
         StopWatchMap::iterator gtend = m_gametime.end();
         for(StopWatchMap::iterator iter = m_gametime.begin(); iter != gtend; ++iter) 
         {
@@ -88,7 +88,7 @@ LONG GameTimer::Tock(INT p_id, TockOption p_option)
         {
             static LARGE_INTEGER now;
             QueryPerformanceCounter(&now);
-            time = (LONG)((DOUBLE)(now.QuadPart - m_immediateStops[p_id]) / (1e-3 * m_sysFrequency));
+            time = (LONG)((double)(now.QuadPart - m_immediateStops[p_id]) / (1e-3 * m_sysFrequency));
         }
         else
         {
@@ -115,7 +115,7 @@ LONG GameTimer::Tock(INT p_id, TockOption p_option)
 }
 
 
-INT GameTimer::GetTickTockID(VOID) CONST
+INT GameTimer::GetTickTockID(void) const
 {
     INT id = rand();
     while(m_types.find(id) != m_types.end())

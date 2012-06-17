@@ -5,21 +5,21 @@
 
 MemoryPool Octree::sm_pool;
 
-Octree::Octree(VOID):
+Octree::Octree(void):
 m_pFather(NULL), m_pSons(NULL), m_value(DEFAULT_VALUE)
 {
 }
 
 
-Octree::~Octree(VOID)
+Octree::~Octree(void)
 {
     this->Clear();
 }
 
 
-BOOL Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value)
+bool Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, char p_value)
 {
-    BOOL changed = FALSE;
+    bool changed = false;
     if(this->GetSize() == 1)
     {
         changed = m_value != p_value;
@@ -39,13 +39,13 @@ BOOL Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value)
             }
             else 
             {
-                return FALSE;
+                return false;
             }
         }
         INT index = this->GetSonIndex(p_x, p_y, p_z);
         if(index == -1)
         {
-            return FALSE;
+            return false;
         }
         changed = m_pSons[index].SetValue(p_x, p_y, p_z, p_value);
     }
@@ -64,7 +64,7 @@ BOOL Octree::SetValue(USHORT p_x, USHORT p_y, USHORT p_z, CHAR p_value)
 }
 
 
-CHAR Octree::GetValue(USHORT p_x, USHORT p_y, USHORT p_z) CONST
+char Octree::GetValue(USHORT p_x, USHORT p_y, USHORT p_z) const
 {
     if(m_pSons == NULL)
     {
@@ -78,17 +78,17 @@ CHAR Octree::GetValue(USHORT p_x, USHORT p_y, USHORT p_z) CONST
 }
 
 
-VOID Octree::CheckSons(VOID)
+void Octree::CheckSons(void)
 {
     if(m_pSons != NULL)
     {
         m_value = m_pSons[0].m_value;
-        BOOL collapsable = TRUE;
+        bool collapsable = true;
         for(INT i=0; collapsable && i < 8; ++i) 
         {
             if(!m_pSons[i].IsLeaf() || m_pSons[i].m_value != m_value)
             {
-                collapsable = FALSE;
+                collapsable = false;
             }
         }
         if(collapsable)
@@ -99,7 +99,7 @@ VOID Octree::CheckSons(VOID)
 }
 
 
-INT Octree::GetSonIndex(USHORT p_x, USHORT p_y, USHORT p_z) CONST
+INT Octree::GetSonIndex(USHORT p_x, USHORT p_y, USHORT p_z) const
 {
     INT index = 0;
 #ifdef _DEBUG
@@ -118,7 +118,7 @@ INT Octree::GetSonIndex(USHORT p_x, USHORT p_y, USHORT p_z) CONST
 }
 
 
-BOOL Octree::IsIn(USHORT p_x, USHORT p_y, USHORT p_z) CONST
+bool Octree::IsIn(USHORT p_x, USHORT p_y, USHORT p_z) const
 {
     return this->GetMinX() <= p_x && p_x < this->GetMaxX() &&
            this->GetMinY() <= p_y && p_y < this->GetMaxY() &&
@@ -126,7 +126,7 @@ BOOL Octree::IsIn(USHORT p_x, USHORT p_y, USHORT p_z) CONST
 }
 
 
-VOID Octree::PrintTree(VOID) CONST
+void Octree::PrintTree(void) const
 {
     std::ostringstream str;
     str << "Octree size: " << this->GetSize() << std::endl;
@@ -147,7 +147,7 @@ VOID Octree::PrintTree(VOID) CONST
 }
 
 
-VOID Octree::PrintStructure(VOID) CONST
+void Octree::PrintStructure(void) const
 {
     std::ostringstream str;
     str << "octree size: " << this->GetSize() << ", x dimension: " << this->GetMinX() << " - " << this->GetMaxX() << ", y dimension: " << this->GetMinY() << " - " << this->GetMaxY() << ", z dimension: " << this->GetMinZ() << " - " << this->GetMaxZ() << std::endl;
@@ -162,7 +162,7 @@ VOID Octree::PrintStructure(VOID) CONST
 }
 
 
-ULONG Octree::GetNumNodes(VOID) CONST
+ULONG Octree::GetNumNodes(void) const
 {
     if(m_pSons == NULL)
     {
@@ -182,7 +182,7 @@ ULONG Octree::GetNumNodes(VOID) CONST
 }
 
 
-ULONG Octree::GetNumLeafs(VOID) CONST
+ULONG Octree::GetNumLeafs(void) const
 {
     if(m_pSons == NULL)
     {
@@ -202,7 +202,7 @@ ULONG Octree::GetNumLeafs(VOID) CONST
 }
 
 
-ULONG Octree::GetMaxNumNodes(VOID) CONST
+ULONG Octree::GetMaxNumNodes(void) const
 {
     ULONG sum = 0;
     ULONG start = 1;
@@ -217,7 +217,7 @@ ULONG Octree::GetMaxNumNodes(VOID) CONST
 }
 
 
-VOID Octree::Init(USHORT p_size)
+void Octree::Init(USHORT p_size)
 {
     this->Clear();
 
@@ -230,7 +230,7 @@ VOID Octree::Init(USHORT p_size)
 }
 
 
-VOID Octree::InitIntern(Octree *p_pFather, CHAR p_sonIndex)
+void Octree::InitIntern(Octree *p_pFather, char p_sonIndex)
 {
     //std::cout << p_pFather->m_minX << " " << p_pFather->m_minY << " " << p_pFather->m_minZ << " " << p_pFather->m_size << std::endl;
     m_size = p_pFather->m_size / 2;
@@ -245,7 +245,7 @@ VOID Octree::InitIntern(Octree *p_pFather, CHAR p_sonIndex)
 }
 
 
-BOOL Octree::Init(std::fstream& p_stream)
+bool Octree::Init(std::fstream& p_stream)
 {
     this->Clear();
 
@@ -254,12 +254,12 @@ BOOL Octree::Init(std::fstream& p_stream)
 #if defined(_DEBUG) || defined(PROFILE)
         LI_ERROR("bad stream");
 #endif
-        return FALSE;
+        return false;
     }
     p_stream.seekg(0, std::ios::end);
     UINT length = (UINT)p_stream.tellg();
     p_stream.seekg(0, std::ios::beg);
-    CHAR* pData = new CHAR[length];
+    char* pData = new char[length];
     p_stream.read(pData, length);
 
     this->Init(((USHORT*)pData)[0]);
@@ -267,16 +267,16 @@ BOOL Octree::Init(std::fstream& p_stream)
     //std::cout << "loading octree..." << std::endl;
     //INT id = g_pTimer->Tick(IMMEDIATE);
     this->InitIntern(pData + sizeof(USHORT), NULL, 0);
-    //std::cout << "loading took " << (1e-3 * (DOUBLE)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
+    //std::cout << "loading took " << (1e-3 * (double)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else
     this->InitIntern(pData + sizeof(USHORT), NULL, 0);
 #endif
     SAFE_DELETE_ARRAY(pData);
-    return TRUE;
+    return true;
 }
 
 
-VOID Octree::InitIntern(CHAR* p_pData, Octree* p_pFather, CHAR p_sonIndex)
+void Octree::InitIntern(char* p_pData, Octree* p_pFather, char p_sonIndex)
 {
     if(p_pFather != NULL)
     {
@@ -297,17 +297,17 @@ VOID Octree::InitIntern(CHAR* p_pData, Octree* p_pFather, CHAR p_sonIndex)
 }
 
 
-#define NODE_SIZE_INNER (2 * sizeof(CHAR) + 8 * sizeof(UINT))
-#define NODE_SIZE_LEAF (2 * sizeof(CHAR) + 1 * sizeof(UINT))
+#define NODE_SIZE_INNER (2 * sizeof(char) + 8 * sizeof(UINT))
+#define NODE_SIZE_LEAF (2 * sizeof(char) + 1 * sizeof(UINT))
 #define NODE_SIZE_HEAD (sizeof(USHORT))
 
 
-VOID Octree::Save(std::fstream& p_stream) CONST
+void Octree::Save(std::fstream& p_stream) const
 {
     ULONG numNodes = this->GetNumNodes();
     ULONG numLeafs = this->GetNumLeafs();
     UINT dataSize = (UINT)(NODE_SIZE_HEAD + (numNodes - numLeafs) * NODE_SIZE_INNER + numLeafs * NODE_SIZE_LEAF);
-    CHAR* pData = new CHAR[dataSize];
+    char* pData = new char[dataSize];
     ((USHORT*)pData)[0] = m_size;
     
 #if defined(_DEBUG) || defined(PROFILE)
@@ -320,7 +320,7 @@ VOID Octree::Save(std::fstream& p_stream) CONST
         str << "miscalculated space: " << usedSpace << " / " << dataSize << std::endl;
         LI_LOG_WITH_TAG(str.str());
     }
-    //std::cout << "saving took " << (1e-3 * (DOUBLE)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
+    //std::cout << "saving took " << (1e-3 * (double)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else
     this->SaveIntern(pData + sizeof(USHORT));
 #endif
@@ -329,7 +329,7 @@ VOID Octree::Save(std::fstream& p_stream) CONST
 }
 
 
-CHAR* Octree::SaveIntern(CHAR* p_pData) CONST
+char* Octree::SaveIntern(char* p_pData) const
 {
     p_pData[0] = m_value;
     p_pData[1] = m_flags;
@@ -340,7 +340,7 @@ CHAR* Octree::SaveIntern(CHAR* p_pData) CONST
     }
     else
     {        
-        CHAR* pNode = p_pData + NODE_SIZE_INNER;
+        char* pNode = p_pData + NODE_SIZE_INNER;
         for(INT i=0; i < 8; ++i) 
         {
             ((UINT*)(p_pData + 2))[i] = (UINT)(pNode - p_pData);
@@ -351,14 +351,14 @@ CHAR* Octree::SaveIntern(CHAR* p_pData) CONST
 }
 
 
-BOOL Octree::operator==(Octree CONST& second) CONST
+bool Octree::operator==(Octree const& second) const
 {
     if(this->GetSize() != second.GetSize())
     {
 #if defined(_DEBUG) || defined(PROFILE)
         std::cout << this->GetSize() << " != " << second.GetSize() << std::endl;
 #endif
-        return FALSE;
+        return false;
     }
     USHORT minX = this->GetMinX();
     USHORT minY = this->GetMinY();
@@ -372,23 +372,23 @@ BOOL Octree::operator==(Octree CONST& second) CONST
         {
             for(USHORT z=0; z < this->GetSize(); ++z)
             {
-                CHAR val1 = this->GetValue(minX + x, minY + y, minZ + z);
-                CHAR val2 = second.GetValue(secondMinX + x, secondMinY + y, secondMinZ + z);
+                char val1 = this->GetValue(minX + x, minY + y, minZ + z);
+                char val2 = second.GetValue(secondMinX + x, secondMinY + y, secondMinZ + z);
                 if(val1 != val2)
                 {
 #if defined(_DEBUG) || defined(PROFILE)
                     std::cout << "val mismatch: " << x << " " << y << " " << z << std::endl;
 #endif
-                    return FALSE;
+                    return false;
                 }
             }
         }
     }
-    return TRUE;
+    return true;
 }
 
 
-VOID Octree::ClearSons(VOID)
+void Octree::ClearSons(void)
 {
     if(!this->IsLeaf())
     {
@@ -402,7 +402,7 @@ VOID Octree::ClearSons(VOID)
 }
 
 
-VOID Octree::Clear(VOID)
+void Octree::Clear(void)
 {
     this->ClearSons();
     m_value = DEFAULT_VALUE;

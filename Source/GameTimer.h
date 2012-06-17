@@ -15,35 +15,35 @@ typedef std::hash_map<INT,TickOption> StopWatchTypeMap;
 class GameTimer
 {
 private:
-    DOUBLE           m_sysFrequency;
+    double           m_sysFrequency;
     LONG             m_sysAccumulator;
     LONG             m_sysDeltaMillis;
     StopWatchMap     m_realtime;
-    DOUBLE           m_gameFrequency;
+    double           m_gameFrequency;
     LONG             m_gameAccumulator;
     LONG             m_gameDeltaMillis;
     StopWatchMap     m_gametime;
     LONGLONG         m_lastStop;
-    BOOL             m_paused;
+    bool             m_paused;
     ImmediateMap     m_immediateStops;
     StopWatchTypeMap m_types;
 
-    INT GetTickTockID(VOID) CONST;
+    INT GetTickTockID(void) const;
     INT Tick(INT p_id, TickOption p_option);
     
 public:
-    GameTimer(VOID);
-    ~GameTimer(VOID);
+    GameTimer(void);
+    ~GameTimer(void);
 
-    BOOL Init(VOID);
-    VOID Next(VOID);
+    bool Init(void);
+    void Next(void);
     LONG Tock(INT p_id, TockOption p_option);
 
     INT Tick(TickOption p_option) { return this->Tick(this->GetTickTockID(), p_option); }
-    VOID Pause(VOID) { m_paused = TRUE; }
-    VOID Resume(VOID) { m_paused = FALSE; }
-    VOID SetFactor(DOUBLE p_factor) { m_gameFrequency = m_sysFrequency / p_factor; }
-    LONG GetGameDeltaMillis(VOID) CONST { return m_gameDeltaMillis; }
-    LONG GetSysDeltaMillis(VOID) CONST { return m_sysDeltaMillis; }
+    void Pause(void) { m_paused = true; }
+    void Resume(void) { m_paused = false; }
+    void SetFactor(double p_factor) { m_gameFrequency = m_sysFrequency / p_factor; }
+    LONG GetGameDeltaMillis(void) const { return m_gameDeltaMillis; }
+    LONG GetSysDeltaMillis(void) const { return m_sysDeltaMillis; }
 };
 

@@ -11,34 +11,34 @@ private:
     USHORT m_octreeSize;
     USHORT m_activeOctrees;
     USHORT m_maxActiveOctrees;
-    FLOAT m_minX;
-    FLOAT m_minY;
-    FLOAT m_minZ;
-    FLOAT m_maxX;
-    FLOAT m_maxY;
-    FLOAT m_maxZ;
+    float m_minX;
+    float m_minY;
+    float m_minZ;
+    float m_maxX;
+    float m_maxY;
+    float m_maxZ;
 
-    CHAR Density2Value(FLOAT p_density) CONST;
-    FLOAT Value2Density(SHORT p_value) CONST;
-    VOID Grid2World(INT p_gridX, INT p_gridY, INT p_gridZ, FLOAT& p_worldX, FLOAT& p_worldY, FLOAT& p_worldZ) CONST;
-    VOID World2Grid(FLOAT p_worldX, FLOAT p_worldY, FLOAT p_worldZ, INT& p_gridX, INT& p_gridY, INT& p_gridZ) CONST;
-    VOID UseTile(INT tileX, INT tileY, INT tileZ);
-    VOID UnuseTile(INT tileX, INT tileY, INT tileZ);
-    BOOL IsTileActive(INT tileX, INT tileY, INT tileZ) CONST;
+    char Density2Value(float p_density) const;
+    float Value2Density(SHORT p_value) const;
+    void Grid2World(INT p_gridX, INT p_gridY, INT p_gridZ, float& p_worldX, float& p_worldY, float& p_worldZ) const;
+    void World2Grid(float p_worldX, float p_worldY, float p_worldZ, INT& p_gridX, INT& p_gridY, INT& p_gridZ) const;
+    void UseTile(INT tileX, INT tileY, INT tileZ);
+    void UnuseTile(INT tileX, INT tileY, INT tileZ);
+    bool IsTileActive(INT tileX, INT tileY, INT tileZ) const;
 
 public:
-    TerrainData(VOID);
-    ~TerrainData(VOID);
+    TerrainData(void);
+    ~TerrainData(void);
 
-    BOOL Init(USHORT p_octreeSize, USHORT p_gridSizeX, USHORT p_gridSizeY, USHORT p_gridSizeZ, USHORT p_maxActiveOctrees);
-    VOID SetDimension(FLOAT p_minX, FLOAT p_minY, FLOAT p_minZ, FLOAT p_maxX, FLOAT p_maxY, FLOAT p_maxZ);
-    VOID SetDensity(INT x, INT y, INT z, FLOAT p_density);
-    VOID SaveAllTiles(VOID) CONST;
-    VOID SaveTileToDisk(INT tileX, INT tileY, INT tileZ) CONST;
-    VOID LoadTileFromDisk(INT tileX, INT tileY, INT tileZ);
+    bool Init(USHORT p_octreeSize, USHORT p_gridSizeX, USHORT p_gridSizeY, USHORT p_gridSizeZ, USHORT p_maxActiveOctrees);
+    void SetDimension(float p_minX, float p_minY, float p_minZ, float p_maxX, float p_maxY, float p_maxZ);
+    void SetDensity(INT x, INT y, INT z, float p_density);
+    void SaveAllTiles(void) const;
+    void SaveTileToDisk(INT tileX, INT tileY, INT tileZ) const;
+    void LoadTileFromDisk(INT tileX, INT tileY, INT tileZ);
 
-    VOID Test(VOID);
-    VOID GenerateTestData(VOID);
-    VOID PrintOctFileContents(string p_filename) CONST;
+    void Test(void);
+    void GenerateTestData(void);
+    void PrintOctFileContents(std::string p_filename) const;
 };
 

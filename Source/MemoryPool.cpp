@@ -3,16 +3,16 @@
 
 #define LI_LOGGER_TAG "MemoryPool"
 
-CONST SIZE_T MemoryPool::CHUNK_HEADER_SIZE = sizeof(UCHAR*);
+const SIZE_T MemoryPool::CHUNK_HEADER_SIZE = sizeof(unsigned char*);
 
 
-MemoryPool::MemoryPool(VOID):
+MemoryPool::MemoryPool(void):
 m_ppRawMemArray(NULL), m_memArraySize(0), m_pHead(NULL), m_allocated(0)
 {
 }
 
 
-MemoryPool::~MemoryPool(VOID)
+MemoryPool::~MemoryPool(void)
 {
 #if defined(_DEBUG) || defined(PROFILE)
     if(m_allocated != 0)
@@ -27,7 +27,7 @@ MemoryPool::~MemoryPool(VOID)
 }
 
 
-BOOL MemoryPool::Init(INT p_chunkSize, INT p_numChunks, BOOL p_resizable)
+bool MemoryPool::Init(INT p_chunkSize, INT p_numChunks, bool p_resizable)
 {
     m_chunkSize = p_chunkSize;
     m_numChunks = p_numChunks;
@@ -36,9 +36,9 @@ BOOL MemoryPool::Init(INT p_chunkSize, INT p_numChunks, BOOL p_resizable)
 }
 
 
-BOOL MemoryPool::GrowMemory(VOID)
+bool MemoryPool::GrowMemory(void)
 {
-    UCHAR** ppMemArray = new UCHAR*[m_memArraySize+1];
+    unsigned char** ppMemArray = new unsigned char*[m_memArraySize+1];
     for(UINT i=0; i < m_memArraySize; ++i)
     {
         ppMemArray[i] = m_ppRawMemArray[i];
@@ -47,8 +47,8 @@ BOOL MemoryPool::GrowMemory(VOID)
 
     if(m_pHead != NULL)
     {
-        UCHAR* pCurrent = m_pHead;
-        UCHAR* pNext = this->GetNext(pCurrent);
+        unsigned char* pCurrent = m_pHead;
+        unsigned char* pNext = this->GetNext(pCurrent);
         while(pNext != NULL) {
             pCurrent = pNext;
             pNext = this->GetNext(pCurrent);
@@ -63,22 +63,22 @@ BOOL MemoryPool::GrowMemory(VOID)
     ++m_memArraySize;
     delete[] m_ppRawMemArray;
     m_ppRawMemArray = ppMemArray;
-    return TRUE;
+    return true;
 }
 
 
-UCHAR* MemoryPool::CreateNewMemoryBlock(VOID)
+unsigned char* MemoryPool::CreateNewMemoryBlock(void)
 {
     size_t blockSize = CHUNK_HEADER_SIZE + m_chunkSize;
     size_t memBlockSize = m_numChunks * blockSize;
 
-    UCHAR* pMemBlock = new UCHAR[memBlockSize];
-    UCHAR* pCurrent = pMemBlock;
-    UCHAR* pEnd = pMemBlock + memBlockSize;
+    unsigned char* pMemBlock = new unsigned char[memBlockSize];
+    unsigned char* pCurrent = pMemBlock;
+    unsigned char* pEnd = pMemBlock + memBlockSize;
     while(pCurrent < pEnd)
     {
-        UCHAR* pNext = pCurrent + blockSize;
-        UCHAR** pChunkHeader = (UCHAR**)pCurrent;
+        unsigned char* pNext = pCurrent + blockSize;
+        unsigned char** pChunkHeader = (unsigned char**)pCurrent;
         pChunkHeader[0] = (pNext < pEnd ? pNext : NULL);
         pCurrent += blockSize;
     }
@@ -86,21 +86,21 @@ UCHAR* MemoryPool::CreateNewMemoryBlock(VOID)
 }
 
 
-UCHAR* MemoryPool::GetNext(UCHAR* p_pBlock) CONST
+unsigned char* MemoryPool::GetNext(unsigned char* p_pBlock) const
 {
-    UCHAR** pChunkHeader = (UCHAR**)p_pBlock;
+    unsigned char** pChunkHeader = (unsigned char**)p_pBlock;
     return pChunkHeader[0];
 }
 
 
-VOID MemoryPool::SetNext(UCHAR* p_pBlock, UCHAR* p_pNext)
+void MemoryPool::SetNext(unsigned char* p_pBlock, unsigned char* p_pNext)
 {
-    UCHAR** pChunkHeader = (UCHAR**)p_pBlock;
+    unsigned char** pChunkHeader = (unsigned char**)p_pBlock;
     pChunkHeader[0] = p_pNext;
 }
 
 
-VOID* MemoryPool::Alloc(VOID)
+void* MemoryPool::Alloc(void)
 {
     if(m_pHead == NULL) 
     {
@@ -114,26 +114,26 @@ VOID* MemoryPool::Alloc(VOID)
         }
     }
     ++m_allocated;
-    UCHAR* pMem = m_pHead;
+    unsigned char* pMem = m_pHead;
     m_pHead = this->GetNext(pMem);
     return pMem + CHUNK_HEADER_SIZE;
 }
 
 
-VOID MemoryPool::Free(VOID* p_pMem)
+void MemoryPool::Free(void* p_pMem)
 {
     if(p_pMem == NULL)
     {
         return;
     }
-    UCHAR* pOldHead = m_pHead;
-    m_pHead = (UCHAR*)p_pMem - CHUNK_HEADER_SIZE;
+    unsigned char* pOldHead = m_pHead;
+    m_pHead = (unsigned char*)p_pMem - CHUNK_HEADER_SIZE;
     this->SetNext(m_pHead, pOldHead);
     --m_allocated;
 }
 
 
-VOID MemoryPool::PrintInfo(VOID) CONST
+void MemoryPool::PrintInfo(void) const
 {
     std::ostringstream str;
     str << "chunk size: " << FormatBytes(this->GetChunkSize()) << std::endl
@@ -145,7 +145,7 @@ VOID MemoryPool::PrintInfo(VOID) CONST
 }
 
 
-string MemoryPool::FormatBytes(SIZE_T p_bytes)
+std::string MemoryPool::FormatBytes(SIZE_T p_bytes)
 {
     INT unit = 0;
     while(p_bytes > 4096 && unit < 3)

@@ -3,13 +3,12 @@
 #include <iostream>
 #include <fstream>
 
-using namespace LostIsland;
 #define OCTREE_LOADED 1
 #define TEST_DIR "octree"
 #define TILE(_x, _y, _z) m_pData[(_z) * m_pGridSize[0] * m_pGridSize[1] + (_y) * m_pGridSize[0] + (_x)]
 #define LAST_USED(_x, _y, _z) m_pLastUsed[(_z) * m_pGridSize[0] * m_pGridSize[1] + (_y) * m_pGridSize[0] + (_x)]
 
-TerrainData::TerrainData(VOID):
+TerrainData::TerrainData(void):
     m_pData(NULL), m_pLastUsed(NULL), m_activeOctrees(0)
 {
 }
@@ -22,12 +21,12 @@ TerrainData::~TerrainData(void)
 }
 
 
-BOOL TerrainData::Init(USHORT p_octreeSize, USHORT p_gridSizeX, USHORT p_gridSizeY, USHORT p_gridSizeZ, USHORT p_maxActiveOctrees)
+bool TerrainData::Init(USHORT p_octreeSize, USHORT p_gridSizeX, USHORT p_gridSizeY, USHORT p_gridSizeZ, USHORT p_maxActiveOctrees)
 {
-    BOOL result = Octree::InitMemoryPool(p_octreeSize * p_octreeSize); // TODO: educated guess :P
+    bool result = Octree::InitMemoryPool(p_octreeSize * p_octreeSize); // TODO: educated guess :P
     if(!result)
     {
-        return FALSE;
+        return false;
     }
     else
     {
@@ -40,18 +39,18 @@ BOOL TerrainData::Init(USHORT p_octreeSize, USHORT p_gridSizeX, USHORT p_gridSiz
         m_pLastUsed = new LONGLONG[p_gridSizeX * p_gridSizeY * p_gridSizeZ];
         ZeroMemory(m_pData, p_gridSizeX * p_gridSizeY * p_gridSizeZ * sizeof(Octree));
         ZeroMemory(m_pLastUsed, p_gridSizeX * p_gridSizeY * p_gridSizeZ * sizeof(LONGLONG));
-        this->SetDimension(-0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeX * p_octreeSize),
-                           -0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeY * p_octreeSize),
-                           -0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeZ * p_octreeSize),
-                           +0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeX * p_octreeSize),
-                           +0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeY * p_octreeSize),
-                           +0.5f * METRES_PER_UNIT * (FLOAT)(p_gridSizeZ * p_octreeSize));
-        return TRUE;
+        this->SetDimension(-0.5f * METRES_PER_UNIT * (float)(p_gridSizeX * p_octreeSize),
+                           -0.5f * METRES_PER_UNIT * (float)(p_gridSizeY * p_octreeSize),
+                           -0.5f * METRES_PER_UNIT * (float)(p_gridSizeZ * p_octreeSize),
+                           +0.5f * METRES_PER_UNIT * (float)(p_gridSizeX * p_octreeSize),
+                           +0.5f * METRES_PER_UNIT * (float)(p_gridSizeY * p_octreeSize),
+                           +0.5f * METRES_PER_UNIT * (float)(p_gridSizeZ * p_octreeSize));
+        return true;
     }
 }
 
 
-VOID TerrainData::UseTile(INT tileX, INT tileY, INT tileZ)
+void TerrainData::UseTile(INT tileX, INT tileY, INT tileZ)
 {
     if(!this->IsTileActive(tileX, tileY, tileZ))
     {
@@ -86,7 +85,7 @@ VOID TerrainData::UseTile(INT tileX, INT tileY, INT tileZ)
 }
 
 
-VOID TerrainData::UnuseTile(INT tileX, INT tileY, INT tileZ)
+void TerrainData::UnuseTile(INT tileX, INT tileY, INT tileZ)
 {
     if(this->IsTileActive(tileX, tileY, tileZ))
     {
@@ -98,13 +97,13 @@ VOID TerrainData::UnuseTile(INT tileX, INT tileY, INT tileZ)
 }
 
 
-BOOL TerrainData::IsTileActive(INT tileX, INT tileY, INT tileZ) CONST
+bool TerrainData::IsTileActive(INT tileX, INT tileY, INT tileZ) const
 {
     return (TILE(tileX, tileY, tileZ).ReadFlag() & OCTREE_LOADED) == OCTREE_LOADED;
 }
 
 
-VOID TerrainData::Test(VOID)
+void TerrainData::Test(void)
 {
     this->GenerateTestData();
     this->SaveAllTiles();
@@ -128,7 +127,7 @@ VOID TerrainData::Test(VOID)
     //    {
     //        for(INT z=0; z < size; ++z)
     //        {
-    //            CHAR val = 0;
+    //            char val = 0;
     //            if(x >= size/2)
     //            {
     //                val |= 1;
@@ -168,7 +167,7 @@ VOID TerrainData::Test(VOID)
 }
 
 
-VOID TerrainData::SaveAllTiles(VOID) CONST
+void TerrainData::SaveAllTiles(void) const
 {
     for(INT x=0; x < m_pGridSize[0]; ++x)
     {
@@ -184,7 +183,7 @@ VOID TerrainData::SaveAllTiles(VOID) CONST
 }
 
 
-VOID TerrainData::SaveTileToDisk(INT tileX, INT tileY, INT tileZ) CONST
+void TerrainData::SaveTileToDisk(INT tileX, INT tileY, INT tileZ) const
 {
     if(this->IsTileActive(tileX, tileY, tileZ))
     {
@@ -207,7 +206,7 @@ VOID TerrainData::SaveTileToDisk(INT tileX, INT tileY, INT tileZ) CONST
 }
 
 
-VOID TerrainData::LoadTileFromDisk(INT tileX, INT tileY, INT tileZ)
+void TerrainData::LoadTileFromDisk(INT tileX, INT tileY, INT tileZ)
 {
     std::stringstream strStream;
     strStream << TEST_DIR << "/r" << tileX << "." << tileY << ".oct";
@@ -227,7 +226,7 @@ VOID TerrainData::LoadTileFromDisk(INT tileX, INT tileY, INT tileZ)
 }
 
 
-VOID TerrainData::SetDimension(FLOAT p_minX, FLOAT p_minY, FLOAT p_minZ, FLOAT p_maxX, FLOAT p_maxY, FLOAT p_maxZ)
+void TerrainData::SetDimension(float p_minX, float p_minY, float p_minZ, float p_maxX, float p_maxY, float p_maxZ)
 {
     m_minX = p_minX;
     m_minY = p_minY;
@@ -241,20 +240,20 @@ VOID TerrainData::SetDimension(FLOAT p_minX, FLOAT p_minY, FLOAT p_minZ, FLOAT p
 }
 
 
-CHAR TerrainData::Density2Value(FLOAT p_density) CONST
+char TerrainData::Density2Value(float p_density) const
 {
     p_density = 1.0f + CLAMP(p_density, -1.0f, +1.0f);
-    return (CHAR)MIX((FLOAT)CHAR_MIN, (FLOAT)CHAR_MAX, 0.5f*p_density);
+    return (char)MIX((float)CHAR_MIN, (float)CHAR_MAX, 0.5f*p_density);
 }
 
 
-FLOAT TerrainData::Value2Density(SHORT p_value) CONST
+float TerrainData::Value2Density(SHORT p_value) const
 {
-    return 2.0f * LERP(p_value, (FLOAT)CHAR_MIN, (FLOAT)CHAR_MAX) - 1.0f;
+    return 2.0f * LERP(p_value, (float)CHAR_MIN, (float)CHAR_MAX) - 1.0f;
 }
 
 
-VOID TerrainData::SetDensity(INT x, INT y, INT z, FLOAT p_density)
+void TerrainData::SetDensity(INT x, INT y, INT z, float p_density)
 {
     INT tileX = x / m_octreeSize;
     INT tileY = y / m_octreeSize;
@@ -270,23 +269,23 @@ VOID TerrainData::SetDensity(INT x, INT y, INT z, FLOAT p_density)
 }
 
 
-VOID TerrainData::Grid2World(INT p_gridX, INT p_gridY, INT p_gridZ, FLOAT& p_worldX, FLOAT& p_worldY, FLOAT& p_worldZ) CONST
+void TerrainData::Grid2World(INT p_gridX, INT p_gridY, INT p_gridZ, float& p_worldX, float& p_worldY, float& p_worldZ) const
 {
-    p_worldX = m_minX + (m_maxX - m_minX) * LERP((FLOAT)p_gridX, 0.0f, (FLOAT)(m_pGridSize[0] * m_octreeSize));
-    p_worldY = m_minY + (m_maxY - m_minY) * LERP((FLOAT)p_gridY, 0.0f, (FLOAT)(m_pGridSize[1] * m_octreeSize));
-    p_worldZ = m_minZ + (m_maxZ - m_minZ) * LERP((FLOAT)p_gridZ, 0.0f, (FLOAT)(m_pGridSize[2] * m_octreeSize));
+    p_worldX = m_minX + (m_maxX - m_minX) * LERP((float)p_gridX, 0.0f, (float)(m_pGridSize[0] * m_octreeSize));
+    p_worldY = m_minY + (m_maxY - m_minY) * LERP((float)p_gridY, 0.0f, (float)(m_pGridSize[1] * m_octreeSize));
+    p_worldZ = m_minZ + (m_maxZ - m_minZ) * LERP((float)p_gridZ, 0.0f, (float)(m_pGridSize[2] * m_octreeSize));
 }
 
 
-VOID TerrainData::World2Grid(FLOAT p_worldX, FLOAT p_worldY, FLOAT p_worldZ, INT& p_gridX, INT& p_gridY, INT& p_gridZ) CONST
+void TerrainData::World2Grid(float p_worldX, float p_worldY, float p_worldZ, INT& p_gridX, INT& p_gridY, INT& p_gridZ) const
 {
-    p_gridX = (INT)((FLOAT)(m_pGridSize[0] * m_octreeSize) * LERP(p_worldX, m_minX, m_maxX));
-    p_gridY = (INT)((FLOAT)(m_pGridSize[1] * m_octreeSize) * LERP(p_worldY, m_minY, m_maxY));
-    p_gridZ = (INT)((FLOAT)(m_pGridSize[2] * m_octreeSize) * LERP(p_worldZ, m_minZ, m_maxZ));
+    p_gridX = (INT)((float)(m_pGridSize[0] * m_octreeSize) * LERP(p_worldX, m_minX, m_maxX));
+    p_gridY = (INT)((float)(m_pGridSize[1] * m_octreeSize) * LERP(p_worldY, m_minY, m_maxY));
+    p_gridZ = (INT)((float)(m_pGridSize[2] * m_octreeSize) * LERP(p_worldZ, m_minZ, m_maxZ));
 }
 
 
-VOID TerrainData::GenerateTestData(VOID)
+void TerrainData::GenerateTestData(void)
 {
     //m_pData->SetValue(0,0,0,1);
     //m_pData->SetValue(1,1,1,2);
@@ -295,9 +294,9 @@ VOID TerrainData::GenerateTestData(VOID)
     //return;
 
     std::cout << "generating " << (m_pGridSize[0] * m_octreeSize) << "x" << (m_pGridSize[1] * m_octreeSize) << "x" << (m_pGridSize[2] * m_octreeSize) << " octree..." << std::endl;
-    INT id = g_pTimer->Tick(IMMEDIATE);
+    INT id = LostIsland::g_pTimer->Tick(IMMEDIATE);
 
-    DOUBLE nextPercentageOutput = 0;
+    double nextPercentageOutput = 0;
     LONG lastStop = 0;
     ULONGLONG current = 0;
     ULONGLONG target = (ULONGLONG)(m_pGridSize[0] * m_octreeSize) * (m_pGridSize[1] * m_octreeSize) * (m_pGridSize[2] * m_octreeSize);
@@ -308,18 +307,18 @@ VOID TerrainData::GenerateTestData(VOID)
         {
             for(INT z=0; z < (m_pGridSize[2] * m_octreeSize); ++z) 
             {
-                FLOAT worldX, worldY, worldZ;
+                float worldX, worldY, worldZ;
                 this->Grid2World(x, y, z, worldX, worldY, worldZ);
                 
-                FLOAT density = 10.0f * sin(6.282f * LERP(worldX, m_minX, m_maxX)) * cos(6.282f * LERP(worldZ, m_minZ, m_maxZ));
+                float density = 10.0f * sin(6.282f * LERP(worldX, m_minX, m_maxX)) * cos(6.282f * LERP(worldZ, m_minZ, m_maxZ));
                 this->SetDensity(x, y, z, density);
 
-                DOUBLE percentage = (DOUBLE)++current / (DOUBLE)target;
-                LONG elapsed = g_pTimer->Tock(id, KEEPRUNNING);
+                double percentage = (double)++current / (double)target;
+                LONG elapsed = LostIsland::g_pTimer->Tock(id, KEEPRUNNING);
                 if(percentage >= nextPercentageOutput || lastStop + 250 < elapsed)
                 {
                     lastStop = elapsed;
-                    DOUBLE progressPerTime = percentage / (DOUBLE)elapsed;
+                    double progressPerTime = percentage / (double)elapsed;
                     INT estimated = (INT)((1.0 - percentage) / progressPerTime);
                     if(percentage >= nextPercentageOutput)
                     {
@@ -330,7 +329,7 @@ VOID TerrainData::GenerateTestData(VOID)
                     str << L"Terrain generation: ";
                     for(INT i=0; i < 20; ++i)
                     {
-                        if((DOUBLE)i / 20.0 < percentage)
+                        if((double)i / 20.0 < percentage)
                         {
                             str << "*";
                         }
@@ -339,41 +338,41 @@ VOID TerrainData::GenerateTestData(VOID)
                             str << "-";
                         }
                     }
-                    str << " " << (1e-4 * (DOUBLE)(INT)(1e+6 * percentage)) << L"% (time elapsed / remaining: " << (elapsed / 1000) << L"s / " << (estimated / 1000) << L"s)";
+                    str << " " << (1e-4 * (double)(INT)(1e+6 * percentage)) << L"% (time elapsed / remaining: " << (elapsed / 1000) << L"s / " << (estimated / 1000) << L"s)";
                     //Logger::ShowStatus(str.str());
                 }
             }
         }
     }
 
-    std::cout << std::endl << "generation took " << (1e-3 * (DOUBLE)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl << std::endl;
+    std::cout << std::endl << "generation took " << (1e-3 * (double)LostIsland::g_pTimer->Tock(id, ERASE)) << " secs" << std::endl << std::endl;
 }
 
 
-VOID TerrainData::PrintOctFileContents(string p_filename) CONST
+void TerrainData::PrintOctFileContents(std::string p_filename) const
 {
     std::fstream str;
     str.open(p_filename, std::ios::in | std::ios::binary);
     if(str.is_open())
     {
         USHORT size;
-        str.read((CHAR*)&size, sizeof(USHORT));
+        str.read((char*)&size, sizeof(USHORT));
         std::cout << "octree size: " << size << std::endl;
 
         while(str.good())
         {
-            static CHAR value;
-            static CHAR flags;
+            static char value;
+            static char flags;
             static INT pSons[8];
             static INT currentPos;
             currentPos = (INT)str.tellg();
-            str.read(&value, sizeof(CHAR));
-            str.read(&flags, sizeof(CHAR));
+            str.read(&value, sizeof(char));
+            str.read(&flags, sizeof(char));
             std::cout << currentPos << ": value: " << (INT)value << ", flags: " << (INT)flags;
-            str.read((CHAR*)pSons, sizeof(INT));
+            str.read((char*)pSons, sizeof(INT));
             if(pSons[0] != 0)
             {
-                str.read((CHAR*)(pSons + 1), 7 * sizeof(INT));
+                str.read((char*)(pSons + 1), 7 * sizeof(INT));
                 std::cout << ", sons: " << pSons[0] << " " << pSons[1] << " " << pSons[2] << " " << pSons[3] << " " << pSons[4] << " " << pSons[5] << " " << pSons[6] << " " << pSons[7] << std::endl;
             }
             else

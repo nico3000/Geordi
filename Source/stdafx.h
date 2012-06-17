@@ -21,13 +21,6 @@
 #include <tchar.h>
 
 // TODO: reference additional headers your program requires here
-#include <d3d11.h>
-#include <D3DX11.h>
-#include <xnamath.h>
-#include <DxErr.h>
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "d3dx11.lib")
-#pragma comment(lib, "DxErr.lib")
 
 // used for status bar
 #include <Commctrl.h>
@@ -48,11 +41,16 @@
 #include <streambuf>
 #include <fstream>
 #include <sstream>
-using std::wstring;
-using std::string;
+
+//#define DXUT_AUTOLIB
+//#include <DXUT.h>
+//#pragma comment(lib, "DXUT.lib")
 
 #ifndef DEBUG_NEW
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)
+#endif
+
+#ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
@@ -63,10 +61,24 @@ using std::string;
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
 
-#define SAFE_RELEASE(_resource){ if((_resource) != NULL) { (_resource)->Release(); (_resource) = NULL; } }
-#define SAFE_DELETE(_ptr) { if((_ptr) != NULL) { delete (_ptr); (_ptr) = NULL; } }
-#define SAFE_DELETE_ARRAY(_ptr) { if((_ptr) != NULL) { delete[] (_ptr); (_ptr) = NULL; } }
-#define RETURN_IF_FAILED(_hr, _errorMsg) { if(FAILED(_hr)) { LI_ERROR(DXGetErrorDescriptionA(_hr)); return hr; } }
+#define SAFE_DELETE(_ptr) do    \
+{                               \
+    if((_ptr) != NULL)          \
+    {                           \
+        delete (_ptr);          \
+        (_ptr) = NULL;          \
+    }                           \
+} while(0)
+
+#define SAFE_DELETE_ARRAY(_ptr) do  \
+{                                   \
+    if((_ptr) != NULL)              \
+    {                               \
+        delete[] (_ptr);            \
+        (_ptr) = NULL;              \
+    }                               \
+} while(0)
+
 #define CLAMP(_val, _min, _max) max(_min, min(_val, _max))
 #define LERP(_val, _min, _max) (((_val) - (_min)) / ((_max) - (_min)))
 #define MIX(_val1, _val2, _t) ((1.0f - _t) * (_val1) + (_t) * (_val2))

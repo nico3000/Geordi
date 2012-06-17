@@ -4,36 +4,36 @@
 class MemoryPool
 {
 private:
-    CONST static SIZE_T CHUNK_HEADER_SIZE;
+    const static SIZE_T CHUNK_HEADER_SIZE;
 
-    UCHAR** m_ppRawMemArray;
+    unsigned char** m_ppRawMemArray;
     UINT    m_memArraySize;
     UINT    m_chunkSize;
     UINT    m_numChunks;
-    BOOL    m_resizable;
-    UCHAR*  m_pHead;
+    bool    m_resizable;
+    unsigned char*  m_pHead;
     UINT    m_allocated;
 
-    BOOL GrowMemory(VOID);
-    UCHAR* CreateNewMemoryBlock(VOID);
-    UCHAR* GetNext(UCHAR* p_pBlock) CONST;
-    VOID SetNext(UCHAR* p_pBlock, UCHAR* p_pNext);
+    bool GrowMemory(void);
+    unsigned char* CreateNewMemoryBlock(void);
+    unsigned char* GetNext(unsigned char* p_pBlock) const;
+    void SetNext(unsigned char* p_pBlock, unsigned char* p_pNext);
 
-    static string FormatBytes(SIZE_T p_bytes);
+    static std::string FormatBytes(SIZE_T p_bytes);
 
 public:
-    MemoryPool(VOID);
-    ~MemoryPool(VOID);
+    MemoryPool(void);
+    ~MemoryPool(void);
 
-    BOOL Init(INT p_chunkSize, INT p_numChunks, BOOL p_resizeable);
-    VOID* Alloc(VOID);
-    VOID Free(VOID* p_pMem);
-    VOID PrintInfo(VOID) CONST;
+    bool Init(INT p_chunkSize, INT p_numChunks, bool p_resizeable);
+    void* Alloc(void);
+    void Free(void* p_pMem);
+    void PrintInfo(void) const;
 
-    SIZE_T GetSystemAllocatedBytes(VOID) CONST { return m_memArraySize * m_numChunks * (m_chunkSize + CHUNK_HEADER_SIZE); }
-    SIZE_T GetPoolAllocatedChunks(VOID) CONST { return m_allocated; }
-    SIZE_T GetPoolAllocatedBytes(VOID) CONST { return m_allocated * (m_chunkSize + CHUNK_HEADER_SIZE); }
-    SIZE_T GetPoolFreeBytes(VOID) CONST { return (m_memArraySize * m_numChunks - m_allocated) * (m_chunkSize + CHUNK_HEADER_SIZE); }
-    DOUBLE GetPoolUsage(VOID) CONST { return (DOUBLE)this->GetPoolAllocatedBytes() / (DOUBLE)(this->GetPoolAllocatedBytes() + this->GetPoolFreeBytes()); }
-    UINT GetChunkSize(VOID) CONST { return m_chunkSize; }
+    SIZE_T GetSystemAllocatedBytes(void) const { return m_memArraySize * m_numChunks * (m_chunkSize + CHUNK_HEADER_SIZE); }
+    SIZE_T GetPoolAllocatedChunks(void) const { return m_allocated; }
+    SIZE_T GetPoolAllocatedBytes(void) const { return m_allocated * (m_chunkSize + CHUNK_HEADER_SIZE); }
+    SIZE_T GetPoolFreeBytes(void) const { return (m_memArraySize * m_numChunks - m_allocated) * (m_chunkSize + CHUNK_HEADER_SIZE); }
+    double GetPoolUsage(void) const { return (double)this->GetPoolAllocatedBytes() / (double)(this->GetPoolAllocatedBytes() + this->GetPoolFreeBytes()); }
+    UINT GetChunkSize(void) const { return m_chunkSize; }
 };

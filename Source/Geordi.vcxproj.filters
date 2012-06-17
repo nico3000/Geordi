@@ -25,6 +25,18 @@
     <Filter Include="Header Files\GameLogic">
       <UniqueIdentifier>{96220e4c-e8cc-49d3-8c11-71c41174659d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GameApplicationLayer\Graphics">
+      <UniqueIdentifier>{7ecdb879-bd38-494d-82ff-769e49b4ed7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameApplicationLayer\Graphics">
+      <UniqueIdentifier>{aeeb012e-6cce-4371-8ed9-91ef9e884b1e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GameView">
+      <UniqueIdentifier>{ac76495c-a763-4430-8c9c-6a3275288af1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameView">
+      <UniqueIdentifier>{b0b3e52c-ec0b-49ae-8fb6-3b10c5eaec18}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -66,6 +78,33 @@
     <ClInclude Include="Octree.h">
       <Filter>Header Files\GameLogic</Filter>
     </ClInclude>
+    <ClInclude Include="GameApp.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsLayer.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
+    <ClInclude Include="IGameLogic.h">
+      <Filter>Header Files\GameLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderProgram.h">
+      <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexBuffer.h">
+      <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="IndexBuffer.h">
+      <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="ConstantBuffer.h">
+      <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="InputController.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -91,6 +130,30 @@
     </ClCompile>
     <ClCompile Include="Octree.cpp">
       <Filter>Source Files\GameLogic</Filter>
+    </ClCompile>
+    <ClCompile Include="GameApp.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsLayer.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="ShaderProgram.cpp">
+      <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="VertexBuffer.cpp">
+      <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="IndexBuffer.cpp">
+      <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="ConstantBuffer.cpp">
+      <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="InputController.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

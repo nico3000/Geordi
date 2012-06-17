@@ -5,29 +5,31 @@
 { \
     static Logger::ErrorMessenger* _pErrorMessenger = new Logger::ErrorMessenger; \
     std::string _s(_msg); \
-    _pErrorMessenger->Show(_s, TRUE, __FUNCTION__, __FILE__, __LINE__); \
+    _pErrorMessenger->Show(_s, true, __FUNCTION__, __FILE__, __LINE__); \
 } while(0)
 #else
-#define LI_ERROR(_msg) do { (VOID)sizeof(_msg); } while(0)
+#define LI_ERROR(_msg) do { (void)sizeof(_msg); } while(0)
 #endif
 
 #if defined PROFILE | defined _DEBUG
 #define LI_WARNING(_msg) do { \
     static Logger::ErrorMessenger* _pErrorMessenger = new Logger::ErrorMessenger; \
     std::string _s(_msg); \
-    _pErrorMessenger->Show(_s, FALSE, __FUNCTION__, __FILE__, __LINE__); \
+    _pErrorMessenger->Show(_s, false, __FUNCTION__, __FILE__, __LINE__); \
 } while(0)
 #else
-#define LI_WARNING(_msg) do { (VOID)sizeof(_msg); } while(0)
+#define LI_WARNING(_msg) do { (void)sizeof(_msg); } while(0)
 #endif
 
 #if defined PROFILE | defined _DEBUG
 #define LI_LOG(_tag, _msg) do { \
-    Logger::Log(_tag, _msg, FALSE, __FUNCTION__, __FILE__, __LINE__); \
+    Logger::Log(_tag, _msg, false, __FUNCTION__, __FILE__, __LINE__); \
 } while(0)
 #else
-#define LI_LOG(_tag, _msg) do { (VOID)sizeof(_tag); (VOID)sizeof(_msg); } while(0)
+#define LI_LOG(_tag, _msg) do { (void)sizeof(_tag); (void)sizeof(_msg); } while(0)
 #endif
+
+#define LI_INFO(_msg) LI_LOG("INFO", _msg)
 
 #define LI_LOG_WITH_TAG(_msg) LI_LOG(LI_LOGGER_TAG, _msg)
 
@@ -36,23 +38,23 @@ namespace Logger
     class ErrorMessenger
     {
     private:
-        BOOL m_enabled;
+        bool m_enabled;
 
     public:
-        ErrorMessenger(VOID);
+        ErrorMessenger(void);
 
-        VOID Show(CONST std::string& p_errorMsg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line);
+        void Show(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line);
 
     };
 
-    BOOL Init(CONST CHAR* p_configFile);
-    VOID Destroy(VOID);
-    VOID Log(CONST std::string& p_tag, CONST std::string& p_errorMsg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line);
-    VOID SetDisplayFlags(CONST std::string& p_tag, UCHAR p_flags);
+    bool Init(const char* p_configFile);
+    void Destroy(void);
+    void Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line);
+    void SetDisplayFlags(const std::string& p_tag, unsigned char p_flags);
 
     class LogMgr
     {
-        typedef std::map<string, UCHAR> Tags;
+        typedef std::map<std::string, unsigned char> Tags;
         typedef std::list<Logger::ErrorMessenger*> ErrorMessengerList;
 
     private:
@@ -62,8 +64,8 @@ namespace Logger
         CRITICAL_SECTION m_tagCriticalSection;
         CRITICAL_SECTION m_messengerCriticalSection;
 
-        VOID WriteToLogFile(CONST std::string& p_text);
-        VOID GetOutputBuffer(std::string& p_output, CONST std::string& p_tag, CONST std::string& p_msg, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line);
+        void WriteToLogFile(const std::string& p_text);
+        void GetOutputBuffer(std::string& p_output, const std::string& p_tag, const std::string& p_msg, const char* p_function, const char* p_file, UINT p_line);
 
     public:
         enum ErrorDialogResult
@@ -73,14 +75,14 @@ namespace Logger
             LOGMGR_ERROR_IGNORE,
         };
 
-        LogMgr(VOID);
-        ~LogMgr(VOID);
+        LogMgr(void);
+        ~LogMgr(void);
 
-        BOOL Init(CONST CHAR* p_configFile);
-        VOID Log(CONST std::string& p_tag, CONST std::string& p_errorMsg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line);
-        VOID SetDisplayFlags(CONST std::string& p_tag, UCHAR p_flags);
-        VOID AddErrorMessenger(ErrorMessenger* p_pMessenger);
-        LogMgr::ErrorDialogResult Error(CONST std::string& p_errorMsg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT line);
+        bool Init(const char* p_configFile);
+        void Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line);
+        void SetDisplayFlags(const std::string& p_tag, unsigned char p_flags);
+        void AddErrorMessenger(ErrorMessenger* p_pMessenger);
+        LogMgr::ErrorDialogResult Error(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT line);
 
     };
 }

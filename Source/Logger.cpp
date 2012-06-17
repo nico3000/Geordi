@@ -11,20 +11,20 @@ namespace Logger
     static LogMgr* g_pLogMgr = NULL;
 
 
-    ErrorMessenger::ErrorMessenger(VOID):
-    m_enabled(TRUE)
+    ErrorMessenger::ErrorMessenger(void):
+    m_enabled(true)
     {
         g_pLogMgr->AddErrorMessenger(this);
     }
 
-    VOID ErrorMessenger::Show(CONST std::string& p_errorMsg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
+    void ErrorMessenger::Show(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
     {
         if(m_enabled)
         {
             switch(g_pLogMgr->Error(p_errorMsg, p_isFatal, p_function, p_file, p_line))
             {
             case LogMgr::LOGMGR_ERROR_ABORT: break; // TODO
-            case LogMgr::LOGMGR_ERROR_IGNORE: m_enabled = FALSE;
+            case LogMgr::LOGMGR_ERROR_IGNORE: m_enabled = false;
             case LogMgr::LOGMGR_ERROR_RETRY: break; // do nothing
             }
 
@@ -32,46 +32,46 @@ namespace Logger
     }
 
 
-    BOOL Init(CONST CHAR* p_configFile)
+    bool Init(const char* p_configFile)
     {
         g_pLogMgr = new LogMgr;
         if(g_pLogMgr == NULL)
         {
-            return FALSE;
+            return false;
         }
         return g_pLogMgr->Init(p_configFile);
     }
 
 
-    VOID Destroy(VOID)
+    void Destroy(void)
     {
         SAFE_DELETE(g_pLogMgr);
     }
 
 
-    VOID Log(CONST std::string& p_tag, CONST std::string& p_msg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
+    void Log(const std::string& p_tag, const std::string& p_msg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
     {
         g_pLogMgr->Log(p_tag, p_msg, p_isFatal, p_function, p_file, p_line);
     }
 
 
-    VOID SetDisplayFlags(CONST std::string& p_tag, UCHAR p_flags)
+    void SetDisplayFlags(const std::string& p_tag, unsigned char p_flags)
     {
         g_pLogMgr->SetDisplayFlags(p_tag, p_flags);
     }
 
 
-    CONST UCHAR LOGFLAG_WRITE_TO_LOG_FILE = 1 << 0;
-    CONST UCHAR LOGFLAG_WRITE_TO_DEBUGGER = 1 << 1;
+    const unsigned char LOGFLAG_WRITE_TO_LOG_FILE = 1 << 0;
+    const unsigned char LOGFLAG_WRITE_TO_DEBUGGER = 1 << 1;
 #define LOGMGR_FILE "LostIsland.log"
 
-    LogMgr::LogMgr(VOID)
+    LogMgr::LogMgr(void)
     {
 
     }
 
 
-    LogMgr::~LogMgr(VOID)
+    LogMgr::~LogMgr(void)
     {
         for each(ErrorMessenger* pErrorMessenger in m_errorMessengers)
         {
@@ -81,26 +81,26 @@ namespace Logger
     }
 
 
-    BOOL LogMgr::Init(CONST CHAR* p_configFile)
+    bool LogMgr::Init(const char* p_configFile)
     {
         tinyxml2::XMLDocument doc;
         INT result = doc.LoadFile(p_configFile);
         if(result != tinyxml2::XML_NO_ERROR)
         {
             OutputDebugStringA((std::string("error opening ") + p_configFile + '\n').c_str());
-            return FALSE;
+            return false;
         }
         tinyxml2::XMLElement* pLoggingElem = doc.FirstChildElement("Logging");
         if(pLoggingElem == NULL)
         {
             OutputDebugStringA((std::string("no \"Logging\" element in ") + p_configFile + '\n').c_str());
-            return FALSE;
+            return false;
         }
         
         tinyxml2::XMLElement* pTagElem = pLoggingElem->FirstChildElement("Log");
         while(pTagElem != NULL)
         {
-            UCHAR flags = 0;
+            unsigned char flags = 0;
             if(pTagElem->BoolAttribute("file"))
             {
                 flags |= LOGFLAG_WRITE_TO_LOG_FILE;
@@ -121,16 +121,16 @@ namespace Logger
                 
         //g_sbHWnd = CreateStatusWindowA(WS_CHILD | WS_VISIBLE, "Teststatus", hWnd, 0);
         
-        return TRUE;
+        return true;
     }
 
 
-    VOID LogMgr::Log(CONST std::string& p_tag, CONST std::string& p_msg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
+    void LogMgr::Log(const std::string& p_tag, const std::string& p_msg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
     {
         std::string out;
         this->GetOutputBuffer(out, p_tag, p_msg, p_function, p_file, p_line);
 
-        UCHAR flags = m_tags.find(p_tag) == m_tags.end() ? (LOGFLAG_WRITE_TO_DEBUGGER | LOGFLAG_WRITE_TO_LOG_FILE) : m_tags[p_tag];
+        unsigned char flags = m_tags.find(p_tag) == m_tags.end() ? (LOGFLAG_WRITE_TO_DEBUGGER | LOGFLAG_WRITE_TO_LOG_FILE) : m_tags[p_tag];
         if(flags & LOGFLAG_WRITE_TO_DEBUGGER)
         {
             OutputDebugStringA((out + '\n').c_str());
@@ -142,22 +142,23 @@ namespace Logger
     }
 
 
-    VOID LogMgr::SetDisplayFlags(CONST std::string& p_tag, UCHAR p_flags)
+    void LogMgr::SetDisplayFlags(const std::string& p_tag, unsigned char p_flags)
     {
         m_tags[p_tag] = p_flags;
     }
 
 
-    VOID LogMgr::AddErrorMessenger(ErrorMessenger* p_pMessenger)
+    void LogMgr::AddErrorMessenger(ErrorMessenger* p_pMessenger)
     {
         m_errorMessengers.push_back(p_pMessenger);
     }
 
 
-    LogMgr::ErrorDialogResult LogMgr::Error(CONST std::string& p_errorMsg, BOOL p_isFatal, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
+    LogMgr::ErrorDialogResult LogMgr::Error(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
     {
         std::string out;
         this->GetOutputBuffer(out, p_isFatal ? LOGMGR_TAG_ERROR : LOGMGR_TAG_WARNING, p_errorMsg, p_function, p_file, p_line);
+        Logger::Log("ERROR", p_errorMsg, p_isFatal, p_function, p_file, p_line);
         switch(MessageBoxA(NULL, out.c_str(), LOGMGR_TAG_ERROR, MB_ABORTRETRYIGNORE | (p_isFatal ? MB_ICONERROR : MB_ICONWARNING)))
         {
         case IDABORT: return LOGMGR_ERROR_ABORT;
@@ -168,7 +169,7 @@ namespace Logger
     }
 
 
-    VOID LogMgr::GetOutputBuffer(std::string& p_output, CONST std::string& p_tag, CONST std::string& p_msg, CONST CHAR* p_function, CONST CHAR* p_file, UINT p_line)
+    void LogMgr::GetOutputBuffer(std::string& p_output, const std::string& p_tag, const std::string& p_msg, const char* p_function, const char* p_file, UINT p_line)
     {
         std::ostringstream str(p_output);
         str << "[" << p_tag << "] " << p_msg;
@@ -180,7 +181,7 @@ namespace Logger
     }
 
 
-    VOID LogMgr::WriteToLogFile(CONST std::string& p_text)
+    void LogMgr::WriteToLogFile(const std::string& p_text)
     {
         std::ofstream file(LOGMGR_FILE, std::ios::app);
         file << p_text;

@@ -1,28 +1,21 @@
 #pragma once
 #include "GameTimer.h"
+#include "GameApp.h"
+#include "GraphicsLayer.h"
+#include "InputController.h"
 
 namespace LostIsland
 {
-    extern BOOL g_continue;
     extern GameTimer* g_pTimer;
+    extern GameApp* g_pApp;    
+    extern GraphicsLayer* g_pGraphics;
+    extern InputController* g_pInput;
+}
 
-    extern IDXGISwapChain* g_pSwapChain;
-    extern ID3D11Device* g_pDevice;
-    extern ID3D11DeviceContext* g_pContext;
-
-    extern D3D_FEATURE_LEVEL g_featureLevel;
-
-    class GameInitializer
-    {
-    private:
-        BOOL InitDirect3D(HWND hWnd);
-
-    public:
-        GameInitializer(VOID);
-        ~GameInitializer(VOID);
-
-        BOOL Init(HWND hWnd);
-    };
+namespace GameInitializer
+{
+    bool Init(HINSTANCE hInstance);
+    void Destroy(void);
 }
 
 
