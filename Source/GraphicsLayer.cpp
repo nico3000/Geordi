@@ -32,7 +32,7 @@
 
 
 GraphicsLayer::GraphicsLayer(void):
-m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBuffer(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_fullscreen(0)
+m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBuffer(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_fullscreen(false)
 {
 }
 
@@ -54,8 +54,8 @@ GraphicsLayer::~GraphicsLayer(void)
     SAFE_RELEASE(m_pBackBuffer);
     SAFE_RELEASE(m_pContext);
     SAFE_RELEASE(m_pDevice);
-    SAFE_RELEASE(m_pOutput);
     SAFE_RELEASE(m_pSwapChain);
+    SAFE_RELEASE(m_pOutput);
     if(m_hWnd)
     {
         DestroyWindow(m_hWnd);
@@ -164,17 +164,6 @@ bool GraphicsLayer::CreateAppGraphics(void)
     m_pixelShaderProfiles[SHADER_VERSION_4_0] = "ps_4_0";
     m_pixelShaderProfiles[SHADER_VERSION_5_0] = "ps_5_0";
 
-    IDXGIFactory* pFactory;
-    hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
-    RETURN_IF_FAILED(hr);
-
-    IDXGIAdapter* pAdapter;
-    hr = pFactory->EnumAdapters(0, &pAdapter);
-    RETURN_IF_FAILED(hr);
-
-    hr = pAdapter->EnumOutputs(0, &m_pOutput);
-    RETURN_IF_FAILED(hr);
-
     UINT flags = 0;
 #if defined(_DEBUG)
     flags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -187,8 +176,17 @@ bool GraphicsLayer::CreateAppGraphics(void)
         D3D_FEATURE_LEVEL_9_2,
         D3D_FEATURE_LEVEL_9_1,
     };
+
+    IDXGIFactory1* pFactory;
+    hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&pFactory);
+    RETURN_IF_FAILED(hr);
+
+    IDXGIAdapter1* pAdapter;
+    hr = pFactory->EnumAdapters1(0, &pAdapter);
+    RETURN_IF_FAILED(hr);
+
     hr = D3D11CreateDevice(pAdapter,
-                           D3D_DRIVER_TYPE_HARDWARE,
+                           D3D_DRIVER_TYPE_UNKNOWN,
                            0,
                            flags,
                            pFeatureLevels,
@@ -199,28 +197,8 @@ bool GraphicsLayer::CreateAppGraphics(void)
                            &m_pContext);
     RETURN_IF_FAILED(hr);
 
-    DXGI_MODE_DESC desiredMode, matchingMode;
-    desiredMode.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    desiredMode.Width = SCREEN_WIDTH;
-    desiredMode.Height = SCREEN_HEIGHT;
-    desiredMode.RefreshRate.Numerator = 120;
-    desiredMode.RefreshRate.Denominator = 1;
-    desiredMode.Scaling = DXGI_MODE_SCALING_CENTERED;
-    desiredMode.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
-    hr = m_pOutput->FindClosestMatchingMode(&desiredMode, &matchingMode, m_pDevice);
-    RETURN_IF_FAILED(hr);
-
-    return false;
-
     DXGI_SWAP_CHAIN_DESC scDesc;
     scDesc.BufferCount = 1;
-    scDesc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-    scDesc.BufferDesc.Width = 1920;
-    scDesc.BufferDesc.Height = 1080;
-    scDesc.BufferDesc.RefreshRate.Numerator = 0;
-    scDesc.BufferDesc.RefreshRate.Denominator = 0;
-    scDesc.BufferDesc.Scaling = DXGI_MODE_SCALING_CENTERED;
-    scDesc.BufferDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
     scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
     scDesc.OutputWindow = m_hWnd;
@@ -229,7 +207,22 @@ bool GraphicsLayer::CreateAppGraphics(void)
     scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     scDesc.Windowed = !m_fullscreen;
 
-    hr = m_pSwapChain->GetContainingOutput(&m_pOutput);
+    DXGI_MODE_DESC desiredMode;
+    desiredMode.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desiredMode.Width = SCREEN_WIDTH;
+    desiredMode.Height = SCREEN_HEIGHT;
+    desiredMode.RefreshRate.Numerator = 120;
+    desiredMode.RefreshRate.Denominator = 1;
+    desiredMode.Scaling = DXGI_MODE_SCALING_CENTERED;
+    desiredMode.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
+
+    hr = pAdapter->EnumOutputs(0, &m_pOutput);
+    RETURN_IF_FAILED(hr);
+    hr = m_pOutput->FindClosestMatchingMode(&desiredMode, &scDesc.BufferDesc, m_pDevice);
+    RETURN_IF_FAILED(hr);
+    hr = pFactory->CreateSwapChain(m_pDevice,
+                                   &scDesc,
+                                   &m_pSwapChain);
     RETURN_IF_FAILED(hr);
 
     switch(m_featureLevel)
@@ -355,7 +348,7 @@ bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 
         this->ReleaseBackbuffer();
 
-        hr = m_pSwapChain->ResizeBuffers(1, p_width, p_height, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+        hr = m_pSwapChain->ResizeBuffers(0, p_width, p_height, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
         RETURN_IF_FAILED(hr);
 
         if(!this->LoadBackbuffer())
