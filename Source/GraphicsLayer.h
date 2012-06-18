@@ -23,14 +23,25 @@
     }                               \
 } while(0)
 
-#define RETURN_IF_FAILED(_hr) do     \
-{                                               \
-    if(FAILED(_hr))                             \
-    {                                           \
-        LI_ERROR(DXGetErrorDescriptionA(_hr));  \
-        return false;                           \
-    }                                           \
-} while (0)
+#define HRESULT_TO_ERROR(_hr) do            \
+{                                           \
+    LI_ERROR(DXGetErrorDescriptionA(_hr));  \
+} while(0)
+
+#define HRESULT_TO_WARNING(_hr) do          \
+{                                           \
+    LI_WARNING(DXGetErrorDescriptionA(_hr));\
+} while(0)
+
+#define RETURN_IF_FAILED(_hr) do    \
+{                                   \
+    HRESULT _result = _hr;          \
+    if(FAILED(_result))             \
+    {                               \
+        HRESULT_TO_ERROR(_result);  \
+        return false;               \
+    }                               \
+} while(0)
 
 
 class GraphicsLayer
@@ -51,7 +62,7 @@ private:
     typedef std::map<ShaderVersion, LPCSTR> ShaderProfiles;
 
     bool m_initialized;
-    bool m_fullscreen;
+    bool m_vsync;
     HWND m_hWnd;
     IDXGISwapChain* m_pSwapChain;
     IDXGIOutput *m_pOutput;
@@ -88,6 +99,8 @@ public:
     ID3D11GeometryShader* CompileGeometryShader(LPCSTR p_file, LPCSTR p_function, ShaderVersion p_version = SHADER_VERSION_MAX);
     ID3D11PixelShader* CompilePixelShader(LPCSTR p_file, LPCSTR p_function, ShaderVersion p_version = SHADER_VERSION_MAX);
     bool ToggleFullscreen(void);
+    bool SetFullscreen(bool p_fullscreen);
+    bool IsFullscreen(void) const;
 
     const D3D_FEATURE_LEVEL& GetFeatureLevel(void) const { return m_featureLevel; }
     ID3D11Device* GetDevice(void) { return m_pDevice; }
@@ -95,6 +108,5 @@ public:
     int GetWidth(void) const { return m_width; }
     int GetHeight(void) const { return m_height; }
     const HWND GetWindowHandle(VOID) const { return m_hWnd; }
-    bool IsFullscreen(void) const { return m_fullscreen; }
 };
 

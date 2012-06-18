@@ -16,6 +16,8 @@ IndexBuffer::~IndexBuffer(void)
 
 bool IndexBuffer::Build(unsigned int* p_data, unsigned int p_indexCount, D3D11_PRIMITIVE_TOPOLOGY p_topology)
 {
+    SAFE_RELEASE(m_pBuffer);
+
     D3D11_BUFFER_DESC desc;
     desc.BindFlags = D3D11_BIND_INDEX_BUFFER;
     desc.ByteWidth = p_indexCount * sizeof(unsigned int);
@@ -31,12 +33,13 @@ bool IndexBuffer::Build(unsigned int* p_data, unsigned int p_indexCount, D3D11_P
     RETURN_IF_FAILED(hr);
 
     m_topology = p_topology;
+    m_indexCount = p_indexCount;
 
     return true;
 }
 
 
-void IndexBuffer::Bind(void)
+void IndexBuffer::Bind(void) const
 {
     LostIsland::g_pGraphics->GetContext()->IASetIndexBuffer(m_pBuffer, DXGI_FORMAT_R32_UINT, 0);
     LostIsland::g_pGraphics->GetContext()->IASetPrimitiveTopology(m_topology);

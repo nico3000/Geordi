@@ -19,13 +19,13 @@ bool InputController::Init(void)
     // adds HID mouse
     rid[0].usUsagePage = 0x01; 
     rid[0].usUsage = 0x02; 
-    rid[0].dwFlags = LostIsland::g_pGraphics->IsFullscreen() ? RIDEV_NOLEGACY : 0;
+    rid[0].dwFlags = 0;
     rid[0].hwndTarget = LostIsland::g_pGraphics->GetWindowHandle();
 
     // adds HID keyboard
     rid[1].usUsagePage = 0x01; 
     rid[1].usUsage = 0x06; 
-    rid[1].dwFlags = LostIsland::g_pGraphics->IsFullscreen() ? RIDEV_NOLEGACY : 0;
+    rid[1].dwFlags = 0;
     rid[1].hwndTarget = LostIsland::g_pGraphics->GetWindowHandle();
 
     if(!RegisterRawInputDevices(rid, 2, sizeof(RAWINPUTDEVICE))) {

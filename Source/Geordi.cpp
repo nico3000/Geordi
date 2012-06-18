@@ -58,8 +58,12 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
                 LostIsland::g_pApp->SetContinue(false);
             }
         }
+        else
+        {
+            LostIsland::g_pApp->OnNextFrame();
+        }
         
-        LostIsland::g_pApp->OnNextFrame();        
+        
 	}
 
     GameInitializer::Destroy();

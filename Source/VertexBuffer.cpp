@@ -23,6 +23,8 @@ VertexBuffer::~VertexBuffer(void)
 
 bool VertexBuffer::Build(void* p_data, unsigned int p_numVertices, unsigned int p_byteStride)
 {
+    SAFE_RELEASE(m_pBuffer);
+
     D3D11_BUFFER_DESC desc;
     desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
     desc.ByteWidth = p_numVertices * p_byteStride;

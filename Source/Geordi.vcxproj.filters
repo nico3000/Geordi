@@ -102,11 +102,11 @@
     <ClInclude Include="InputController.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
-    </ClInclude>
     <ClInclude Include="Config.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Camera.h">
+      <Filter>Header Files\GameView</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -155,11 +155,11 @@
     <ClCompile Include="InputController.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
-    </ClCompile>
     <ClCompile Include="Config.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera.cpp">
+      <Filter>Source Files\GameView</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

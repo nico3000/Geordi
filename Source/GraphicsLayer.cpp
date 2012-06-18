@@ -34,17 +34,18 @@
 
 
 GraphicsLayer::GraphicsLayer(void):
-m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBuffer(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_fullscreen(false)
+m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBuffer(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_vsync(0)
 {
 }
 
 
 GraphicsLayer::~GraphicsLayer(void)
 {
-    if(m_initialized && m_fullscreen)
+    if(m_initialized)
     {
-        this->ToggleFullscreen();
+        this->SetFullscreen(false);
     }
+    m_initialized = false;
     for each(std::pair<std::string, ID3D11VertexShader*> shaderPair in m_vertexShaders)
     {
         SAFE_RELEASE(shaderPair.second);
@@ -68,11 +69,18 @@ GraphicsLayer::~GraphicsLayer(void)
     }
 }
 
+struct ModelProperties
+{
+    XMFLOAT4X4 model;
+    XMFLOAT4X4 modelIT;
+};
 
 ShaderProgram g_program;
 VertexBuffer g_vertices;
 IndexBuffer g_indices;
 Camera g_cam;
+ConstantBuffer g_model;
+ModelProperties g_properties;
 
 
 bool GraphicsLayer::Init(HINSTANCE hInstance)
@@ -82,7 +90,7 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     //terrain.Test();
     m_width = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "width");
     m_height = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "height");
-    m_fullscreen = LostIsland::g_pConfig->GetBoolAttribute("graphics", "display", "fullscreen");
+    m_vsync = LostIsland::g_pConfig->GetBoolAttribute("graphics", "display", "vsync");
     if(!this->CreateAppWindow(hInstance))
     {
         return false;
@@ -105,10 +113,14 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     }
 
     VertexBuffer::SimpleVertex vertices[] = {
-        { XMFLOAT3(-0.5f, -0.5f, 0.5f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
-        { XMFLOAT3(+0.5f, -0.5f, 0.5f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
-        { XMFLOAT3(-0.5f, +0.5f, 0.5f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
-        { XMFLOAT3(+0.5f, +0.5f, 0.5f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
+        { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
+        { XMFLOAT3(+0.5f, -0.5f, -0.5f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
+        { XMFLOAT3(+0.5f, +0.5f, -0.5f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
+        { XMFLOAT3(-0.5f, +0.5f, -0.5f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
+        { XMFLOAT3(-0.5f, -0.5f, +0.5f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
+        { XMFLOAT3(+0.5f, -0.5f, +0.5f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
+        { XMFLOAT3(+0.5f, +0.5f, +0.5f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
+        { XMFLOAT3(-0.5f, +0.5f, +0.5f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) },
     };
     if(!g_vertices.Build(vertices, ARRAYSIZE(vertices), sizeof(VertexBuffer::SimpleVertex)))
     {
@@ -116,7 +128,9 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     }
 
     unsigned int indices[] = {
-        0, 1, 2, 3,
+        0, 1, 3, 2, 7, 6, 4, 5, 0, 1, 0xFFFFFFFF,
+        1, 5, 2, 6, 0xFFFFFFFF,
+        3, 7, 0, 4,
     };
     if(!g_indices.Build(indices, ARRAYSIZE(indices), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP))
     {
@@ -128,7 +142,13 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
         return false;
     }
     g_cam.Bind();
-    g_cam.Move(-5.0f, 0.0f, 0.0f);
+    g_cam.Move(-2.0f, 0.0f, 0.0f);
+
+    if(!g_model.Build(&g_properties, sizeof(ModelProperties)))
+    {
+        return false;
+    }
+    g_model.Bind(1, ConstantBuffer::TARGET_ALL);
 
     return true;
 }
@@ -136,7 +156,7 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
 
 void GraphicsLayer::Clear(void)
 {
-    static const float pClearColor[] = { 0.0f, 1.0f, 0.0f, 1.0f };
+    static const float pClearColor[] = { 0.0f, 0.2f, 0.2f, 1.0f };
     m_pContext->ClearRenderTargetView(m_pBackBuffer, pClearColor);
 }
 
@@ -145,22 +165,22 @@ void GraphicsLayer::Present(void)
 {
     static int id = LostIsland::g_pTimer->Tick(REALTIME);
     long elapsed = LostIsland::g_pTimer->Tock(id, KEEPRUNNING);
-    g_cam.SetPosition(sin((float)elapsed * 1e-2f), 0.0f, -3.0f + sin((float)elapsed * 0.5e-2f));
+    //g_cam.SetPosition(sin((float)elapsed * 1e-2f), 0.0f, -3.0f + sin((float)elapsed * 0.5e-2f));
+    XMStoreFloat4x4(&g_properties.model, XMMatrixRotationY(4e-3f * (float)elapsed));
 
     g_program.Bind();
     g_vertices.Bind();
     g_indices.Bind();
     g_cam.Update();
-    m_pContext->DrawIndexed(4, 0, 0);
+    g_model.Update();
+    m_pContext->DrawIndexed(g_indices.GetIndexCount(), 0, 0);
 
-    m_pSwapChain->Present(0, 0);
+    m_pSwapChain->Present(m_vsync, 0);
 }
 
 
 bool GraphicsLayer::CreateAppGraphics(void)
 {
-    HRESULT hr = S_OK;
-
     m_vertexShaderProfiles[SHADER_VERSION_3_0] = "vs_3_0";
     m_vertexShaderProfiles[SHADER_VERSION_4_0] = "vs_4_0";
     m_vertexShaderProfiles[SHADER_VERSION_5_0] = "vs_5_0";
@@ -184,33 +204,32 @@ bool GraphicsLayer::CreateAppGraphics(void)
     };
 
     IDXGIFactory1* pFactory;
-    hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&pFactory);
-    RETURN_IF_FAILED(hr);
+    RETURN_IF_FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&pFactory));
 
     IDXGIAdapter1* pAdapter;
-    do
+    for(int i=0; 1; ++i)
     {
-        static unsigned int i = 0;
-        hr = pFactory->EnumAdapters1(i++, &pAdapter);
-        if(SUCCEEDED(hr))
+        if(SUCCEEDED(pFactory->EnumAdapters1(i, &pAdapter)))
         {
             this->PrintAdapterString(pAdapter);
         }
-    } while(SUCCEEDED(hr));
-    hr = pFactory->EnumAdapters1(0, &pAdapter);  // TODO: use default adapter
-    RETURN_IF_FAILED(hr);
+        else
+        {
+            break;
+        }
+    }
 
-    hr = D3D11CreateDevice(pAdapter,
-                           D3D_DRIVER_TYPE_UNKNOWN,
-                           0,
-                           flags,
-                           pFeatureLevels,
-                           ARRAYSIZE(pFeatureLevels),
-                           D3D11_SDK_VERSION,
-                           &m_pDevice,
-                           &m_featureLevel,
-                           &m_pContext);
-    RETURN_IF_FAILED(hr);
+    RETURN_IF_FAILED(pFactory->EnumAdapters1(0, &pAdapter));    // TODO: use default adapter
+    RETURN_IF_FAILED(D3D11CreateDevice(pAdapter,
+                                       D3D_DRIVER_TYPE_UNKNOWN,
+                                       0,
+                                       flags,
+                                       pFeatureLevels,
+                                       ARRAYSIZE(pFeatureLevels),
+                                       D3D11_SDK_VERSION,
+                                       &m_pDevice,
+                                       &m_featureLevel,
+                                       &m_pContext));
     this->PrepareFeatureLevel();
 
     DXGI_SWAP_CHAIN_DESC scDesc;
@@ -221,37 +240,55 @@ bool GraphicsLayer::CreateAppGraphics(void)
     scDesc.SampleDesc.Count = 1;
     scDesc.SampleDesc.Quality = 0;
     scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    scDesc.Windowed = !m_fullscreen;
+    scDesc.Windowed = LostIsland::g_pConfig->GetBoolAttribute("graphics", "display", "windowed");
 
     DXGI_MODE_DESC desiredMode;
     ZeroMemory(&desiredMode, sizeof(DXGI_MODE_DESC));
     desiredMode.Width = m_width;
-    desiredMode.Height = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "height");
+    desiredMode.Height = m_height;
     desiredMode.RefreshRate.Numerator = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "refresh");
     desiredMode.RefreshRate.Denominator = 1;
-    desiredMode.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    hr = pAdapter->EnumOutputs(0, &m_pOutput);
-    RETURN_IF_FAILED(hr);
-    hr = m_pOutput->FindClosestMatchingMode(&desiredMode, &scDesc.BufferDesc, m_pDevice);
-    RETURN_IF_FAILED(hr);
+    RETURN_IF_FAILED(pAdapter->EnumOutputs(0, &m_pOutput));
+    RETURN_IF_FAILED(m_pOutput->FindClosestMatchingMode(&desiredMode, &scDesc.BufferDesc, m_pDevice));
+
+    std::ostringstream str;
+    str << "Using DXGI mode " << scDesc.BufferDesc.Width << "x" << scDesc.BufferDesc.Height << "@" << (scDesc.BufferDesc.RefreshRate.Numerator / scDesc.BufferDesc.RefreshRate.Denominator) << "Hz";
+    LI_LOG_WITH_TAG(str.str());
+
+//     unsigned int numModes;
+//     RETURN_IF_FAILED(m_pOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH, &numModes, 0));
+//     DXGI_MODE_DESC *pDesc = new DXGI_MODE_DESC[numModes];
+//     RETURN_IF_FAILED(m_pOutput->GetDisplayModeList(DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH, &numModes, pDesc));
+//     for(unsigned int i=0; i < numModes; ++i)
+//     {
+//         std::ostringstream str;
+//         str << pDesc[i].Width << "x" << pDesc[i].Height << " {" << pDesc[i].RefreshRate.Numerator << ", " << pDesc[i].RefreshRate.Denominator << "}";
+//         LI_INFO(str.str());
+//     }
+//     SAFE_DELETE(pDesc);
     
-    hr = pFactory->CreateSwapChain(m_pDevice,
-                                   &scDesc,
-                                   &m_pSwapChain);
-    RETURN_IF_FAILED(hr);
+    RETURN_IF_FAILED(pFactory->CreateSwapChain(m_pDevice,
+                                               &scDesc,
+                                               &m_pSwapChain));
 
     D3D11_RASTERIZER_DESC rasterizerDesc;
     ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
-    rasterizerDesc.CullMode = D3D11_CULL_NONE;
+    rasterizerDesc.CullMode = D3D11_CULL_BACK;
     rasterizerDesc.DepthClipEnable = true;
     rasterizerDesc.FillMode = D3D11_FILL_SOLID;
     rasterizerDesc.FrontCounterClockwise = true;
     ID3D11RasterizerState* pRasterizerState;
-    hr = m_pDevice->CreateRasterizerState(&rasterizerDesc, &pRasterizerState);
-    RETURN_IF_FAILED(hr);
-    m_pContext->RSSetState(pRasterizerState);
-    SAFE_RELEASE(pRasterizerState);   
+    HRESULT hr = m_pDevice->CreateRasterizerState(&rasterizerDesc, &pRasterizerState);
+    if(FAILED(hr))
+    {
+        HRESULT_TO_WARNING(hr);
+    }
+    else
+    {
+        m_pContext->RSSetState(pRasterizerState);
+        SAFE_RELEASE(pRasterizerState);   
+    }
 
     m_initialized = true;
 
@@ -401,7 +438,7 @@ bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 {
     //return true;
     HRESULT hr = S_OK;
-    if(m_initialized && !m_fullscreen)
+    if(m_initialized)
     {
         std::ostringstream str;
         str << p_width << "x" << p_height;
@@ -426,18 +463,24 @@ bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 
 bool GraphicsLayer::ToggleFullscreen(void)
 {
-    
+    return this->SetFullscreen(!this->IsFullscreen());
+}
+
+
+bool GraphicsLayer::SetFullscreen(bool p_fullscreen)
+{
     HRESULT hr = S_OK;
-
-    hr = m_pSwapChain->SetFullscreenState(!m_fullscreen, 0);
-    RETURN_IF_FAILED(hr);
-    m_fullscreen ^= true;
-
-    if(!m_fullscreen)
+    bool wasFullscreen = this->IsFullscreen();
+    if(wasFullscreen != p_fullscreen)
     {
-        ShowWindow(m_hWnd, SW_SHOW);
-    }
+        hr = m_pSwapChain->SetFullscreenState(p_fullscreen, 0);
+        RETURN_IF_FAILED(hr);
 
+        if(wasFullscreen)
+        {
+            ShowWindow(m_hWnd, SW_SHOW);
+        }
+    }
     return true;
 }
 
@@ -472,6 +515,18 @@ bool GraphicsLayer::LoadBackbuffer(void)
     m_pContext->RSSetViewports(1, &viewport);
 
     return true;
+}
+
+
+bool GraphicsLayer::IsFullscreen(void) const
+{
+    if(!m_initialized)
+    {
+        return false;
+    }
+    int fullscreen;
+    m_pSwapChain->GetFullscreenState(&fullscreen, 0);
+    return fullscreen != 0;
 }
 
 

@@ -2,6 +2,10 @@
 [Direct3D] GPU found: NVIDIA GeForce GTX 580, Dedicated Video Memory: 3019MB, Dedicated System Memory: 0MB, output: \\.\DISPLAY1
 [Direct3D] GPU found: Intel(R) HD Graphics 3000, Dedicated Video Memory: 64MB, Dedicated System Memory: 0MB
 [Direct3D] Your GPU supports Direct3D11.
+[Direct3D] Using DXGI mode 1280x768@119Hz
+[Direct3D] New size 1280x768
+[Direct3D] New size 1280x720
+[Direct3D] New size 1296x758
 [Direct3D] New size 1280x720
 [Direct3D] New size 1296x758
 [Direct3D] New size 1280x720
