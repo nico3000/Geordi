@@ -137,14 +137,14 @@ void GraphicsLayer::Clear(void)
 
 void GraphicsLayer::Present(void)
 {
-    //static int id = LostIsland::g_pTimer->Tick(REALTIME);
-    //long elapsed = LostIsland::g_pTimer->Tock(id, KEEPRUNNING);
-    //g_cam.SetPosition(sin((float)elapsed * 1e-2f), 0.0f, -3.0f + sin((float)elapsed * 0.5e-2f));
+    static int id = LostIsland::g_pTimer->Tick(REALTIME);
+    long elapsed = LostIsland::g_pTimer->Tock(id, KEEPRUNNING);
+    g_cam.SetPosition(sin((float)elapsed * 1e-2f), 0.0f, -3.0f + sin((float)elapsed * 0.5e-2f));
 
-    //g_program.Bind();
-    //g_vertices.Bind();
-    //g_indices.Bind();
-    //g_cam.Update();
+    g_program.Bind();
+    g_vertices.Bind();
+    g_indices.Bind();
+    g_cam.Update();
     //m_pContext->DrawIndexed(4, 0, 0);
 
     m_pSwapChain->Present(0, 0);
@@ -177,24 +177,13 @@ bool GraphicsLayer::CreateAppGraphics(void)
         D3D_FEATURE_LEVEL_9_1,
     };
 
-    IDXGIFactory1* pFactory;
-    hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&pFactory);
+    IDXGIFactory* pFactory;
+    hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
     RETURN_IF_FAILED(hr);
 
-    IDXGIAdapter1* pAdapter;
-    hr = pFactory->EnumAdapters1(0, &pAdapter);
+    IDXGIAdapter* pAdapter;
+    hr = pFactory->EnumAdapters(0, &pAdapter);
     RETURN_IF_FAILED(hr);
-
-    hr = D3D11CreateDevice(pAdapter,
-                           D3D_DRIVER_TYPE_UNKNOWN,
-                           0,
-                           flags,
-                           pFeatureLevels,
-                           ARRAYSIZE(pFeatureLevels),
-                           D3D11_SDK_VERSION,
-                           &m_pDevice,
-                           &m_featureLevel,
-                           &m_pContext);
     RETURN_IF_FAILED(hr);
 
     DXGI_SWAP_CHAIN_DESC scDesc;
@@ -208,21 +197,29 @@ bool GraphicsLayer::CreateAppGraphics(void)
     scDesc.Windowed = !m_fullscreen;
 
     DXGI_MODE_DESC desiredMode;
-    desiredMode.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    ZeroMemory(&desiredMode, sizeof(DXGI_MODE_DESC));
     desiredMode.Width = SCREEN_WIDTH;
     desiredMode.Height = SCREEN_HEIGHT;
     desiredMode.RefreshRate.Numerator = 120;
     desiredMode.RefreshRate.Denominator = 1;
-    desiredMode.Scaling = DXGI_MODE_SCALING_CENTERED;
-    desiredMode.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
 
     hr = pAdapter->EnumOutputs(0, &m_pOutput);
     RETURN_IF_FAILED(hr);
     hr = m_pOutput->FindClosestMatchingMode(&desiredMode, &scDesc.BufferDesc, m_pDevice);
     RETURN_IF_FAILED(hr);
-    hr = pFactory->CreateSwapChain(m_pDevice,
-                                   &scDesc,
-                                   &m_pSwapChain);
+
+    hr = D3D11CreateDeviceAndSwapChain(pAdapter,
+                                       D3D_DRIVER_TYPE_UNKNOWN,
+                                       0,
+                                       flags,
+                                       pFeatureLevels,
+                                       ARRAYSIZE(pFeatureLevels),
+                                       D3D11_SDK_VERSION,
+                                       &scDesc,
+                                       &m_pSwapChain,
+                                       &m_pDevice,
+                                       &m_featureLevel,
+                                       &m_pContext);
     RETURN_IF_FAILED(hr);
 
     switch(m_featureLevel)
@@ -339,6 +336,7 @@ bool GraphicsLayer::CreateAppWindow(HINSTANCE hInstance)
 
 bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 {
+    //return true;
     HRESULT hr = S_OK;
     if(m_initialized)
     {
@@ -348,7 +346,7 @@ bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 
         this->ReleaseBackbuffer();
 
-        hr = m_pSwapChain->ResizeBuffers(0, p_width, p_height, DXGI_FORMAT_B8G8R8A8_UNORM, 0);
+        hr = m_pSwapChain->ResizeBuffers(0, p_width, p_height, DXGI_FORMAT_UNKNOWN, 0);
         RETURN_IF_FAILED(hr);
 
         if(!this->LoadBackbuffer())
@@ -397,14 +395,15 @@ bool GraphicsLayer::ToggleFullscreen(void)
     }
     else
     {
-        DXGI_MODE_DESC desc;
+        DXGI_MODE_DESC desc, matching;
         desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
         desc.Width = 1920;
         desc.Height = 1080;
-        desc.RefreshRate.Numerator = 0;
-        desc.RefreshRate.Denominator = 0;
+        desc.RefreshRate.Numerator = 120;
+        desc.RefreshRate.Denominator = 1;
         desc.Scaling = DXGI_MODE_SCALING_CENTERED;
         desc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
+        m_pOutput->FindClosestMatchingMode(&desc, &matching, m_pDevice);
 
         hr = m_pSwapChain->ResizeTarget(&desc);
         RETURN_IF_FAILED(hr);

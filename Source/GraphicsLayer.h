@@ -2,7 +2,11 @@
 #include <d3d11.h>
 #include <D3DX11.h>
 #include <DxErr.h>
+#ifdef _DEBUG
 #include <dxgi.h>
+#else
+#include <dxgi.h>
+#endif
 #include <xnamath.h>
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dx11.lib")
