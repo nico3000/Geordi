@@ -102,7 +102,7 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     UpdateWindow(m_hWnd);
     ShowWindow(m_hWnd, SW_SHOW);
 
-    // testing
+    // --- begin testing
     if(!g_program.Load("shader/NicotopiaTest.fx", "SimpleVS", 0, "SimplePS"))
     {
         return false;
@@ -149,7 +149,8 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
         return false;
     }
     g_model.Bind(1, ConstantBuffer::TARGET_ALL);
-
+    // --- end testing
+    
     return true;
 }
 
@@ -163,6 +164,7 @@ void GraphicsLayer::Clear(void)
 
 void GraphicsLayer::Present(void)
 {
+    // --- begin testing
     static int id = LostIsland::g_pTimer->Tick(REALTIME);
     long elapsed = LostIsland::g_pTimer->Tock(id, KEEPRUNNING);
     //g_cam.SetPosition(sin((float)elapsed * 1e-2f), 0.0f, -3.0f + sin((float)elapsed * 0.5e-2f));
@@ -174,6 +176,7 @@ void GraphicsLayer::Present(void)
     g_cam.Update();
     g_model.Update();
     m_pContext->DrawIndexed(g_indices.GetIndexCount(), 0, 0);
+    // --- end testing
 
     m_pSwapChain->Present(m_vsync, 0);
 }
