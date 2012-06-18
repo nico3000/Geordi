@@ -578,3 +578,45 @@ ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCSTR p_file, LPCSTR p_fun
     }
     return m_pixelShaders[id];
 }
+
+
+bool GraphicsLayer::SetDefaultSamplers(void)
+{
+    static const unsigned int SAMPLER_STATE_COUNT = 3;
+
+    D3D11_SAMPLER_DESC pDesc[SAMPLER_STATE_COUNT];
+    ZeroMemory(pDesc, 3 * sizeof(D3D11_SAMPLER_DESC));
+    pDesc[0].AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[0].AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[0].AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[0].Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
+
+    pDesc[1].AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[1].AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[1].AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[1].Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
+
+    pDesc[2].AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[2].AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[2].AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+    pDesc[2].Filter = D3D11_FILTER_ANISOTROPIC;
+    pDesc[2].MaxAnisotropy = 16;
+
+    ID3D11SamplerState* ppStates[SAMPLER_STATE_COUNT];
+    for(unsigned int i=0; i < SAMPLER_STATE_COUNT; ++i)
+    {
+        RETURN_IF_FAILED(m_pDevice->CreateSamplerState(&pDesc[i], &ppStates[i]));
+    }
+    m_pContext->VSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+    m_pContext->PSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+    if(m_featureLevel >= D3D_FEATURE_LEVEL_10_0)
+    {
+        m_pContext->GSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+    }
+    if(m_featureLevel >= D3D_FEATURE_LEVEL_11_0)
+    {
+        m_pContext->DSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+        m_pContext->HSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+    }
+    return true;
+}

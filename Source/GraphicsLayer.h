@@ -86,6 +86,7 @@ private:
     void PrepareFeatureLevel(void);
     bool PrintAdapterString(IDXGIAdapter1* p_pAdapter) const;
     std::string GetAdapterOutputString(IDXGIOutput* p_pOutput) const;
+    bool SetDefaultSamplers(void);
 
 public:
     GraphicsLayer(void);

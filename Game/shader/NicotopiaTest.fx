@@ -3,7 +3,7 @@ cbuffer Camera : register(c0)
 	float4x4 view;
 	float4x4 projection;
 	float4x4 projectionView;
-	float3 eye;
+	float3 camPosition;
 	float viewDistance;
 }
 
