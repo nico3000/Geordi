@@ -2,6 +2,7 @@
 #include "GameInitializer.h"
 
 
+Config* LostIsland::g_pConfig = 0;
 GameTimer* LostIsland::g_pTimer = 0;
 GraphicsLayer* LostIsland::g_pGraphics = 0;
 GameApp* LostIsland::g_pApp = 0;
@@ -16,6 +17,12 @@ bool GameInitializer::Init(HINSTANCE hInstance)
     Logger::Init("logging_release.xml");
 #endif
 
+    LostIsland::g_pConfig = new Config;
+    if(!LostIsland::g_pConfig->Init())
+    {
+        LI_ERROR("Config initialization error");
+        return false;
+    }
     LostIsland::g_pTimer = new GameTimer;
     if(LostIsland::g_pTimer == 0 || !LostIsland::g_pTimer->Init())
     {
@@ -50,6 +57,7 @@ void GameInitializer::Destroy(void)
     SAFE_DELETE(LostIsland::g_pInput);
     SAFE_DELETE(LostIsland::g_pGraphics);
     SAFE_DELETE(LostIsland::g_pTimer);
+    SAFE_DELETE(LostIsland::g_pConfig);
     Logger::Destroy();
 }
 

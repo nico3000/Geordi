@@ -1,0 +1,5 @@
+<Logging>
+	<Log tag="Logger" debugger="0" file="1" />
+	<Log tag="MemoryPool" debugger="0" file="1" />
+	<Log tag="Octree" debugger="0" file="1" />
+</Logging>

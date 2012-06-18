@@ -58,9 +58,6 @@
 #include "GameInitializer.h"
 
 // defines
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 720
-
 #define SAFE_DELETE(_ptr) do    \
 {                               \
     if((_ptr) != NULL)          \

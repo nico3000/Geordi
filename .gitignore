@@ -14,7 +14,8 @@
 # Visual Studio
 Temp
 Test
-Game
+Game/Build
+Game/Octree
 Source/VS2010/ipch
 Source/VS2010/Geordi.suo
 *.opensdf

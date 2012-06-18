@@ -104,28 +104,28 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\..\Game\$(PlatformName)_$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\Game\Build\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\..\Lib\x86\$(Configuration);$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\..\Game\$(PlatformName)_$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\Game\Build\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\..\Lib\x86\$(Configuration);$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\..\Game\$(PlatformName)_$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\Game\Build\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
     <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
     <LibraryPath>$(SolutionDir)..\..\Lib\x64\$(Configuration);$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)..\..\Game\$(PlatformName)_$(Configuration)\</OutDir>
+    <OutDir>$(SolutionDir)..\..\Game\Build\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
     <LibraryPath>$(SolutionDir)..\..\Lib\x64\$(Configuration);$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
     <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
@@ -231,6 +231,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="Config.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="GameApp.h" />
     <ClInclude Include="GameInitializer.h" />
@@ -252,6 +253,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="GameApp.cpp" />
     <ClCompile Include="GameInitializer.cpp" />

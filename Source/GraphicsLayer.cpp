@@ -30,6 +30,8 @@
     } \
 } while(0)
 
+#define LI_LOGGER_TAG "Direct3D"
+
 
 GraphicsLayer::GraphicsLayer(void):
 m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBuffer(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_fullscreen(false)
@@ -39,6 +41,10 @@ m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBuffer(0), m_pOutput(0), m_
 
 GraphicsLayer::~GraphicsLayer(void)
 {
+    if(m_initialized && m_fullscreen)
+    {
+        this->ToggleFullscreen();
+    }
     for each(std::pair<std::string, ID3D11VertexShader*> shaderPair in m_vertexShaders)
     {
         SAFE_RELEASE(shaderPair.second);
@@ -71,11 +77,12 @@ Camera g_cam;
 
 bool GraphicsLayer::Init(HINSTANCE hInstance)
 {
-    // TODO: Static testing stuff goes here and only here.
     //TerrainData terrain;
     //terrain.Init(32, 8, 4, 8, 8);
     //terrain.Test();
-
+    m_width = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "width");
+    m_height = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "height");
+    m_fullscreen = LostIsland::g_pConfig->GetBoolAttribute("graphics", "display", "fullscreen");
     if(!this->CreateAppWindow(hInstance))
     {
         return false;
@@ -83,10 +90,9 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     if(!this->CreateAppGraphics())
     {
         return false;
-    }
+    }    
     UpdateWindow(m_hWnd);
     ShowWindow(m_hWnd, SW_SHOW);
-    
 
     // testing
     if(!g_program.Load("shader/NicotopiaTest.fx", "SimpleVS", 0, "SimplePS"))
@@ -145,7 +151,7 @@ void GraphicsLayer::Present(void)
     g_vertices.Bind();
     g_indices.Bind();
     g_cam.Update();
-    //m_pContext->DrawIndexed(4, 0, 0);
+    m_pContext->DrawIndexed(4, 0, 0);
 
     m_pSwapChain->Present(0, 0);
 }
@@ -177,14 +183,35 @@ bool GraphicsLayer::CreateAppGraphics(void)
         D3D_FEATURE_LEVEL_9_1,
     };
 
-    IDXGIFactory* pFactory;
-    hr = CreateDXGIFactory(__uuidof(IDXGIFactory), (void**)&pFactory);
+    IDXGIFactory1* pFactory;
+    hr = CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&pFactory);
     RETURN_IF_FAILED(hr);
 
-    IDXGIAdapter* pAdapter;
-    hr = pFactory->EnumAdapters(0, &pAdapter);
+    IDXGIAdapter1* pAdapter;
+    do
+    {
+        static unsigned int i = 0;
+        hr = pFactory->EnumAdapters1(i++, &pAdapter);
+        if(SUCCEEDED(hr))
+        {
+            this->PrintAdapterString(pAdapter);
+        }
+    } while(SUCCEEDED(hr));
+    hr = pFactory->EnumAdapters1(0, &pAdapter);  // TODO: use default adapter
     RETURN_IF_FAILED(hr);
+
+    hr = D3D11CreateDevice(pAdapter,
+                           D3D_DRIVER_TYPE_UNKNOWN,
+                           0,
+                           flags,
+                           pFeatureLevels,
+                           ARRAYSIZE(pFeatureLevels),
+                           D3D11_SDK_VERSION,
+                           &m_pDevice,
+                           &m_featureLevel,
+                           &m_pContext);
     RETURN_IF_FAILED(hr);
+    this->PrepareFeatureLevel();
 
     DXGI_SWAP_CHAIN_DESC scDesc;
     scDesc.BufferCount = 1;
@@ -198,54 +225,21 @@ bool GraphicsLayer::CreateAppGraphics(void)
 
     DXGI_MODE_DESC desiredMode;
     ZeroMemory(&desiredMode, sizeof(DXGI_MODE_DESC));
-    desiredMode.Width = SCREEN_WIDTH;
-    desiredMode.Height = SCREEN_HEIGHT;
-    desiredMode.RefreshRate.Numerator = 120;
+    desiredMode.Width = m_width;
+    desiredMode.Height = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "height");
+    desiredMode.RefreshRate.Numerator = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "refresh");
     desiredMode.RefreshRate.Denominator = 1;
+    desiredMode.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 
     hr = pAdapter->EnumOutputs(0, &m_pOutput);
     RETURN_IF_FAILED(hr);
     hr = m_pOutput->FindClosestMatchingMode(&desiredMode, &scDesc.BufferDesc, m_pDevice);
     RETURN_IF_FAILED(hr);
-
-    hr = D3D11CreateDeviceAndSwapChain(pAdapter,
-                                       D3D_DRIVER_TYPE_UNKNOWN,
-                                       0,
-                                       flags,
-                                       pFeatureLevels,
-                                       ARRAYSIZE(pFeatureLevels),
-                                       D3D11_SDK_VERSION,
-                                       &scDesc,
-                                       &m_pSwapChain,
-                                       &m_pDevice,
-                                       &m_featureLevel,
-                                       &m_pContext);
+    
+    hr = pFactory->CreateSwapChain(m_pDevice,
+                                   &scDesc,
+                                   &m_pSwapChain);
     RETURN_IF_FAILED(hr);
-
-    switch(m_featureLevel)
-    {
-    case D3D_FEATURE_LEVEL_11_0:
-        m_vertexShaderProfiles[SHADER_VERSION_MAX] = m_vertexShaderProfiles[SHADER_VERSION_5_0];
-        m_geometryShaderProfiles[SHADER_VERSION_MAX] = m_geometryShaderProfiles[SHADER_VERSION_5_0];
-        m_pixelShaderProfiles[SHADER_VERSION_MAX] = m_pixelShaderProfiles[SHADER_VERSION_5_0];
-        LI_LOG("Direct3D", "Your GPU supports Direct3D11.");
-        break;
-    case D3D_FEATURE_LEVEL_10_1:
-        break;
-    case D3D_FEATURE_LEVEL_10_0:
-        m_vertexShaderProfiles[SHADER_VERSION_MAX] = m_vertexShaderProfiles[SHADER_VERSION_4_0];
-        m_geometryShaderProfiles[SHADER_VERSION_MAX] = m_geometryShaderProfiles[SHADER_VERSION_4_0];
-        m_pixelShaderProfiles[SHADER_VERSION_MAX] = m_pixelShaderProfiles[SHADER_VERSION_4_0];
-        LI_LOG("Direct3D", "Your GPU does not support Direct3D 11. Falling back to Direct3D10.");
-        break;
-    case D3D_FEATURE_LEVEL_9_3:
-    case D3D_FEATURE_LEVEL_9_2:
-    case D3D_FEATURE_LEVEL_9_1:
-        m_vertexShaderProfiles[SHADER_VERSION_MAX] = m_vertexShaderProfiles[SHADER_VERSION_3_0];
-        m_pixelShaderProfiles[SHADER_VERSION_MAX] = m_pixelShaderProfiles[SHADER_VERSION_3_0];
-        LI_LOG("Direct3D", "Poor bastard! Your GPU does not support Direct3D 11. Not even Direct3D 10. Falling back to Direct3D9.");
-        break;
-    }
 
     D3D11_RASTERIZER_DESC rasterizerDesc;
     ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
@@ -257,23 +251,94 @@ bool GraphicsLayer::CreateAppGraphics(void)
     hr = m_pDevice->CreateRasterizerState(&rasterizerDesc, &pRasterizerState);
     RETURN_IF_FAILED(hr);
     m_pContext->RSSetState(pRasterizerState);
-    SAFE_RELEASE(pRasterizerState);
-
-    D3D11_VIEWPORT viewport;
-    viewport.Width = SCREEN_WIDTH;
-    viewport.Height = SCREEN_HEIGHT;
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    m_pContext->RSSetViewports(1, &viewport);
-
-    this->LoadBackbuffer();
-    m_pContext->OMSetRenderTargets(1, &m_pBackBuffer, 0);
+    SAFE_RELEASE(pRasterizerState);   
 
     m_initialized = true;
 
-    return SUCCEEDED(hr);
+    SAFE_RELEASE(pAdapter);
+    SAFE_RELEASE(pFactory);
+
+    this->ReleaseBackbuffer();
+    return this->LoadBackbuffer();
+}
+
+
+void GraphicsLayer::PrepareFeatureLevel(void)
+{
+    switch(m_featureLevel)
+    {
+    case D3D_FEATURE_LEVEL_11_0:
+        m_vertexShaderProfiles[SHADER_VERSION_MAX] = m_vertexShaderProfiles[SHADER_VERSION_5_0];
+        m_geometryShaderProfiles[SHADER_VERSION_MAX] = m_geometryShaderProfiles[SHADER_VERSION_5_0];
+        m_pixelShaderProfiles[SHADER_VERSION_MAX] = m_pixelShaderProfiles[SHADER_VERSION_5_0];
+        LI_LOG_WITH_TAG("Your GPU supports Direct3D11.");
+        break;
+    case D3D_FEATURE_LEVEL_10_1:
+        break;
+    case D3D_FEATURE_LEVEL_10_0:
+        m_vertexShaderProfiles[SHADER_VERSION_MAX] = m_vertexShaderProfiles[SHADER_VERSION_4_0];
+        m_geometryShaderProfiles[SHADER_VERSION_MAX] = m_geometryShaderProfiles[SHADER_VERSION_4_0];
+        m_pixelShaderProfiles[SHADER_VERSION_MAX] = m_pixelShaderProfiles[SHADER_VERSION_4_0];
+        LI_LOG_WITH_TAG("Your GPU does not support Direct3D 11. Falling back to Direct3D10.");
+        break;
+    case D3D_FEATURE_LEVEL_9_3:
+    case D3D_FEATURE_LEVEL_9_2:
+    case D3D_FEATURE_LEVEL_9_1:
+        m_vertexShaderProfiles[SHADER_VERSION_MAX] = m_vertexShaderProfiles[SHADER_VERSION_3_0];
+        m_pixelShaderProfiles[SHADER_VERSION_MAX] = m_pixelShaderProfiles[SHADER_VERSION_3_0];
+        LI_LOG_WITH_TAG("Poor bastard! Your GPU does not support Direct3D 11. Not even Direct3D 10. Falling back to Direct3D9.");
+        break;
+    }
+}
+
+
+bool GraphicsLayer::PrintAdapterString(IDXGIAdapter1* p_pAdapter) const
+{
+    HRESULT hr = S_OK;
+    DXGI_ADAPTER_DESC1 desc;
+    hr = p_pAdapter->GetDesc1(&desc);
+    RETURN_IF_FAILED(hr);
+
+    std::ostringstream adapterStr;
+    adapterStr << "GPU found: ";
+    for(const wchar_t* c = desc.Description; *c != 0; ++c)
+    {
+        adapterStr << (char)*c;
+    }
+    adapterStr << ", Dedicated Video Memory: " << (desc.DedicatedVideoMemory / (1024*1024)) << "MB";
+    adapterStr << ", Dedicated System Memory: " << (desc.DedicatedSystemMemory / (1024*1024)) << "MB";
+    do 
+    {
+        static unsigned int i = 0;
+        static IDXGIOutput* pOutput;
+        hr = p_pAdapter->EnumOutputs(i++, &pOutput);
+        if(SUCCEEDED(hr))
+        {
+            adapterStr << ", " << this->GetAdapterOutputString(pOutput);
+        }
+    } while (SUCCEEDED(hr));
+    
+    LI_LOG_WITH_TAG(adapterStr.str().c_str());
+
+    return true;
+}
+
+
+std::string GraphicsLayer::GetAdapterOutputString(IDXGIOutput* p_pOutput) const
+{
+    HRESULT hr = S_OK;
+    DXGI_OUTPUT_DESC desc;
+    hr = p_pOutput->GetDesc(&desc);
+    RETURN_IF_FAILED(hr);
+
+    std::ostringstream outputStr;
+    outputStr << "output: ";
+    for(const wchar_t* c = desc.DeviceName; *c != 0; ++c)
+    {
+        outputStr << (char)*c;
+    }
+
+    return outputStr.str();
 }
 
 
@@ -299,8 +364,6 @@ bool GraphicsLayer::CreateAppWindow(HINSTANCE hInstance)
 
     RegisterClassEx(&wcex);
 
-    m_width = SCREEN_WIDTH;
-    m_height = SCREEN_HEIGHT;
     RECT rect;
     rect.left = 0;
     rect.top = 0;
@@ -338,15 +401,15 @@ bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 {
     //return true;
     HRESULT hr = S_OK;
-    if(m_initialized)
+    if(m_initialized && !m_fullscreen)
     {
         std::ostringstream str;
-        str << "New size: " << p_width << "x" << p_height;
-        LI_INFO(str.str());
+        str << p_width << "x" << p_height;
+        LI_LOG_WITH_TAG("New size " + str.str());
 
         this->ReleaseBackbuffer();
-
-        hr = m_pSwapChain->ResizeBuffers(0, p_width, p_height, DXGI_FORMAT_UNKNOWN, 0);
+        
+        hr = m_pSwapChain->ResizeBuffers(0, p_width, p_height, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
         RETURN_IF_FAILED(hr);
 
         if(!this->LoadBackbuffer())
@@ -357,6 +420,24 @@ bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
         m_width = p_width;
         m_height = p_height;
     }
+    return true;
+}
+
+
+bool GraphicsLayer::ToggleFullscreen(void)
+{
+    
+    HRESULT hr = S_OK;
+
+    hr = m_pSwapChain->SetFullscreenState(!m_fullscreen, 0);
+    RETURN_IF_FAILED(hr);
+    m_fullscreen ^= true;
+
+    if(!m_fullscreen)
+    {
+        ShowWindow(m_hWnd, SW_SHOW);
+    }
+
     return true;
 }
 
@@ -379,40 +460,17 @@ bool GraphicsLayer::LoadBackbuffer(void)
     SAFE_RELEASE(pTexture);
     RETURN_IF_FAILED(hr);
 
-    return true;
-}
+    m_pContext->OMSetRenderTargets(1, &m_pBackBuffer, 0);
 
+    D3D11_VIEWPORT viewport;
+    viewport.Width = (float)m_width;
+    viewport.Height = (float)m_height;
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+    m_pContext->RSSetViewports(1, &viewport);
 
-bool GraphicsLayer::ToggleFullscreen(void)
-{
-    ReleaseBackbuffer();
-    HRESULT hr = S_OK;
-    if(m_fullscreen)
-    {
-        hr = m_pSwapChain->SetFullscreenState(false, 0);
-        RETURN_IF_FAILED(hr);
-        m_fullscreen = false;
-    }
-    else
-    {
-        DXGI_MODE_DESC desc, matching;
-        desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
-        desc.Width = 1920;
-        desc.Height = 1080;
-        desc.RefreshRate.Numerator = 120;
-        desc.RefreshRate.Denominator = 1;
-        desc.Scaling = DXGI_MODE_SCALING_CENTERED;
-        desc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE;
-        m_pOutput->FindClosestMatchingMode(&desc, &matching, m_pDevice);
-
-        hr = m_pSwapChain->ResizeTarget(&desc);
-        RETURN_IF_FAILED(hr);
-        hr = m_pSwapChain->SetFullscreenState(true, m_pOutput);
-        RETURN_IF_FAILED(hr);
-
-        m_fullscreen = true;
-    }
-    LoadBackbuffer();
     return true;
 }
 

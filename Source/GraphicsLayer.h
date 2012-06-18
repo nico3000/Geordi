@@ -72,6 +72,9 @@ private:
     bool CreateAppGraphics(VOID);
     void ReleaseBackbuffer(void);
     bool LoadBackbuffer(void);
+    void PrepareFeatureLevel(void);
+    bool PrintAdapterString(IDXGIAdapter1* p_pAdapter) const;
+    std::string GetAdapterOutputString(IDXGIOutput* p_pOutput) const;
 
 public:
     GraphicsLayer(void);
