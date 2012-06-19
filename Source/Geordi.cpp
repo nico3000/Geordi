@@ -43,9 +43,6 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
 	// Main message loop:
 	while (LostIsland::g_pApp->IsContinued())
 	{
-        LostIsland::g_pTimer->Next();
-        
-
         if(PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
         {
 		    if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -61,9 +58,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance,
         else
         {
             LostIsland::g_pApp->OnNextFrame();
-        }
-        
-        
+        }        
 	}
 
     GameInitializer::Destroy();

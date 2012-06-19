@@ -37,6 +37,12 @@
     <Filter Include="Source Files\GameView">
       <UniqueIdentifier>{b0b3e52c-ec0b-49ae-8fb6-3b10c5eaec18}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GameApplicationLayer\Processes">
+      <UniqueIdentifier>{e5f020b3-2af3-46dc-8d0c-70aa8b5db2a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameApplicationLayer\Processes">
+      <UniqueIdentifier>{af4e9e5e-6866-4340-a3d7-4a18811b11f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -102,11 +108,20 @@
     <ClInclude Include="InputController.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
-    <ClInclude Include="Config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files\GameView</Filter>
+    </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessManager.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
+    <ClInclude Include="DelayProcess.h">
+      <Filter>Header Files\GameApplicationLayer\Processes</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugOutProcess.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -155,11 +170,20 @@
     <ClCompile Include="InputController.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
-    <ClCompile Include="Config.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files\GameView</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessManager.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
+    </ClCompile>
+    <ClCompile Include="DelayProcess.cpp">
+      <Filter>Source Files\GameApplicationLayer\Processes</Filter>
+    </ClCompile>
+    <ClCompile Include="DebugOutProcess.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "GameApp.h"
 
-
 GameApp::GameApp(void):
 m_pLogic(NULL), m_continue(true)
 {
@@ -22,7 +21,12 @@ bool GameApp::Init(void)
 
 void GameApp::OnNextFrame(void)
 {
+    LostIsland::g_pTimer->Next();
+    unsigned long deltaMillis = LostIsland::g_pTimer->GetGameDeltaMillis();
+    LostIsland::g_pProcessManager->UpdateProcesses(deltaMillis);
+
     LostIsland::g_pGraphics->Clear();
+
     // TODO: Dynamic testing stuff goes here and only here.
 
     // TODO: Main entry point

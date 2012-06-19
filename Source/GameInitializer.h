@@ -1,9 +1,10 @@
 #pragma once
+#include "Config.h"
 #include "GameTimer.h"
 #include "GameApp.h"
 #include "GraphicsLayer.h"
 #include "InputController.h"
-#include "Config.h"
+#include "ProcessManager.h"
 
 namespace LostIsland
 {
@@ -12,6 +13,7 @@ namespace LostIsland
     extern GameApp* g_pApp;    
     extern GraphicsLayer* g_pGraphics;
     extern InputController* g_pInput;
+    extern ProcessManager* g_pProcessManager;
 }
 
 namespace GameInitializer
