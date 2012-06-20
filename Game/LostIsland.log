@@ -1,6 +1,5 @@
 [Logger] Initialization successful
-[Direct3D] GPU found: NVIDIA GeForce GTX 580, Dedicated Video Memory: 3019MB, Dedicated System Memory: 0MB, output: \\.\DISPLAY1
-[Direct3D] GPU found: Intel(R) HD Graphics 3000, Dedicated Video Memory: 64MB, Dedicated System Memory: 0MB
+[Direct3D] GPU found: ATI Radeon HD 5800 Series, Dedicated Video Memory: 1014MB, Dedicated System Memory: 0MB, output: \\.\DISPLAY2, output: \\.\DISPLAY1
 [Direct3D] Your GPU supports Direct3D11.
-[Direct3D] Using DXGI mode 1024x768@119Hz
+[Direct3D] Using DXGI mode 1024x768@75Hz
 [Direct3D] New size 1024x768

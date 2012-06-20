@@ -1,11 +1,13 @@
 #pragma once
 #include "IGameLogic.h"
+#include "Actor.h"
 
 class GameApp
 {
 private:
     bool m_continue;
     IGameLogic* m_pLogic;
+    ActorFactory* m_pActorFactory;
 
 public:
     GameApp(void);
@@ -16,6 +18,8 @@ public:
 
     bool IsContinued(void) const { return m_continue; }
     void SetContinue(bool p_continue) { m_continue = p_continue; }
+    ActorFactory* GetActorFactory(void) { return m_pActorFactory; }
+    IGameLogic* GetGameLogic(void) { return m_pLogic; }
 
 };
 

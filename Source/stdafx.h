@@ -41,6 +41,17 @@
 #include <streambuf>
 #include <fstream>
 #include <sstream>
+#include <FastDelegate.h>
+
+#include <d3d11.h>
+#include <D3DX11.h>
+#include <DxErr.h>
+#include <dxgi.h>
+#include <xnamath.h>
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "d3dx11.lib")
+#pragma comment(lib, "DxErr.lib")
+#pragma comment(lib, "dxgi.lib")
 
 //#define DXUT_AUTOLIB
 //#include <DXUT.h>

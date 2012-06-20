@@ -4,6 +4,7 @@
 // testing includes
 #include "DelayProcess.h"
 #include "DebugOutProcess.h"
+#include "DelegateTest.h"
 
 Config* LostIsland::g_pConfig = 0;
 GameTimer* LostIsland::g_pTimer = 0;
@@ -59,21 +60,36 @@ bool GameInitializer::Init(HINSTANCE hInstance)
     }
 
     // static testing stuff goes here and only here.
-    StrongProcessPtr pCountdown(new DelayProcess(1000));
-    LostIsland::g_pProcessManager->AttachProcess(pCountdown);
-    for(int i=5; i > 0; --i)
-    {
-        std::ostringstream str;
-        str << i;
-        
-        StrongProcessPtr pTextProcess(new DebugOutProcess(str.str()));
-        pCountdown->AttachChild(pTextProcess);
-        StrongProcessPtr pNewCountdown(new DelayProcess(1000));
-        pTextProcess->AttachChild(pNewCountdown);
-        pCountdown = pNewCountdown;
-    }
-    StrongProcessPtr pTextProcess(new DebugOutProcess("Boooom!"));
-    pCountdown->AttachChild(pTextProcess);
+    // process testing
+//     StrongProcessPtr pCountdown(new DelayProcess(1000));
+//     LostIsland::g_pProcessManager->AttachProcess(pCountdown);
+//     for(int i=5; i > 0; --i)
+//     {
+//         std::ostringstream str;
+//         str << i;
+//         
+//         StrongProcessPtr pTextProcess(new DebugOutProcess(str.str()));
+//         pCountdown->AttachChild(pTextProcess);
+//         StrongProcessPtr pNewCountdown(new DelayProcess(1000));
+//         pTextProcess->AttachChild(pNewCountdown);
+//         pCountdown = pNewCountdown;
+//     }
+//     StrongProcessPtr pTextProcess(new DebugOutProcess("Booooom!"));
+//     pCountdown->AttachChild(pTextProcess);
+
+    // delegate testing
+//     typedef fastdelegate::FastDelegate1<std::string> TestDelegate;
+//     DelegateTest* pTest = new DelegateTest;
+//     DelegateTest2* pTest2 = new DelegateTest2;
+//     TestDelegate del1 = fastdelegate::MakeDelegate(pTest, &DelegateTest::Test1);
+//     del1("testout\n");
+//     TestDelegate del2 = fastdelegate::MakeDelegate(pTest2, &DelegateTest2::Test2);
+//     del2("testout\n");
+//     delete pTest;
+//     delete pTest2;
+
+    // actor testing
+    LostIsland::g_pApp->GetGameLogic()->VCreateActor("Actors/CubeActor.xml");
 
     return true;
 }

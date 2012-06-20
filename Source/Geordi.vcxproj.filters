@@ -43,6 +43,12 @@
     <Filter Include="Source Files\GameApplicationLayer\Processes">
       <UniqueIdentifier>{af4e9e5e-6866-4340-a3d7-4a18811b11f0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GameLogic\ActorSystem">
+      <UniqueIdentifier>{71679af8-c42c-4b95-aa13-9ea0279c0f11}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameLogic\ActorSystem">
+      <UniqueIdentifier>{e4088ffc-d126-4110-b96b-4a8508ccd975}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -87,12 +93,6 @@
     <ClInclude Include="GameApp.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
-    <ClInclude Include="GraphicsLayer.h">
-      <Filter>Header Files\GameApplicationLayer</Filter>
-    </ClInclude>
-    <ClInclude Include="IGameLogic.h">
-      <Filter>Header Files\GameLogic</Filter>
-    </ClInclude>
     <ClInclude Include="ShaderProgram.h">
       <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
     </ClInclude>
@@ -114,13 +114,28 @@
     <ClInclude Include="Config.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
-    <ClInclude Include="ProcessManager.h">
-      <Filter>Header Files\GameApplicationLayer</Filter>
-    </ClInclude>
     <ClInclude Include="DelayProcess.h">
       <Filter>Header Files\GameApplicationLayer\Processes</Filter>
     </ClInclude>
     <ClInclude Include="DebugOutProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DelegateTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcessManager.h">
+      <Filter>Header Files\GameApplicationLayer\Processes</Filter>
+    </ClInclude>
+    <ClInclude Include="GraphicsLayer.h">
+      <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="IGameLogic.h">
+      <Filter>Header Files\GameLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="GameLogic.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -152,9 +167,6 @@
     <ClCompile Include="GameApp.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
-    <ClCompile Include="GraphicsLayer.cpp">
-      <Filter>Source Files\GameApplicationLayer</Filter>
-    </ClCompile>
     <ClCompile Include="ShaderProgram.cpp">
       <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
     </ClCompile>
@@ -176,13 +188,22 @@
     <ClCompile Include="Config.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
-    <ClCompile Include="ProcessManager.cpp">
-      <Filter>Source Files\GameApplicationLayer</Filter>
-    </ClCompile>
     <ClCompile Include="DelayProcess.cpp">
       <Filter>Source Files\GameApplicationLayer\Processes</Filter>
     </ClCompile>
     <ClCompile Include="DebugOutProcess.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcessManager.cpp">
+      <Filter>Source Files\GameApplicationLayer\Processes</Filter>
+    </ClCompile>
+    <ClCompile Include="GraphicsLayer.cpp">
+      <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="GameLogic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

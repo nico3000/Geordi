@@ -1,20 +1,35 @@
 #include "StdAfx.h"
 #include "GameApp.h"
+#include "GameLogic.h"
 
 GameApp::GameApp(void):
-m_pLogic(NULL), m_continue(true)
+m_pActorFactory(0), m_pLogic(0), m_continue(true)
 {
 }
 
 
 GameApp::~GameApp(void)
 {
+    m_pLogic->VDestroy();
     SAFE_DELETE(m_pLogic);
+    SAFE_DELETE(m_pActorFactory);
 }
 
 
 bool GameApp::Init(void)
 {
+    m_pActorFactory = new ActorFactory;
+    if(!m_pActorFactory)
+    {
+        LI_ERROR("ActorFactory initialization failed");
+        return false;
+    }
+    m_pLogic = new GameLogic;
+    if(!m_pLogic || !m_pLogic->VInit())
+    {
+        LI_ERROR("GameLogic initialization failed");
+        return false;
+    }
     return true;
 }
 
@@ -30,7 +45,7 @@ void GameApp::OnNextFrame(void)
     // TODO: Dynamic testing stuff goes here and only here.
 
     // TODO: Main entry point
-    //m_pLogic->VOnNextFrame();
+    m_pLogic->VUpdate(deltaMillis);
 
     LostIsland::g_pGraphics->Present();
 }
