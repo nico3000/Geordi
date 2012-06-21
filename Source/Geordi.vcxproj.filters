@@ -37,17 +37,23 @@
     <Filter Include="Source Files\GameView">
       <UniqueIdentifier>{b0b3e52c-ec0b-49ae-8fb6-3b10c5eaec18}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\GameApplicationLayer\Processes">
-      <UniqueIdentifier>{e5f020b3-2af3-46dc-8d0c-70aa8b5db2a4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\GameApplicationLayer\Processes">
-      <UniqueIdentifier>{af4e9e5e-6866-4340-a3d7-4a18811b11f0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\GameLogic\ActorSystem">
       <UniqueIdentifier>{71679af8-c42c-4b95-aa13-9ea0279c0f11}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\GameLogic\ActorSystem">
       <UniqueIdentifier>{e4088ffc-d126-4110-b96b-4a8508ccd975}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GameLogic\EventSystem">
+      <UniqueIdentifier>{e1018837-65bb-4bef-b0f8-74cab2829fe8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameLogic\ProcesSystem">
+      <UniqueIdentifier>{af4e9e5e-6866-4340-a3d7-4a18811b11f0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameLogic\EventSystem">
+      <UniqueIdentifier>{f9eb448a-2731-4804-b1d2-bb3189f5fde4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GameLogic\ProcesSystem">
+      <UniqueIdentifier>{e5f020b3-2af3-46dc-8d0c-70aa8b5db2a4}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -115,13 +121,13 @@
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
     <ClInclude Include="DelayProcess.h">
-      <Filter>Header Files\GameApplicationLayer\Processes</Filter>
+      <Filter>Header Files\GameLogic\ProcesSystem</Filter>
     </ClInclude>
     <ClInclude Include="DelegateTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ProcessManager.h">
-      <Filter>Header Files\GameApplicationLayer\Processes</Filter>
+      <Filter>Header Files\GameLogic\ProcesSystem</Filter>
     </ClInclude>
     <ClInclude Include="GraphicsLayer.h">
       <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
@@ -136,7 +142,16 @@
       <Filter>Header Files\GameLogic</Filter>
     </ClInclude>
     <ClInclude Include="DebugOutProcess.h">
-      <Filter>Header Files\GameApplicationLayer\Processes</Filter>
+      <Filter>Header Files\GameLogic\ProcesSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="EventManager.h">
+      <Filter>Header Files\GameLogic\EventSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="TestEventData.h">
+      <Filter>Header Files\GameLogic\EventSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ActorEvents.h">
+      <Filter>Header Files\GameLogic\EventSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -189,10 +204,10 @@
       <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
     <ClCompile Include="DelayProcess.cpp">
-      <Filter>Source Files\GameApplicationLayer\Processes</Filter>
+      <Filter>Source Files\GameLogic\ProcesSystem</Filter>
     </ClCompile>
     <ClCompile Include="ProcessManager.cpp">
-      <Filter>Source Files\GameApplicationLayer\Processes</Filter>
+      <Filter>Source Files\GameLogic\ProcesSystem</Filter>
     </ClCompile>
     <ClCompile Include="GraphicsLayer.cpp">
       <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
@@ -201,10 +216,19 @@
       <Filter>Source Files\GameLogic\ActorSystem</Filter>
     </ClCompile>
     <ClCompile Include="DebugOutProcess.cpp">
-      <Filter>Source Files\GameApplicationLayer\Processes</Filter>
+      <Filter>Source Files\GameLogic\ProcesSystem</Filter>
     </ClCompile>
     <ClCompile Include="GameLogic.cpp">
       <Filter>Source Files\GameLogic</Filter>
+    </ClCompile>
+    <ClCompile Include="EventManager.cpp">
+      <Filter>Source Files\GameLogic\EventSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="TestEventData.cpp">
+      <Filter>Source Files\GameLogic\EventSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ActorEvents.cpp">
+      <Filter>Source Files\GameLogic\EventSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

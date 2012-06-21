@@ -231,12 +231,14 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
+    <ClInclude Include="ActorEvents.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DebugOutProcess.h" />
     <ClInclude Include="DelayProcess.h" />
     <ClInclude Include="DelegateTest.h" />
+    <ClInclude Include="EventManager.h" />
     <ClInclude Include="GameApp.h" />
     <ClInclude Include="GameInitializer.h" />
     <ClInclude Include="GameLogic.h" />
@@ -255,15 +257,18 @@
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TerrainData.h" />
+    <ClInclude Include="TestEventData.h" />
     <ClInclude Include="VertexBuffer.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="ActorEvents.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DebugOutProcess.cpp" />
     <ClCompile Include="DelayProcess.cpp" />
+    <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="GameApp.cpp" />
     <ClCompile Include="GameInitializer.cpp" />
     <ClCompile Include="GameLogic.cpp" />
@@ -286,6 +291,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TerrainData.cpp" />
+    <ClCompile Include="TestEventData.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>

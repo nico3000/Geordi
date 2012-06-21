@@ -34,6 +34,7 @@ namespace Logger
 
     bool Init(const char* p_configFile)
     {
+        
         g_pLogMgr = new LogMgr;
         if(g_pLogMgr == NULL)
         {
