@@ -117,9 +117,6 @@
     <ClInclude Include="DelayProcess.h">
       <Filter>Header Files\GameApplicationLayer\Processes</Filter>
     </ClInclude>
-    <ClInclude Include="DebugOutProcess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="DelegateTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -136,7 +133,10 @@
       <Filter>Header Files\GameLogic</Filter>
     </ClInclude>
     <ClInclude Include="GameLogic.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\GameLogic</Filter>
+    </ClInclude>
+    <ClInclude Include="DebugOutProcess.h">
+      <Filter>Header Files\GameApplicationLayer\Processes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -191,9 +191,6 @@
     <ClCompile Include="DelayProcess.cpp">
       <Filter>Source Files\GameApplicationLayer\Processes</Filter>
     </ClCompile>
-    <ClCompile Include="DebugOutProcess.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="ProcessManager.cpp">
       <Filter>Source Files\GameApplicationLayer\Processes</Filter>
     </ClCompile>
@@ -203,8 +200,11 @@
     <ClCompile Include="Actor.cpp">
       <Filter>Source Files\GameLogic\ActorSystem</Filter>
     </ClCompile>
+    <ClCompile Include="DebugOutProcess.cpp">
+      <Filter>Source Files\GameApplicationLayer\Processes</Filter>
+    </ClCompile>
     <ClCompile Include="GameLogic.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GameLogic</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
