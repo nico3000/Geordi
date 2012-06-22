@@ -4,7 +4,6 @@
 // testing includes
 #include "DelayProcess.h"
 #include "DebugOutProcess.h"
-#include "DelegateTest.h"
 
 Config* LostIsland::g_pConfig = 0;
 GameTimer* LostIsland::g_pTimer = 0;
@@ -76,17 +75,6 @@ bool GameInitializer::Init(HINSTANCE hInstance)
 //     }
 //     StrongProcessPtr pTextProcess(new DebugOutProcess("Booooom!"));
 //     pCountdown->AttachChild(pTextProcess);
-
-    // delegate testing
-//     typedef fastdelegate::FastDelegate1<std::string> TestDelegate;
-//     DelegateTest* pTest = new DelegateTest;
-//     DelegateTest2* pTest2 = new DelegateTest2;
-//     TestDelegate del1 = fastdelegate::MakeDelegate(pTest, &DelegateTest::Test1);
-//     del1("testout\n");
-//     TestDelegate del2 = fastdelegate::MakeDelegate(pTest2, &DelegateTest2::Test2);
-//     del2("testout\n");
-//     delete pTest;
-//     delete pTest2;
 
     // actor testing
     LostIsland::g_pApp->GetGameLogic()->VCreateActor("Actors/CubeActor.xml");

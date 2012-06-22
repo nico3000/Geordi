@@ -1,6 +1,15 @@
 <Actor>
-    <CubeRenderComponent>
-        <Dimension width="1.0" />
-        <Color r="0" g="1.0" b="1.0" a="1.0" />
-    </CubeRenderComponent>
+    <PoseComponent>
+        <InitialTransform>
+            <Translation x="0.0" y="0.0" z="0.0" />
+            <Rotation pitch="0.6" yaw="0.0" roll="0.0" />
+            <Scale x="1.0" y="1.0" z="1.0" />
+        </InitialTransform>
+    </PoseComponent>
+    <RenderComponent>
+        <Geometry type="cube" />
+    </RenderComponent>
+    <RotationComponent>
+        <Properties pitchspeed="0.3" yawspeed="0.7" rollspeed="0.2" />
+    </RotationComponent>
 </Actor>

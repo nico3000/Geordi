@@ -1,12 +1,23 @@
 #include "StdAfx.h"
 #include "Actor.h"
+#include "RenderComponent.h"
+#include "PoseComponent.h"
+#include "RotationComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 //////// Component Creator Functions /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-ActorComponent* CreateCubeRenderComponent(void) {
-    return new CubeRenderComponent;
+ActorComponent* CreateRenderComponent(void) {
+    return new RenderComponent;
+}
+
+ActorComponent* CreatePoseComponent(void) {
+    return new PoseComponent;
+}
+
+ActorComponent* CreateRotationComponent(void) {
+    return new RotationComponent;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -57,7 +68,9 @@ void Actor::AddComponent(StrongActorComponentPtr p_pComponent)
 
 ActorFactory::ActorFactory(void)
 {
-    m_actorComponentCreators["CubeRenderComponent"] = CreateCubeRenderComponent;
+    m_actorComponentCreators["RenderComponent"] = CreateRenderComponent;
+    m_actorComponentCreators["PoseComponent"] = CreatePoseComponent;
+    m_actorComponentCreators["RotationComponent"] = CreateRotationComponent;
 }
 
 
@@ -94,12 +107,12 @@ StrongActorPtr ActorFactory::CreateActor(const char* p_actorResource)
         StrongActorComponentPtr pComponent(this->CreateComponent(pComponentData));
         if(pComponent)
         {
-            pActor->AddComponent(pComponent);
             pComponent->SetOwner(pActor);
+            pActor->AddComponent(pComponent);
         }
         else
         {
-            return StrongActorPtr(0);
+            //return StrongActorPtr(0);
         }
         pComponentData = pComponentData->NextSiblingElement();
     }
@@ -130,29 +143,4 @@ StrongActorComponentPtr ActorFactory::CreateComponent(tinyxml2::XMLElement* p_pD
         LI_ERROR("No suitable component constructor found: " + name);
     }
     return StrongActorComponentPtr(0);
-}
-
-
-
-//////////////////////////////////////////////////////////////////////////
-////////// individual components come here ///////////////////////////////
-//////////////////////////////////////////////////////////////////////////
-
-bool CubeRenderComponent::VInit(tinyxml2::XMLElement* p_pData)
-{
-    tinyxml2::XMLElement* pDimension = p_pData->FirstChildElement("Dimension");
-    tinyxml2::XMLElement* pColor = p_pData->FirstChildElement("Color");
-
-    if(!pDimension || !pColor)
-    {
-        return false;
-    }
-
-    m_size = pDimension->FloatAttribute("size");
-    m_color.x = pColor->FloatAttribute("r");
-    m_color.y = pColor->FloatAttribute("g");
-    m_color.z = pColor->FloatAttribute("b");
-    m_color.w = pColor->FloatAttribute("a");
-
-    return true;
 }

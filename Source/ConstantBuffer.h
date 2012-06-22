@@ -22,5 +22,7 @@ public:
     bool Build(void* p_pData, unsigned int p_byteWidth);
     void Bind(unsigned int p_slot, int p_target);
     bool Update(void);
+
+    bool IsBuilt(void) const { return m_pData != 0; }
 };
 

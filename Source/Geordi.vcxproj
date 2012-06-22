@@ -237,12 +237,12 @@
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DebugOutProcess.h" />
     <ClInclude Include="DelayProcess.h" />
-    <ClInclude Include="DelegateTest.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="GameApp.h" />
     <ClInclude Include="GameInitializer.h" />
     <ClInclude Include="GameLogic.h" />
     <ClInclude Include="GameTimer.h" />
+    <ClInclude Include="Geometry.h" />
     <ClInclude Include="Geordi.h" />
     <ClInclude Include="GraphicsLayer.h" />
     <ClInclude Include="IGameLogic.h" />
@@ -251,8 +251,11 @@
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="Octree.h" />
+    <ClInclude Include="PoseComponent.h" />
     <ClInclude Include="ProcessManager.h" />
+    <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="RotationComponent.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -273,6 +276,7 @@
     <ClCompile Include="GameInitializer.cpp" />
     <ClCompile Include="GameLogic.cpp" />
     <ClCompile Include="GameTimer.cpp" />
+    <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="Geordi.cpp" />
     <ClCompile Include="GraphicsLayer.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
@@ -280,7 +284,10 @@
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="PoseComponent.cpp" />
     <ClCompile Include="ProcessManager.cpp" />
+    <ClCompile Include="RenderComponent.cpp" />
+    <ClCompile Include="RotationComponent.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

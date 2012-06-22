@@ -67,7 +67,7 @@ public:
         }
         else
         {
-            return std::weak_ptr<ComponentType>(0);
+            return std::weak_ptr<ComponentType>();
         }
     }
 };
@@ -89,22 +89,5 @@ public:
     ~ActorFactory(void);
 
     StrongActorPtr CreateActor(const char* p_actorResource);
-
-};
-
-
-class CubeRenderComponent :
-    public ActorComponent
-{
-private:
-    XMFLOAT4 m_color;
-    float m_size;
-
-public:
-    CubeRenderComponent(void) {}
-    ~CubeRenderComponent(void) {}
-
-    bool VInit(tinyxml2::XMLElement* p_pData);
-    ComponentID VGetComponentID(void) const { return 0xd08283ae; }
 
 };

@@ -99,7 +99,7 @@ bool EventManager::VQueueEvent(IEventDataPtr p_pEvent)
     }
     else
     {
-        LI_WARNING("new event ignored, because no one is interested: " + std::string(p_pEvent->VGetName()));
+        //LI_WARNING("new event ignored, because no one is interested: " + std::string(p_pEvent->VGetName()));
         return false;
     }
 }

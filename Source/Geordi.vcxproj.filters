@@ -123,9 +123,6 @@
     <ClInclude Include="DelayProcess.h">
       <Filter>Header Files\GameLogic\ProcesSystem</Filter>
     </ClInclude>
-    <ClInclude Include="DelegateTest.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ProcessManager.h">
       <Filter>Header Files\GameLogic\ProcesSystem</Filter>
     </ClInclude>
@@ -152,6 +149,18 @@
     </ClInclude>
     <ClInclude Include="ActorEvents.h">
       <Filter>Header Files\GameLogic\EventSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderComponent.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="Geometry.h">
+      <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="PoseComponent.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="RotationComponent.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -229,6 +238,18 @@
     </ClCompile>
     <ClCompile Include="ActorEvents.cpp">
       <Filter>Source Files\GameLogic\EventSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderComponent.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="Geometry.cpp">
+      <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="PoseComponent.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="RotationComponent.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

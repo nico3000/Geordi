@@ -69,18 +69,8 @@ GraphicsLayer::~GraphicsLayer(void)
     }
 }
 
-struct ModelProperties
-{
-    XMFLOAT4X4 model;
-    XMFLOAT4X4 modelIT;
-};
-
 ShaderProgram g_program;
-VertexBuffer g_vertices;
-IndexBuffer g_indices;
 Camera g_cam;
-ConstantBuffer g_model;
-ModelProperties g_properties;
 
 
 bool GraphicsLayer::Init(HINSTANCE hInstance)
@@ -112,43 +102,12 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
         return false;
     }
 
-    VertexBuffer::SimpleVertex vertices[] = {
-        { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
-        { XMFLOAT3(+0.5f, -0.5f, -0.5f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
-        { XMFLOAT3(+0.5f, +0.5f, -0.5f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
-        { XMFLOAT3(-0.5f, +0.5f, -0.5f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
-        { XMFLOAT3(-0.5f, -0.5f, +0.5f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
-        { XMFLOAT3(+0.5f, -0.5f, +0.5f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
-        { XMFLOAT3(+0.5f, +0.5f, +0.5f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
-        { XMFLOAT3(-0.5f, +0.5f, +0.5f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) },
-    };
-    if(!g_vertices.Build(vertices, ARRAYSIZE(vertices), sizeof(VertexBuffer::SimpleVertex)))
-    {
-        return false;
-    }
-
-    unsigned int indices[] = {
-        0, 1, 3, 2, 7, 6, 4, 5, 0, 1, 0xFFFFFFFF,
-        1, 5, 2, 6, 0xFFFFFFFF,
-        3, 7, 0, 4,
-    };
-    if(!g_indices.Build(indices, ARRAYSIZE(indices), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP))
-    {
-        return false;
-    }
-
     if(!g_cam.Init())
     {
         return false;
     }
     g_cam.Bind();
     g_cam.Move(-2.0f, 0.0f, 0.0f);
-
-    if(!g_model.Build(&g_properties, sizeof(ModelProperties)))
-    {
-        return false;
-    }
-    g_model.Bind(1, ConstantBuffer::TARGET_ALL);
     // --- end testing
     
     return true;
@@ -165,17 +124,8 @@ void GraphicsLayer::Clear(void)
 void GraphicsLayer::Present(void)
 {
     // --- begin testing
-    static int id = LostIsland::g_pTimer->Tick(REALTIME);
-    long elapsed = LostIsland::g_pTimer->Tock(id, KEEPRUNNING);
-    //g_cam.SetPosition(sin((float)elapsed * 1e-2f), 0.0f, -3.0f + sin((float)elapsed * 0.5e-2f));
-    XMStoreFloat4x4(&g_properties.model, XMMatrixRotationY(4e-3f * (float)elapsed));
-
     g_program.Bind();
-    g_vertices.Bind();
-    g_indices.Bind();
     g_cam.Update();
-    g_model.Update();
-    m_pContext->DrawIndexed(g_indices.GetIndexCount(), 0, 0);
     // --- end testing
 
     m_pSwapChain->Present(m_vsync, 0);
