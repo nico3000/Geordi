@@ -1,5 +1,6 @@
 #pragma once
 #include "Actor.h"
+
 class RotationComponent :
     public ActorComponent
 {
@@ -18,5 +19,3 @@ public:
     static ComponentID GetComponentID(void) { return 0x1d00c3f0; }
 
 };
-
-

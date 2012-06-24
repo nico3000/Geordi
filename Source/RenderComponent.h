@@ -33,5 +33,3 @@ public:
     ComponentID VGetComponentID(void) const { return 0xd08283ae; }
 
 };
-
-

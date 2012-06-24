@@ -30,7 +30,7 @@ private:
 
     int GetTickTockID(void) const;
     int Tick(int p_id, TickOption p_option);
-    
+
 public:
     GameTimer(void);
     ~GameTimer(void);

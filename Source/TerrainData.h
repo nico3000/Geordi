@@ -41,4 +41,3 @@ public:
     void GenerateTestData(void);
     void PrintOctFileContents(std::string p_filename) const;
 };
-

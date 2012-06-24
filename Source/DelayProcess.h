@@ -1,5 +1,6 @@
 #pragma once
 #include "ProcessManager.h"
+
 class DelayProcess :
     public Process
 {

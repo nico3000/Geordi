@@ -1,13 +1,14 @@
 #pragma once
-#include "IGameLogic.h"
+#include "GameLogic.h"
 #include "Actor.h"
+#include "Config.h"
 
 class GameApp
 {
 private:
     bool m_continue;
-    IGameLogic* m_pLogic;
-    ActorFactory* m_pActorFactory;
+    GameLogic* m_pLogic;
+    Config* m_pConfig;
 
 public:
     GameApp(void);
@@ -18,8 +19,8 @@ public:
 
     bool IsContinued(void) const { return m_continue; }
     void SetContinue(bool p_continue) { m_continue = p_continue; }
-    ActorFactory* GetActorFactory(void) { return m_pActorFactory; }
-    IGameLogic* GetGameLogic(void) { return m_pLogic; }
+    GameLogic* GetGameLogic(void) { return m_pLogic; }
+    Config* GetConfig(void) const { return m_pConfig; }
 
 };
 
@@ -27,4 +28,5 @@ namespace LostIsland
 {
     LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 }
+
 

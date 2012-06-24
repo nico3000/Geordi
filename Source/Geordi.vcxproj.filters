@@ -55,6 +55,12 @@
     <Filter Include="Header Files\GameLogic\ProcesSystem">
       <UniqueIdentifier>{e5f020b3-2af3-46dc-8d0c-70aa8b5db2a4}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\GameApplicationLayer\Input">
+      <UniqueIdentifier>{0ac4f656-801e-4a33-9609-9fd6b4b12f05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GameApplicationLayer\Input">
+      <UniqueIdentifier>{5cb1909c-17b3-4167-b4dc-6d11d556266f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -111,9 +117,6 @@
     <ClInclude Include="ConstantBuffer.h">
       <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="InputController.h">
-      <Filter>Header Files\GameApplicationLayer</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files\GameView</Filter>
     </ClInclude>
@@ -159,8 +162,26 @@
     <ClInclude Include="PoseComponent.h">
       <Filter>Header Files\GameLogic\ActorSystem</Filter>
     </ClInclude>
+    <ClInclude Include="InputController.h">
+      <Filter>Header Files\GameApplicationLayer\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="IKeyboardHandler.h">
+      <Filter>Header Files\GameApplicationLayer\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="IPointerHandler.h">
+      <Filter>Header Files\GameApplicationLayer\Input</Filter>
+    </ClInclude>
     <ClInclude Include="RotationComponent.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="IGameView.h">
+      <Filter>Header Files\GameView</Filter>
+    </ClInclude>
+    <ClInclude Include="FPSActorInputHandler.h">
+      <Filter>Header Files\GameView</Filter>
+    </ClInclude>
+    <ClInclude Include="ActorStaticMoveProcess.h">
+      <Filter>Header Files\GameLogic\ProcesSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -202,9 +223,6 @@
     </ClCompile>
     <ClCompile Include="ConstantBuffer.cpp">
       <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="InputController.cpp">
-      <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files\GameView</Filter>
@@ -248,8 +266,17 @@
     <ClCompile Include="PoseComponent.cpp">
       <Filter>Source Files\GameLogic\ActorSystem</Filter>
     </ClCompile>
+    <ClCompile Include="InputController.cpp">
+      <Filter>Source Files\GameApplicationLayer\Input</Filter>
+    </ClCompile>
     <ClCompile Include="RotationComponent.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="FPSActorInputHandler.cpp">
+      <Filter>Source Files\GameView</Filter>
+    </ClCompile>
+    <ClCompile Include="ActorStaticMoveProcess.cpp">
+      <Filter>Source Files\GameLogic\ProcesSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

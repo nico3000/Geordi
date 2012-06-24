@@ -78,9 +78,9 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     //TerrainData terrain;
     //terrain.Init(32, 8, 4, 8, 8);
     //terrain.Test();
-    m_width = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "width");
-    m_height = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "height");
-    m_vsync = LostIsland::g_pConfig->GetBoolAttribute("graphics", "display", "vsync");
+    m_width = LostIsland::g_pApp->GetConfig()->GetIntAttribute("graphics", "display", "width");
+    m_height = LostIsland::g_pApp->GetConfig()->GetIntAttribute("graphics", "display", "height");
+    m_vsync = LostIsland::g_pApp->GetConfig()->GetBoolAttribute("graphics", "display", "vsync");
     if(!this->CreateAppWindow(hInstance))
     {
         return false;
@@ -193,13 +193,13 @@ bool GraphicsLayer::CreateAppGraphics(void)
     scDesc.SampleDesc.Count = 1;
     scDesc.SampleDesc.Quality = 0;
     scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-    scDesc.Windowed = LostIsland::g_pConfig->GetBoolAttribute("graphics", "display", "windowed");
+    scDesc.Windowed = LostIsland::g_pApp->GetConfig()->GetBoolAttribute("graphics", "display", "windowed");
 
     DXGI_MODE_DESC desiredMode;
     ZeroMemory(&desiredMode, sizeof(DXGI_MODE_DESC));
     desiredMode.Width = m_width;
     desiredMode.Height = m_height;
-    desiredMode.RefreshRate.Numerator = LostIsland::g_pConfig->GetIntAttribute("graphics", "display", "refresh");
+    desiredMode.RefreshRate.Numerator = LostIsland::g_pApp->GetConfig()->GetIntAttribute("graphics", "display", "refresh");
     desiredMode.RefreshRate.Denominator = 1;
 
     RETURN_IF_FAILED(pAdapter->EnumOutputs(0, &m_pOutput));

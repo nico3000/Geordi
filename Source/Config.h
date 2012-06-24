@@ -1,4 +1,5 @@
 #pragma once
+
 class Config
 {
 private:
@@ -18,4 +19,5 @@ public:
     std::string GetStringAttribute(const char* p_section, const char* p_subsection, const char* p_attribute);
 
 };
+
 

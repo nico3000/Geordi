@@ -1,5 +1,6 @@
 #pragma once
 #include "ProcessManager.h"
+
 class DebugOutProcess :
     public Process
 {
@@ -13,6 +14,5 @@ public:
     DebugOutProcess(std::string p_text);
     ~DebugOutProcess(void);
 
-    
-};
 
+};

@@ -2,6 +2,13 @@
 #include "InputController.h"
 
 
+static std::map<int,bool> g_keyPresses;
+static long g_lastMouseX = 0;
+static long g_lastMouseY = 0;
+static long g_deltaMouseX = 0;
+static long g_deltaMouseY = 0;
+
+
 InputController::InputController(void)
 {
 }
@@ -43,13 +50,13 @@ void InputController::RawInput(LPARAM lParam, WPARAM wParam)
 {
     UINT dwSize = 1024;
 
-    //GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
+    GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
     LPBYTE lpb = new BYTE[dwSize];
     if(lpb != 0) 
     {
         if(GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize)
         {
-            //LI_WARNING("GetRawInputData does not return correct size.");
+            LI_WARNING("GetRawInputData does not return correct size.");
         }
 
         RAWINPUT* raw = (RAWINPUT*)lpb;
@@ -68,15 +75,85 @@ void InputController::RawInput(LPARAM lParam, WPARAM wParam)
 }
 
 
+void InputController::UnregisterKeyboardHandler(StrongKeyboardHandlerPtr pKeyboardHandler)
+{
+    for(auto iter=m_keyboardHandlers.begin(); iter != m_keyboardHandlers.end(); ++iter)
+    {
+        if((*iter) == pKeyboardHandler)
+        {
+            m_keyboardHandlers.erase(iter);
+            return;
+        }
+    }
+}
+
+
+void InputController::UnregisterPointerHandler(StrongPointerHandlerPtr pPointerHandler)
+{
+    for(auto iter=m_pointerHandlers.begin(); iter != m_pointerHandlers.end(); ++iter)
+    {
+        if((*iter) == pPointerHandler)
+        {
+            m_pointerHandlers.erase(iter);
+            return;
+        }
+    }
+}
+
+
+void InputController::OnOpdate(void)
+{
+    if(g_deltaMouseX || g_deltaMouseY)
+    {
+        g_lastMouseX += g_deltaMouseX;
+        g_lastMouseY += g_deltaMouseY;
+        for(auto iter=m_pointerHandlers.begin(); iter != m_pointerHandlers.end(); ++iter)
+        {
+            if((*iter)->VOnPointerMoved(g_lastMouseX, g_lastMouseY, g_deltaMouseX, g_deltaMouseY))
+            {
+                break;
+            }
+        }
+        g_deltaMouseX = g_deltaMouseY = 0;
+    }
+}
+
+
 void InputController::Mouse(const RAWMOUSE& data)
 {
-    //LI_INFO("got mouse");
+    g_deltaMouseX += data.lLastX;
+    g_deltaMouseY += data.lLastY;
 }
 
 
 void InputController::Keyboard(const RAWKEYBOARD& data)
 {
-    //LI_INFO("got keyboard");
+    int keyCode = data.VKey;
+    bool keyUp = data.Flags & RI_KEY_BREAK;
+    if(keyUp)
+    {
+        g_keyPresses[keyCode] = false;
+        for(auto iter=m_keyboardHandlers.begin(); iter != m_keyboardHandlers.end(); ++iter)
+        {
+            if((*iter)->VOnKeyUp(keyCode)) {
+                return;
+            }
+        }
+    }
+    else
+    {
+        if(!g_keyPresses[keyCode])
+        {
+            g_keyPresses[keyCode] = true;
+            for(auto iter=m_keyboardHandlers.begin(); iter != m_keyboardHandlers.end(); ++iter)
+            {
+                if((*iter)->VOnKeyDown(keyCode)) {
+                    return;
+                }
+            }
+        }
+    }
+
     if(data.VKey == VK_ESCAPE)
     {
         PostQuitMessage(0);

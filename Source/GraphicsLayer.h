@@ -96,4 +96,3 @@ public:
     int GetHeight(void) const { return m_height; }
     const HWND GetWindowHandle(VOID) const { return m_hWnd; }
 };
-

@@ -232,12 +232,14 @@
   <ItemGroup>
     <ClInclude Include="Actor.h" />
     <ClInclude Include="ActorEvents.h" />
+    <ClInclude Include="ActorStaticMoveProcess.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DebugOutProcess.h" />
     <ClInclude Include="DelayProcess.h" />
     <ClInclude Include="EventManager.h" />
+    <ClInclude Include="FPSActorInputHandler.h" />
     <ClInclude Include="GameApp.h" />
     <ClInclude Include="GameInitializer.h" />
     <ClInclude Include="GameLogic.h" />
@@ -246,8 +248,11 @@
     <ClInclude Include="Geordi.h" />
     <ClInclude Include="GraphicsLayer.h" />
     <ClInclude Include="IGameLogic.h" />
+    <ClInclude Include="IGameView.h" />
+    <ClInclude Include="IKeyboardHandler.h" />
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="InputController.h" />
+    <ClInclude Include="IPointerHandler.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="Octree.h" />
@@ -266,12 +271,14 @@
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="ActorEvents.cpp" />
+    <ClCompile Include="ActorStaticMoveProcess.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DebugOutProcess.cpp" />
     <ClCompile Include="DelayProcess.cpp" />
     <ClCompile Include="EventManager.cpp" />
+    <ClCompile Include="FPSActorInputHandler.cpp" />
     <ClCompile Include="GameApp.cpp" />
     <ClCompile Include="GameInitializer.cpp" />
     <ClCompile Include="GameLogic.cpp" />

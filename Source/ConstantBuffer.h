@@ -25,4 +25,3 @@ public:
 
     bool IsBuilt(void) const { return m_pData != 0; }
 };
-

@@ -56,7 +56,7 @@ void PoseComponent::VPostInit(void)
 void PoseComponent::UpdateMatrices(void)
 {
     XMVECTOR det;
-    XMMATRIX model = XMMatrixTranslation(m_translation.x, m_translation.y, m_translation.z) * XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z) * XMMatrixScaling(m_scaling.x, m_scaling.y, m_scaling.z);
+    XMMATRIX model = XMMatrixScaling(m_scaling.x, m_scaling.y, m_scaling.z) * XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z) * XMMatrixTranslation(m_translation.x, m_translation.y, m_translation.z);
     XMStoreFloat4x4(&m_pModelMatrix[0], model);
     XMStoreFloat4x4(&m_pModelMatrix[1], XMMatrixTranspose(XMMatrixInverse(&det, model)));
 

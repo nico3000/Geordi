@@ -3,7 +3,7 @@
 #include "GameLogic.h"
 
 GameApp::GameApp(void):
-m_pActorFactory(0), m_pLogic(0), m_continue(true)
+m_pLogic(0), m_pConfig(0), m_continue(true)
 {
 }
 
@@ -12,16 +12,17 @@ GameApp::~GameApp(void)
 {
     m_pLogic->VDestroy();
     SAFE_DELETE(m_pLogic);
-    SAFE_DELETE(m_pActorFactory);
+    SAFE_DELETE(m_pConfig);
 }
 
 
 bool GameApp::Init(void)
 {
-    m_pActorFactory = new ActorFactory;
-    if(!m_pActorFactory)
+
+    m_pConfig = new Config;
+    if(!m_pConfig->Init())
     {
-        LI_ERROR("ActorFactory initialization failed");
+        LI_ERROR("Config initialization error");
         return false;
     }
     m_pLogic = new GameLogic;
@@ -38,7 +39,8 @@ void GameApp::OnNextFrame(void)
 {
     LostIsland::g_pTimer->Next();
     unsigned long deltaMillis = LostIsland::g_pTimer->GetGameDeltaMillis();
-    LostIsland::g_pProcessManager->UpdateProcesses(deltaMillis);
+
+    LostIsland::g_pInput->OnOpdate();
 
     LostIsland::g_pGraphics->Clear();
 
