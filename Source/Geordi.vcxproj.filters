@@ -61,6 +61,15 @@
     <Filter Include="Header Files\GameApplicationLayer\Input">
       <UniqueIdentifier>{5cb1909c-17b3-4167-b4dc-6d11d556266f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GameView\HumanView">
+      <UniqueIdentifier>{19b53bbe-c1d0-4c11-95ee-3c2fac6f96c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameView\HumanView">
+      <UniqueIdentifier>{cc5f0397-d89d-4088-9a29-53de20847b83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\GameView\HumanView\SceneGraph">
+      <UniqueIdentifier>{517a1713-e4e0-4a9e-a68c-05e7f3389169}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -183,6 +192,18 @@
     <ClInclude Include="ActorStaticMoveProcess.h">
       <Filter>Header Files\GameLogic\ProcesSystem</Filter>
     </ClInclude>
+    <ClInclude Include="HumanDisplay.h">
+      <Filter>Header Files\GameView\HumanView</Filter>
+    </ClInclude>
+    <ClInclude Include="ISceneNode.h">
+      <Filter>Header Files\GameView\HumanView\SceneGraph</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BaseSceneNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -277,6 +298,15 @@
     </ClCompile>
     <ClCompile Include="ActorStaticMoveProcess.cpp">
       <Filter>Source Files\GameLogic\ProcesSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="HumanDisplay.cpp">
+      <Filter>Source Files\GameView\HumanView</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BaseSceneNode.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

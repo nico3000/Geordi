@@ -3,6 +3,7 @@
 #include "Geometry.h"
 #include "ConstantBuffer.h"
 #include "EventManager.h"
+#include "ISceneNode.h"
 
 class RenderComponent :
     public ActorComponent
@@ -13,22 +14,23 @@ public:
         GEOMETRY_CUBE,
     };
 
-private:
-    typedef std::list<StrongGeometryPtr> GeometryList;
+    struct GeometryProperties
+    {
+        GeometryType type;
+        const char* resource;
+    };
 
-    GeometryList m_geometries;
-    ConstantBuffer m_model;
+private:
+    GeometryProperties m_properties;
+    std::shared_ptr<ISceneNode> m_pSceneNode;
 
 public:
-
-    RenderComponent(void) {}
+    RenderComponent(void) : m_pSceneNode(0) {}
     ~RenderComponent(void) {}
 
     virtual bool VInit(tinyxml2::XMLElement* p_pData);
-    virtual void VUpdate(unsigned long deltaMillis);
-    StrongGeometryPtr GetGeometry(GeometryType p_type) const;
-    void Draw(void) const;
-    void OnActorMoved(IEventDataPtr pEvent);
+    std::shared_ptr<ISceneNode> GetSceneNode(void);
+    const GeometryProperties& GetProperties(void) const { return m_properties; }
 
     ComponentID VGetComponentID(void) const { return 0xd08283ae; }
 

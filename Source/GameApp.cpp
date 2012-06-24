@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "GameApp.h"
 #include "GameLogic.h"
+#include "HumanDisplay.h"
 
 GameApp::GameApp(void):
 m_pLogic(0), m_pConfig(0), m_continue(true)
@@ -31,6 +32,8 @@ bool GameApp::Init(void)
         LI_ERROR("GameLogic initialization failed");
         return false;
     }
+    StrongGameViewPtr pHumanDisp(new HumanDisplay);
+    m_gameViews.push_back(pHumanDisp);
     return true;
 }
 
@@ -41,24 +44,24 @@ void GameApp::OnNextFrame(void)
     unsigned long deltaMillis = LostIsland::g_pTimer->GetGameDeltaMillis();
 
     LostIsland::g_pInput->OnOpdate();
+    m_pLogic->VUpdate(deltaMillis);
+    
+    for(auto iter=m_gameViews.begin(); iter != m_gameViews.end(); ++iter)
+    {
+        (*iter)->VOnUpdate(deltaMillis);
+    }
 
     LostIsland::g_pGraphics->Clear();
-
-    // TODO: Dynamic testing stuff goes here and only here.
-
-    // TODO: Main entry point
-    m_pLogic->VUpdate(deltaMillis);
-
-    LostIsland::g_pGraphics->Present();
+    for(auto iter=m_gameViews.begin(); iter != m_gameViews.end(); ++iter)
+    {
+        (*iter)->VOnRender(deltaMillis);
+    }
+    LostIsland::g_pGraphics->Present();    
 }
 
 
 LRESULT CALLBACK LostIsland::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    //int wmId, wmEvent;
-    //PAINTSTRUCT ps;
-    //HDC hdc;
-
     static bool lostFocusInFullscreen = false;
     switch (message)
     {

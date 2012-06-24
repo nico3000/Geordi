@@ -1,14 +1,14 @@
 #pragma once
 
+typedef unsigned int GameViewID;
+
 class IGameView
 {
 public:
     enum GameViewType
     {
-        GameViewHuman,
+        GAME_VIEW_HUMAN,
     };
-
-    typedef unsigned int GameViewID;
 
     virtual ~IGameView(void) {}
 
@@ -21,5 +21,7 @@ public:
     virtual void VOnAttach(GameViewID p_gameViewID, ActorID p_actorID) = 0;
 
 };
+
+typedef std::shared_ptr<IGameView> StrongGameViewPtr;
 
 

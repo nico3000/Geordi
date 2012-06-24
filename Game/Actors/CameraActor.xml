@@ -1,0 +1,9 @@
+<Actor>
+    <CameraComponent>
+        <Settings fov="90.0" aspect="default" minz="0.01" maxz="100.0" />
+        <Cameratype type="freelook">
+            <Position x="0.0" y="0.0" z="0.0" />
+            <Orientation phi="0.0" theta="0.0" />
+        </Cameratype>
+    </CameraComponent>
+</Actor>

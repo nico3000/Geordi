@@ -233,6 +233,7 @@
     <ClInclude Include="Actor.h" />
     <ClInclude Include="ActorEvents.h" />
     <ClInclude Include="ActorStaticMoveProcess.h" />
+    <ClInclude Include="BaseSceneNode.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="ConstantBuffer.h" />
@@ -247,14 +248,17 @@
     <ClInclude Include="Geometry.h" />
     <ClInclude Include="Geordi.h" />
     <ClInclude Include="GraphicsLayer.h" />
+    <ClInclude Include="HumanDisplay.h" />
     <ClInclude Include="IGameLogic.h" />
     <ClInclude Include="IGameView.h" />
     <ClInclude Include="IKeyboardHandler.h" />
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="InputController.h" />
     <ClInclude Include="IPointerHandler.h" />
+    <ClInclude Include="ISceneNode.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryPool.h" />
+    <ClInclude Include="MeshNode.h" />
     <ClInclude Include="Octree.h" />
     <ClInclude Include="PoseComponent.h" />
     <ClInclude Include="ProcessManager.h" />
@@ -272,6 +276,7 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="ActorEvents.cpp" />
     <ClCompile Include="ActorStaticMoveProcess.cpp" />
+    <ClCompile Include="BaseSceneNode.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
@@ -286,10 +291,12 @@
     <ClCompile Include="Geometry.cpp" />
     <ClCompile Include="Geordi.cpp" />
     <ClCompile Include="GraphicsLayer.cpp" />
+    <ClCompile Include="HumanDisplay.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="InputController.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
+    <ClCompile Include="MeshNode.cpp" />
     <ClCompile Include="Octree.cpp" />
     <ClCompile Include="PoseComponent.cpp" />
     <ClCompile Include="ProcessManager.cpp" />

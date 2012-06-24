@@ -6,72 +6,32 @@
 bool RenderComponent::VInit(tinyxml2::XMLElement* p_pData)
 {
     tinyxml2::XMLElement* pGeoData = p_pData->FirstChildElement("Geometry");
-    while(pGeoData)
+    if(pGeoData)
     {
         std::string type(pGeoData->Attribute("type"));
         if(type.compare("cube") == 0)
         {
-            StrongGeometryPtr pGeo = this->GetGeometry(GEOMETRY_CUBE);
-            if(pGeo)
-            {
-                m_geometries.push_back(pGeo);
-            }
-            else
-            {
-                LI_ERROR("error");
-            }
+            m_properties.type = GEOMETRY_CUBE;
+            m_properties.resource = 0;
         }
         else
         {
-            LI_WARNING(std::string("unknown geometry found: ") + pGeoData->Attribute("type"));
+            LI_ERROR(std::string("unknown geometry found: ") + pGeoData->Attribute("type"));
+            return false;
         }
-        pGeoData = pGeoData->NextSiblingElement("Geometry");
     }
-
-    EventListenerDelegate del = fastdelegate::MakeDelegate(this, &RenderComponent::OnActorMoved);
-    EventManager::Get()->VAddListener(del, ActorMovedEvent::sm_eventType);
 
     return true;
 }
 
 
-void RenderComponent::VUpdate(unsigned long deltaMillis)
+std::shared_ptr<ISceneNode> RenderComponent::GetSceneNode(void)
 {
-    m_model.Bind(1, ConstantBuffer::TARGET_ALL);
-    this->Draw();
-}
-
-
-void RenderComponent::OnActorMoved(IEventDataPtr pEvent)
-{
-    if(std::static_pointer_cast<ActorMovedEvent>(pEvent)->GetActorID() == m_pOwner->GetID()) {
-        std::shared_ptr<PoseComponent> pPoseComponent = m_pOwner->GetComponent<PoseComponent>(PoseComponent::GetComponentID()).lock();
-        if(pPoseComponent)
-        {
-            if(m_model.IsBuilt())
-            {
-                m_model.Update();
-            }
-            else
-            {
-                m_model.Build((void*)pPoseComponent->GetModelMatrices(), 2 * sizeof(XMFLOAT4X4));
-            }
-            
-        }
-        else
-        {
-            LI_ERROR("Actor does have a RenderComponent but no PoseComponent");
-        }
-    }
-}
-
-
-void RenderComponent::Draw() const
-{
-    for(auto iter=m_geometries.begin(); iter != m_geometries.end(); ++iter)
+    if(!m_pSceneNode)
     {
-        (*iter)->Draw();
+        m_pSceneNode = ?;
     }
+    return m_pSceneNode;
 }
 
 

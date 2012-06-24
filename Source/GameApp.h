@@ -1,14 +1,18 @@
 #pragma once
 #include "GameLogic.h"
+#include "IGameView.h"
 #include "Actor.h"
 #include "Config.h"
 
 class GameApp
 {
 private:
+    typedef std::list<std::shared_ptr<IGameView>> GameViewList;
+
     bool m_continue;
     GameLogic* m_pLogic;
     Config* m_pConfig;
+    GameViewList m_gameViews;
 
 public:
     GameApp(void);
