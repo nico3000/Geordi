@@ -31,7 +31,9 @@ public:
     virtual bool VInit(tinyxml2::XMLElement* p_pData);
     std::shared_ptr<ISceneNode> GetSceneNode(void);
     const GeometryProperties& GetProperties(void) const { return m_properties; }
+    ComponentID VGetComponentID(void) const { return GetComponentID(); }
 
-    ComponentID VGetComponentID(void) const { return 0xd08283ae; }
+    static ComponentID GetComponentID(void) { return 0xd08283ae; }
+    static StrongGeometryPtr GetGeometry(GeometryType p_type);
 
 };

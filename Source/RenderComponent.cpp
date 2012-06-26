@@ -2,6 +2,7 @@
 #include "RenderComponent.h"
 #include "PoseComponent.h"
 #include "ActorEvents.h"
+#include "MeshNode.h"
 
 bool RenderComponent::VInit(tinyxml2::XMLElement* p_pData)
 {
@@ -29,17 +30,21 @@ std::shared_ptr<ISceneNode> RenderComponent::GetSceneNode(void)
 {
     if(!m_pSceneNode)
     {
-        m_pSceneNode = ?;
+        static XMFLOAT4X4 identity(1.0f, 0.0f, 0.0f, 0.0f,
+                                   0.0f, 1.0f, 0.0f, 0.0f,
+                                   0.0f, 0.0f, 1.0f, 0.0f,
+                                   0.0f, 0.0f, 0.0f, 1.0f);
+        m_pSceneNode.reset(new MeshNode(m_pOwner->GetID(), identity, GetGeometry(m_properties.type)));
     }
     return m_pSceneNode;
 }
 
 
-StrongGeometryPtr RenderComponent::GetGeometry(GeometryType p_type) const
+StrongGeometryPtr RenderComponent::GetGeometry(GeometryType p_type)
 {
     switch(p_type)
     {
-    case GEOMETRY_CUBE:
+    case RenderComponent::GEOMETRY_CUBE:
         {
             static std::weak_ptr<Geometry> pCube;
             StrongGeometryPtr pStrongCube = pCube.lock();

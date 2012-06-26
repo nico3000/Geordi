@@ -1,7 +1,6 @@
 #include "StdAfx.h"
 #include "GameApp.h"
 #include "GameLogic.h"
-#include "HumanDisplay.h"
 
 GameApp::GameApp(void):
 m_pLogic(0), m_pConfig(0), m_continue(true)
@@ -32,8 +31,6 @@ bool GameApp::Init(void)
         LI_ERROR("GameLogic initialization failed");
         return false;
     }
-    StrongGameViewPtr pHumanDisp(new HumanDisplay);
-    m_gameViews.push_back(pHumanDisp);
     return true;
 }
 

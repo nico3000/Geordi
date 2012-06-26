@@ -3,6 +3,23 @@
 #include "GraphicsLayer.h"
 
 
+BaseSceneNode::BaseSceneNode(ActorID p_actorID, const XMFLOAT4X4& p_model, const XMFLOAT4X4* p_pModelInv /* = 0 */) :
+m_isVisible(true)
+{
+    m_properties.m_actorID = p_actorID;
+    m_properties.m_model = XMLoadFloat4x4(&p_model);
+    if(p_pModelInv)
+    {
+        m_properties.m_modelInv = XMLoadFloat4x4(p_pModelInv);
+    }
+    else
+    {
+        static XMVECTOR det;
+        m_properties.m_modelInv = XMMatrixInverse(&det, XMLoadFloat4x4(&p_model));
+    }
+}
+
+
 HRESULT BaseSceneNode::VOnLostDevice(void)
 {
     for(auto iter=m_children.begin(); iter != m_children.end(); ++iter)
@@ -25,36 +42,37 @@ HRESULT BaseSceneNode::VOnRestore(void)
 }
 
 
-HRESULT BaseSceneNode::VRenderChildren(void)
+HRESULT BaseSceneNode::VRenderChildren(Scene* p_pScene)
 {
     for(auto iter=m_children.begin(); iter != m_children.end(); ++iter)
     {
         HRESULT hr = S_OK;
-        hr = (*iter)->VPreRender();
+        hr = (*iter)->VPreRender(p_pScene);
         if(FAILED(hr))
         {
             HRESULT_TO_WARNING(hr);
             continue;
         }
-        hr = (*iter)->VRender();
+        hr = (*iter)->VRender(p_pScene);
         if(FAILED(hr))
         {
             HRESULT_TO_WARNING(hr);
             continue;
         }
-        hr = (*iter)->VRenderChildren();
+        hr = (*iter)->VRenderChildren(p_pScene);
         if(FAILED(hr))
         {
             HRESULT_TO_WARNING(hr);
             continue;
         }
-        hr = (*iter)->VPostRender();
+        hr = (*iter)->VPostRender(p_pScene);
         if(FAILED(hr))
         {
             HRESULT_TO_WARNING(hr);
             continue;
         }
     }
+    return S_OK;
 }
 
 bool BaseSceneNode::VAddChild(std::shared_ptr<ISceneNode> p_pChild)
@@ -78,8 +96,7 @@ bool BaseSceneNode::VRemoveChild(ActorID p_actorID)
         std::shared_ptr<BaseSceneNode> pNode = std::static_pointer_cast<BaseSceneNode>(*iter);
         if(pNode)
         {
-            StrongActorPtr pActor = pNode->m_pActor.lock();
-            if(pActor && pActor->GetID() == p_actorID)
+            if(pNode->m_properties.GetActorID() == p_actorID)
             {
                 m_children.erase(iter);
                 return true;

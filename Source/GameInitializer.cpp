@@ -3,6 +3,8 @@
 
 // testing includes
 #include "FPSActorInputHandler.h"
+#include "HumanDisplay.h"
+#include "RenderComponent.h"
 
 GameTimer* LostIsland::g_pTimer = 0;
 GraphicsLayer* LostIsland::g_pGraphics = 0;
@@ -50,8 +52,22 @@ bool GameInitializer::Init(HINSTANCE hInstance)
     ////////////// static testing stuff goes here and only here. /////////////
     //////////////////////////////////////////////////////////////////////////
 
+    // human view
+    std::shared_ptr<HumanDisplay> pHumanDisplay(new HumanDisplay);
+    LostIsland::g_pApp->RegisterView(pHumanDisplay);
+
     // actor testing
     StrongActorPtr pActor = LostIsland::g_pApp->GetGameLogic()->VCreateActor("Actors/CubeActor.xml");
+    std::shared_ptr<RenderComponent> pComponent = pActor->GetComponent<RenderComponent>(RenderComponent::GetComponentID()).lock();
+    if(pComponent)
+    {
+        pHumanDisplay->GetScene().AddChild(pActor->GetID(), pComponent->GetSceneNode());
+    }
+    else
+    {
+        LI_ERROR("no render component");
+    }
+    
 
     // input testing
     std::shared_ptr<FPSActorInputHandler> pFPSHandler(new FPSActorInputHandler(pActor->GetID()));

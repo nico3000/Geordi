@@ -10,6 +10,8 @@ typedef std::shared_ptr<Actor> StrongActorPtr;
 typedef std::weak_ptr<Actor> WeakActorPtr;
 typedef std::shared_ptr<ActorComponent> StrongActorComponentPtr;
 
+#define INVALID_ACTOR_ID ((ActorID)-1)
+
 class ActorComponent
 {
     friend class ActorFactory;
