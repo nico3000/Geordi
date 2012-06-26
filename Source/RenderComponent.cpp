@@ -1,6 +1,5 @@
 #include "StdAfx.h"
 #include "RenderComponent.h"
-#include "PoseComponent.h"
 #include "ActorEvents.h"
 #include "MeshNode.h"
 
@@ -30,11 +29,7 @@ std::shared_ptr<ISceneNode> RenderComponent::GetSceneNode(void)
 {
     if(!m_pSceneNode)
     {
-        static XMFLOAT4X4 identity(1.0f, 0.0f, 0.0f, 0.0f,
-                                   0.0f, 1.0f, 0.0f, 0.0f,
-                                   0.0f, 0.0f, 1.0f, 0.0f,
-                                   0.0f, 0.0f, 0.0f, 1.0f);
-        m_pSceneNode.reset(new MeshNode(m_pOwner->GetID(), identity, GetGeometry(m_properties.type)));
+        m_pSceneNode.reset(new MeshNode(m_pOwner->GetID(), GetGeometry(m_properties.type)));
     }
     return m_pSceneNode;
 }

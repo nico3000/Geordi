@@ -1,12 +1,6 @@
 #pragma once
 #include "eventmanager.h"
 
-struct Transform
-{
-    bool absolute;
-    XMFLOAT3 position;
-    XMFLOAT3 rotation;
-};
 
 class ActorCreatedEvent :
     public BaseEventData
@@ -23,6 +17,7 @@ public:
     virtual const char* VGetName(void) const { return "ActorCreatedEvent"; }
     virtual const EventType& VGetEventType(void) const { return sm_eventType; }
     virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorCreatedEvent(m_id)); }
+    ActorID GetActorID(void) { return m_id; }
 
 };
 
@@ -66,49 +61,30 @@ public:
 };
 
 
-class ActorTranslateEvent :
+class ActorMoveEvent :
     public BaseEventData
 {
 private:
     const ActorID m_id;
-    const XMFLOAT3 m_translation;
-    const bool m_absolute;
+    const XMFLOAT3 m_dTranslation;
+    const XMFLOAT3 m_dRotation;
+    const float m_dScaling;
 
 public:
     static const EventType sm_eventType;
 
-    ActorTranslateEvent(ActorID p_id, const XMFLOAT3& p_translation, bool p_absolute) : m_id(p_id), m_translation(p_translation), m_absolute(p_absolute) {}
-    virtual ~ActorTranslateEvent(void) {}
+    ActorMoveEvent(ActorID p_id, const XMFLOAT3& p_dTranslation, const XMFLOAT3& p_dRotation, float p_dScaling) :
+    m_id(p_id), m_dTranslation(p_dTranslation), m_dRotation(p_dRotation), m_dScaling(p_dScaling)
+    {  }
 
-    virtual const char* VGetName(void) const { return "ActorTranslateEvent"; }
+    virtual ~ActorMoveEvent(void) {}
+
+    virtual const char* VGetName(void) const { return "ActorMoveEvent"; }
     virtual const EventType& VGetEventType(void) const { return sm_eventType; }
-    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorTranslateEvent(m_id, m_translation, m_absolute)); }
+    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorMoveEvent(m_id, m_dTranslation, m_dRotation, m_dScaling)); }
     const ActorID& GetActorID(void) const { return m_id; }
-    const XMFLOAT3& GetTranslation(void) const { return m_translation; }
-    bool IsAbsolute(void) const { return m_absolute; }
-
-};
-
-
-class ActorRotateEvent :
-    public BaseEventData
-{
-private:
-    const ActorID m_id;
-    const XMFLOAT3 m_rotation;
-    const bool m_absolute;
-
-public:
-    static const EventType sm_eventType;
-
-    ActorRotateEvent(ActorID p_id, const XMFLOAT3& p_rotation, bool p_absolute) : m_id(p_id), m_rotation(p_rotation), m_absolute(p_absolute) {}
-    virtual ~ActorRotateEvent(void) {}
-
-    virtual const char* VGetName(void) const { return "ActorRotateEvent"; }
-    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
-    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorRotateEvent(m_id, m_rotation, m_absolute)); }
-    const ActorID& GetActorID(void) const { return m_id; }
-    const XMFLOAT3& GetRotation(void) const { return m_rotation; }
-    bool IsAbsolute(void) const { return m_absolute; }
+    const XMFLOAT3 GetDeltaTranslation(void) const { return m_dTranslation; }
+    const XMFLOAT3 GetDeltaRotation(void) const { return m_dRotation; }
+    float GetDeltaScaling(void) const { return m_dScaling; }
 
 };

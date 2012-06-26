@@ -10,7 +10,8 @@ class Scene
 private:
     typedef std::map<std::string,std::shared_ptr<Camera>> CameraMap;
 
-    const XMMatrixStack m_matrixStack;
+    XMMatrixStack m_modelStack;
+    XMMatrixStack m_modelInvStack;
     std::shared_ptr<RootNode> m_pRoot;
     CameraMap m_cameras;
     std::shared_ptr<Camera> m_pCurrentCamera;
@@ -25,7 +26,10 @@ public:
     void Render(void);
     bool AddChild(ActorID p_actorID, std::shared_ptr<ISceneNode> p_pChild);
     bool RemoveChild(ActorID p_actorID);
-    XMMatrixStack& GetMatrixStack(void);
+    void AddCamera(const std::string& p_name, std::shared_ptr<Camera> p_pCamera, bool p_activate = false);
+
+    XMMatrixStack& GetModelStack(void) { return m_modelStack; }
+    XMMatrixStack& GetModelInvStack(void) { return m_modelInvStack; }
 
 };
 

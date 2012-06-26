@@ -171,9 +171,6 @@
     <ClInclude Include="Geometry.h">
       <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
     </ClInclude>
-    <ClInclude Include="PoseComponent.h">
-      <Filter>Header Files\GameLogic\ActorSystem</Filter>
-    </ClInclude>
     <ClInclude Include="InputController.h">
       <Filter>Header Files\GameApplicationLayer\Input</Filter>
     </ClInclude>
@@ -183,17 +180,8 @@
     <ClInclude Include="IPointerHandler.h">
       <Filter>Header Files\GameApplicationLayer\Input</Filter>
     </ClInclude>
-    <ClInclude Include="RotationComponent.h">
-      <Filter>Header Files\GameLogic\ActorSystem</Filter>
-    </ClInclude>
     <ClInclude Include="IGameView.h">
       <Filter>Header Files\GameView</Filter>
-    </ClInclude>
-    <ClInclude Include="FPSActorInputHandler.h">
-      <Filter>Header Files\GameView</Filter>
-    </ClInclude>
-    <ClInclude Include="ActorStaticMoveProcess.h">
-      <Filter>Header Files\GameLogic\ProcesSystem</Filter>
     </ClInclude>
     <ClInclude Include="HumanDisplay.h">
       <Filter>Header Files\GameView\HumanView</Filter>
@@ -217,7 +205,16 @@
       <Filter>Header Files\GameView\HumanView\Scene</Filter>
     </ClInclude>
     <ClInclude Include="RootNode.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\GameView\HumanView\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="CameraComponent.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="FPSActorInputHandler.h">
+      <Filter>Header Files\GameView\HumanView</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalPose.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -299,20 +296,8 @@
     <ClCompile Include="Geometry.cpp">
       <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
     </ClCompile>
-    <ClCompile Include="PoseComponent.cpp">
-      <Filter>Source Files\GameLogic\ActorSystem</Filter>
-    </ClCompile>
     <ClCompile Include="InputController.cpp">
       <Filter>Source Files\GameApplicationLayer\Input</Filter>
-    </ClCompile>
-    <ClCompile Include="RotationComponent.cpp">
-      <Filter>Source Files\GameLogic\ActorSystem</Filter>
-    </ClCompile>
-    <ClCompile Include="FPSActorInputHandler.cpp">
-      <Filter>Source Files\GameView</Filter>
-    </ClCompile>
-    <ClCompile Include="ActorStaticMoveProcess.cpp">
-      <Filter>Source Files\GameLogic\ProcesSystem</Filter>
     </ClCompile>
     <ClCompile Include="HumanDisplay.cpp">
       <Filter>Source Files\GameView\HumanView</Filter>
@@ -330,7 +315,16 @@
       <Filter>Source Files\GameView\HumanView\Scene</Filter>
     </ClCompile>
     <ClCompile Include="RootNode.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GameView\HumanView\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraComponent.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="FPSActorInputHandler.cpp">
+      <Filter>Source Files\GameView\HumanView</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalPose.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

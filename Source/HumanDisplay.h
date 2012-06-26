@@ -9,21 +9,24 @@ private:
     Scene m_scene;
 
 public:
-    static const GameViewID sm_ID;
+    GameViewID m_viewID;
+    ActorID m_actorID;
 
     HumanDisplay(void);
     ~HumanDisplay(void);
 
-    void VOnAttach(GameViewID p_gameViewID, ActorID p_actorID);
+    void VOnAttach(GameViewID p_viewID, ActorID p_actorID);
     void VOnRender(unsigned long p_deltaMillis);
 
     HRESULT VOnRestore(void) { return m_scene.OnRestore(); }
     HRESULT VOnLostDevice(void) { return m_scene.OnLostDevice(); }
     void VOnUpdate(unsigned long p_deltaMillis) { m_scene.OnUpdate(p_deltaMillis); }
 
-    GameViewType VGetType(void) const { return IGameView::GAME_VIEW_HUMAN; }
-    GameViewID VGetID(void) const { return sm_ID; }
+    GameViewType VGetViewType(void) const { return IGameView::GAME_VIEW_HUMAN; }
+    GameViewID VGetViewID(void) const { return m_viewID; }
     Scene& GetScene(void) { return m_scene; }
+
+    void ActorCreatedDelegate(IEventDataPtr p_pEventData);
 
 };
 

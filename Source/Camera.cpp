@@ -17,8 +17,12 @@ Camera::~Camera(void)
 }
 
 
-bool Camera::Init(void)
+bool Camera::Init(float p_fov, float p_aspect, float p_minZ, float p_maxZ)
 {
+    m_fov = p_fov;
+    m_aspect = p_aspect;
+    m_minZ = p_minZ;
+    m_struct.viewDistance = p_maxZ;
     this->BuildMatrices(MATRIX_BOTH);
     return m_buffer.Build(&m_struct, sizeof(CameraStruct));
 }
@@ -46,7 +50,8 @@ void Camera::BuildMatrices(Matrix p_matrix)
     }
     if(p_matrix & MATRIX_PROJECTION)
     {
-        XMStoreFloat4x4(&m_struct.projection, XMMatrixPerspectiveFovLH(m_fov, (float)LostIsland::g_pGraphics->GetWidth() / (float)LostIsland::g_pGraphics->GetHeight(), 1e-2f, m_struct.viewDistance));
+        float aspect = m_aspect == 0.0f ? (float)LostIsland::g_pGraphics->GetWidth() / (float)LostIsland::g_pGraphics->GetHeight() : m_aspect;
+        XMStoreFloat4x4(&m_struct.projection, XMMatrixPerspectiveFovLH(m_fov, aspect, m_minZ, m_struct.viewDistance));
     }
     if(p_matrix & (MATRIX_BOTH))
     {

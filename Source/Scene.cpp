@@ -3,14 +3,9 @@
 
 
 Scene::Scene(void) :
-m_pRoot(0)
+m_pCurrentCamera(0)
 {
     m_pRoot.reset(new RootNode);
-    m_pCurrentCamera.reset(new Camera);
-    if(FAILED(m_pCurrentCamera->Init()))
-    {
-        m_pCurrentCamera = std::shared_ptr<Camera>();
-    }
 }
 
 
@@ -42,8 +37,8 @@ void Scene::Render(void)
     if(m_pRoot && m_pCurrentCamera)
     {
         //LI_INFO("Scene::Render()");
-        m_pCurrentCamera->Bind();
         m_pCurrentCamera->Update(Camera::MATRIX_BOTH);
+        m_pCurrentCamera->Bind();
 
         m_pRoot->VPreRender(this);
         m_pRoot->VRender(this);
@@ -62,4 +57,14 @@ bool Scene::AddChild(ActorID p_actorID, std::shared_ptr<ISceneNode> p_pChild)
 bool Scene::RemoveChild(ActorID p_actorID)
 {
     return m_pRoot ? m_pRoot->VRemoveChild(p_actorID) : false;
+}
+
+
+void Scene::AddCamera(const std::string& p_name, std::shared_ptr<Camera> p_pCamera, bool p_activate /* = false */)
+{
+    m_cameras[p_name] = p_pCamera;
+    if(p_activate || !m_pCurrentCamera)
+    {
+        m_pCurrentCamera = p_pCamera;
+    }
 }

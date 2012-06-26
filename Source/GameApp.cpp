@@ -40,20 +40,12 @@ void GameApp::OnNextFrame(void)
     LostIsland::g_pTimer->Next();
     unsigned long deltaMillis = LostIsland::g_pTimer->GetGameDeltaMillis();
 
-    LostIsland::g_pInput->OnOpdate();
+    LostIsland::g_pInput->OnUpdate();
     m_pLogic->VUpdate(deltaMillis);
-    
-    for(auto iter=m_gameViews.begin(); iter != m_gameViews.end(); ++iter)
-    {
-        (*iter)->VOnUpdate(deltaMillis);
-    }
 
     LostIsland::g_pGraphics->Clear();
-    for(auto iter=m_gameViews.begin(); iter != m_gameViews.end(); ++iter)
-    {
-        (*iter)->VOnRender(deltaMillis);
-    }
-    LostIsland::g_pGraphics->Present();    
+    m_pLogic->VRender(deltaMillis);
+    LostIsland::g_pGraphics->Present();
 }
 
 

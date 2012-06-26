@@ -1,12 +1,6 @@
 #include "StdAfx.h"
 #include "GraphicsLayer.h"
 
-#include "TerrainData.h"
-#include "ShaderProgram.h"
-#include "VertexBuffer.h"
-#include "IndexBuffer.h"
-#include "Camera.h"
-
 
 #define CHECK_ERROR_BLOB(_hr, _blob) do \
 { \
@@ -69,15 +63,9 @@ GraphicsLayer::~GraphicsLayer(void)
     }
 }
 
-ShaderProgram g_program;
-Camera g_cam;
-
 
 bool GraphicsLayer::Init(HINSTANCE hInstance)
 {
-    //TerrainData terrain;
-    //terrain.Init(32, 8, 4, 8, 8);
-    //terrain.Test();
     m_width = LostIsland::g_pApp->GetConfig()->GetIntAttribute("graphics", "display", "width");
     m_height = LostIsland::g_pApp->GetConfig()->GetIntAttribute("graphics", "display", "height");
     m_vsync = LostIsland::g_pApp->GetConfig()->GetBoolAttribute("graphics", "display", "vsync");
@@ -91,24 +79,6 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     }    
     UpdateWindow(m_hWnd);
     ShowWindow(m_hWnd, SW_SHOW);
-
-    // --- begin testing
-    if(!g_program.Load("shader/NicotopiaTest.fx", "SimpleVS", 0, "SimplePS"))
-    {
-        return false;
-    }
-    if(!g_program.CreateInputLayout(VertexBuffer::sm_pSimpleVertexElementDesc, VertexBuffer::sm_simpleVertexNumElements))
-    {
-        return false;
-    }
-
-    if(!g_cam.Init())
-    {
-        return false;
-    }
-    g_cam.Bind();
-    g_cam.Move(-2.0f, 0.0f, 0.0f);
-    // --- end testing
     
     return true;
 }
@@ -123,11 +93,6 @@ void GraphicsLayer::Clear(void)
 
 void GraphicsLayer::Present(void)
 {
-    // --- begin testing
-    g_program.Bind();
-    g_cam.Update();
-    // --- end testing
-
     m_pSwapChain->Present(m_vsync, 0);
 }
 

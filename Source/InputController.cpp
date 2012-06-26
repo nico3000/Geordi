@@ -101,7 +101,7 @@ void InputController::UnregisterPointerHandler(StrongPointerHandlerPtr pPointerH
 }
 
 
-void InputController::OnOpdate(void)
+void InputController::OnUpdate(void)
 {
     if(g_deltaMouseX || g_deltaMouseY)
     {

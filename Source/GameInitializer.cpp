@@ -5,6 +5,7 @@
 #include "FPSActorInputHandler.h"
 #include "HumanDisplay.h"
 #include "RenderComponent.h"
+#include "CameraComponent.h"
 
 GameTimer* LostIsland::g_pTimer = 0;
 GraphicsLayer* LostIsland::g_pGraphics = 0;
@@ -54,10 +55,11 @@ bool GameInitializer::Init(HINSTANCE hInstance)
 
     // human view
     std::shared_ptr<HumanDisplay> pHumanDisplay(new HumanDisplay);
-    LostIsland::g_pApp->RegisterView(pHumanDisplay);
+    LostIsland::g_pApp->GetGameLogic()->AttachView(pHumanDisplay);
 
     // actor testing
-    StrongActorPtr pActor = LostIsland::g_pApp->GetGameLogic()->VCreateActor("Actors/CubeActor.xml");
+    StrongActorPtr pCamera = LostIsland::g_pApp->GetGameLogic()->VCreateActor("./Actors/CameraActor.xml");
+    StrongActorPtr pActor = LostIsland::g_pApp->GetGameLogic()->VCreateActor("./Actors/CubeActor.xml");
     std::shared_ptr<RenderComponent> pComponent = pActor->GetComponent<RenderComponent>(RenderComponent::GetComponentID()).lock();
     if(pComponent)
     {
@@ -70,9 +72,10 @@ bool GameInitializer::Init(HINSTANCE hInstance)
     
 
     // input testing
-    std::shared_ptr<FPSActorInputHandler> pFPSHandler(new FPSActorInputHandler(pActor->GetID()));
-    LostIsland::g_pInput->RegisterKeyboardHandler(pFPSHandler);
-    LostIsland::g_pInput->RegisterPointerHandler(pFPSHandler);
+     std::shared_ptr<FPSActorInputHandler> pFPSHandler(new FPSActorInputHandler(pActor->GetID()));
+     LostIsland::g_pInput->RegisterKeyboardHandler(pFPSHandler);
+     LostIsland::g_pInput->RegisterPointerHandler(pFPSHandler);
+     LostIsland::g_pApp->GetGameLogic()->AttachView(pFPSHandler, pActor->GetID());
 
     return true;
 }

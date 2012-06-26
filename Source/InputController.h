@@ -22,7 +22,7 @@ public:
     ~InputController(void);
 
     bool Init(VOID);
-    void OnOpdate(void);
+    void OnUpdate(void);
     void RawInput(LPARAM lParam, WPARAM wParam);
     void UnregisterKeyboardHandler(StrongKeyboardHandlerPtr pKeyboardHandler);
     void UnregisterPointerHandler(StrongPointerHandlerPtr pPointerHandler);

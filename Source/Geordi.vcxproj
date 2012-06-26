@@ -232,9 +232,9 @@
   <ItemGroup>
     <ClInclude Include="Actor.h" />
     <ClInclude Include="ActorEvents.h" />
-    <ClInclude Include="ActorStaticMoveProcess.h" />
     <ClInclude Include="BaseSceneNode.h" />
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DebugOutProcess.h" />
@@ -256,16 +256,15 @@
     <ClInclude Include="InputController.h" />
     <ClInclude Include="IPointerHandler.h" />
     <ClInclude Include="ISceneNode.h" />
+    <ClInclude Include="LocalPose.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="MeshNode.h" />
     <ClInclude Include="Octree.h" />
-    <ClInclude Include="PoseComponent.h" />
     <ClInclude Include="ProcessManager.h" />
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RootNode.h" />
-    <ClInclude Include="RotationComponent.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneNodeProperties.h" />
     <ClInclude Include="ShaderProgram.h" />
@@ -279,9 +278,9 @@
   <ItemGroup>
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="ActorEvents.cpp" />
-    <ClCompile Include="ActorStaticMoveProcess.cpp" />
     <ClCompile Include="BaseSceneNode.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DebugOutProcess.cpp" />
@@ -298,15 +297,14 @@
     <ClCompile Include="HumanDisplay.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="InputController.cpp" />
+    <ClCompile Include="LocalPose.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="MeshNode.cpp" />
     <ClCompile Include="Octree.cpp" />
-    <ClCompile Include="PoseComponent.cpp" />
     <ClCompile Include="ProcessManager.cpp" />
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="RootNode.cpp" />
-    <ClCompile Include="RotationComponent.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneNodeProperties.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />

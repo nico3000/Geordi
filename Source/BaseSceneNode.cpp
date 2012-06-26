@@ -3,20 +3,10 @@
 #include "GraphicsLayer.h"
 
 
-BaseSceneNode::BaseSceneNode(ActorID p_actorID, const XMFLOAT4X4& p_model, const XMFLOAT4X4* p_pModelInv /* = 0 */) :
+BaseSceneNode::BaseSceneNode(ActorID p_actorID) :
 m_isVisible(true)
 {
     m_properties.m_actorID = p_actorID;
-    m_properties.m_model = XMLoadFloat4x4(&p_model);
-    if(p_pModelInv)
-    {
-        m_properties.m_modelInv = XMLoadFloat4x4(p_pModelInv);
-    }
-    else
-    {
-        static XMVECTOR det;
-        m_properties.m_modelInv = XMMatrixInverse(&det, XMLoadFloat4x4(&p_model));
-    }
 }
 
 

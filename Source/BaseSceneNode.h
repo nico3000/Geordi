@@ -15,7 +15,7 @@ protected:
     SceneNodeProperties m_properties;
 
 public:
-    BaseSceneNode(ActorID p_actorID, const XMFLOAT4X4& p_model, const XMFLOAT4X4* p_pModelInv = 0);
+    BaseSceneNode(ActorID p_actorID);
     ~BaseSceneNode(void) { }
 
     virtual HRESULT VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis) { return S_OK; }

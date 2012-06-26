@@ -4,24 +4,40 @@
 #include "Scene.h"
 
 
-MeshNode::MeshNode(ActorID p_actorID, const XMFLOAT4X4& p_model, std::shared_ptr<Geometry> p_pGeometry) : BaseSceneNode(p_actorID, p_model), m_pGeometry(p_pGeometry)
+MeshNode::MeshNode(ActorID p_actorID, std::shared_ptr<Geometry> p_pGeometry) : BaseSceneNode(p_actorID), m_pGeometry(p_pGeometry)
 {
-    m_program.Load("./Shader/NicotopiaTest.fx", "SimpleVS", 0, "SimplePS");
-    m_program.CreateInputLayout(VertexBuffer::sm_pSimpleVertexElementDesc, VertexBuffer::sm_simpleVertexNumElements);
-    m_model.Build((void*)&m_properties.m_model, 2 * sizeof(XMMATRIX));
+    m_pActor = LostIsland::g_pApp->GetGameLogic()->VGetActor(p_actorID);
+
+    StrongActorPtr pActor = m_pActor.lock();
+    if(pActor)
+    {
+        m_program.Load("./Shader/NicotopiaTest.fx", "SimpleVS", 0, "SimplePS");
+        m_program.CreateInputLayout(VertexBuffer::sm_pSimpleVertexElementDesc, VertexBuffer::sm_simpleVertexNumElements);
+
+        m_modelBuffer.Build((void*)&m_modelData, sizeof(LocalPose::ModelMatrixData));
+    }
 }
 
 
 HRESULT MeshNode::VPreRender(Scene* p_pScene)
 {
-    p_pScene->GetMatrixStack().PushMatrix(m_properties.GetModel());
+    StrongActorPtr pActor = m_pActor.lock();
+    if(pActor)
+    {
+        const LocalPose::ModelMatrixData& data = pActor->GetPose().GetModelMatrixBuffer(true);
+        p_pScene->GetModelStack().PushMatrix(data.model);
+        p_pScene->GetModelInvStack().PushMatrix(data.modelInv);
+        m_modelData.model = p_pScene->GetModelStack().Top();
+        m_modelData.modelInv = p_pScene->GetModelInvStack().Top();
+    }
     return S_OK;
 }
 
 
 HRESULT MeshNode::VRender(Scene* p_pScene)
 {
-    m_model.
+    m_modelBuffer.Update();
+    m_modelBuffer.Bind(1, ConstantBuffer::TARGET_ALL);
     m_program.Bind();
     m_pGeometry->Draw();
     return S_OK;
@@ -30,6 +46,7 @@ HRESULT MeshNode::VRender(Scene* p_pScene)
 
 HRESULT MeshNode::VPostRender(Scene* p_pScene)
 {
-    p_pScene->GetMatrixStack().PopMatrix();
+    p_pScene->GetModelStack().PopMatrix();
+    p_pScene->GetModelInvStack().PopMatrix();
     return S_OK;
 }

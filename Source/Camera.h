@@ -24,6 +24,8 @@ private:
     CameraStruct m_struct;
     ConstantBuffer m_buffer;
     float m_fov;
+    float m_aspect;
+    float m_minZ;
     float m_anglePhi;
     float m_angleTheta;
     XMFLOAT3 m_dirSide;
@@ -37,7 +39,7 @@ public:
     Camera(void);
     ~Camera(void);
 
-    bool Init(void);
+    bool Init(float p_fov, float p_aspect, float p_minZ, float p_maxZ);
     bool Update(Matrix p_toRebuild = MATRIX_BOTH);
     void Bind(void);
     void Rotate(float p_dPhi, float p_dTheta);

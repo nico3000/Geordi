@@ -170,7 +170,7 @@ bool EventManager::VUpdate(unsigned long p_maxMillis /* = EVT_MGR_INFINITE */)
         {
             IEventDataPtr pEvent = m_eventQueue[queueToProcess].back();
             m_eventQueue[queueToProcess].pop_back();
-            m_eventQueue[queueToProcess].push_front(pEvent);
+            m_eventQueue[m_activeQueue].push_front(pEvent);
         }
         return false;
     }

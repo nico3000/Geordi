@@ -1,23 +1,20 @@
 #include "StdAfx.h"
 #include "Actor.h"
 #include "RenderComponent.h"
-#include "PoseComponent.h"
-#include "RotationComponent.h"
+#include "CameraComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 //////// Component Creator Functions /////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-ActorComponent* CreateRenderComponent(void) {
+ActorComponent* CreateRenderComponent(void)
+{
     return new RenderComponent;
 }
 
-ActorComponent* CreatePoseComponent(void) {
-    return new PoseComponent;
-}
-
-ActorComponent* CreateRotationComponent(void) {
-    return new RotationComponent;
+ActorComponent* CreateCameraComponent(void)
+{
+    return new CameraComponent;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -35,7 +32,34 @@ void Actor::Destroy(void)
 
 bool Actor::Init(tinyxml2::XMLElement* p_pData)
 {
-    // TODO: nothing todo yet
+    tinyxml2::XMLElement* pInitialPose = p_pData->FirstChildElement("InitialPose");
+    if(pInitialPose)
+    {
+        tinyxml2::XMLElement* pScaling = pInitialPose->FirstChildElement("Scaling");
+        if(pScaling)
+        {
+            float scaling = 1.0f;
+            pScaling->QueryFloatAttribute("scaling", &scaling);
+        }
+        tinyxml2::XMLElement* pPosition = pInitialPose->FirstChildElement("Position");
+        if(pPosition)
+        {
+            XMFLOAT3 position;
+            pPosition->QueryFloatAttribute("x", &position.x);
+            pPosition->QueryFloatAttribute("y", &position.y);
+            pPosition->QueryFloatAttribute("z", &position.z);
+            m_localPose.SetPosition(position);
+        }
+        tinyxml2::XMLElement* pRotation = pInitialPose->FirstChildElement("Rotation");
+        if(pRotation)
+        {
+            XMFLOAT3 rotation(0.0f, 0.0f, 0.0f);
+            pRotation->QueryFloatAttribute("pitch", &rotation.x);
+            pRotation->QueryFloatAttribute("yaw", &rotation.y);
+            pRotation->QueryFloatAttribute("roll", &rotation.z);
+            m_localPose.SetPitchYawRoll(rotation.x, rotation.y, rotation.z);
+        }
+    }
     return true;
 }
 
@@ -69,8 +93,7 @@ void Actor::AddComponent(StrongActorComponentPtr p_pComponent)
 ActorFactory::ActorFactory(void)
 {
     m_actorComponentCreators["RenderComponent"] = CreateRenderComponent;
-    m_actorComponentCreators["PoseComponent"] = CreatePoseComponent;
-    m_actorComponentCreators["RotationComponent"] = CreateRotationComponent;
+    m_actorComponentCreators["CameraComponent"] = CreateCameraComponent;
 }
 
 
@@ -140,7 +163,10 @@ StrongActorComponentPtr ActorFactory::CreateComponent(tinyxml2::XMLElement* p_pD
     }
     else
     {
-        LI_ERROR("No suitable component constructor found: " + name);
+        if(name.find("Component") != std::string::npos)
+        {
+            LI_ERROR("No suitable component constructor found: " + name);
+        }
     }
     return StrongActorComponentPtr(0);
 }

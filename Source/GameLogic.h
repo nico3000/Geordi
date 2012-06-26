@@ -7,11 +7,13 @@ class GameLogic :
     public IGameLogic
 {
     typedef std::map<ActorID, StrongActorPtr> ActorMap;
+    typedef std::list<std::shared_ptr<IGameView>> GameViewList;
 
 private:
     ActorMap m_actors;
     ActorFactory* m_pActorFactory;
     ProcessManager* m_pProcessManager;
+    GameViewList m_gameViews;
 
 public:
     GameLogic(void);
@@ -20,15 +22,16 @@ public:
     bool VInit(void);
     void VDestroy(void);
     void VUpdate(unsigned long p_deltaMillis);
+    void VRender(unsigned long p_deltaMillis);
     void VDeleteActor(ActorID p_id);
     StrongActorPtr VCreateActor(const char* p_actorResource);
     WeakActorPtr VGetActor(ActorID p_id);
 
-    void Test(IEventDataPtr p_pEvent) { LI_INFO(std::string(p_pEvent->VGetName()) + " fired"); }
-    void OnActorTranslate(IEventDataPtr pEvent);
-    void OnActorRotate(IEventDataPtr pEvent);
-
     void AttachProcess(StrongProcessPtr p_pProcess) { if(m_pProcessManager) m_pProcessManager->AttachProcess(p_pProcess); }
+    void AttachView(std::shared_ptr<IGameView> p_gameView, ActorID p_actorID = INVALID_ACTOR_ID);
+    void RemoveView(std::shared_ptr<IGameView> p_gameView);
+
+    void ActorMoveDelegate(IEventDataPtr p_pEventData);
 
 };
 

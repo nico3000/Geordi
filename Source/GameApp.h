@@ -7,12 +7,11 @@
 class GameApp
 {
 private:
-    typedef std::list<std::shared_ptr<IGameView>> GameViewList;
+    
 
     bool m_continue;
     GameLogic* m_pLogic;
     Config* m_pConfig;
-    GameViewList m_gameViews;
 
 public:
     GameApp(void);
@@ -25,7 +24,6 @@ public:
     void SetContinue(bool p_continue) { m_continue = p_continue; }
     GameLogic* GetGameLogic(void) { return m_pLogic; }
     Config* GetConfig(void) const { return m_pConfig; }
-    void RegisterView(std::shared_ptr<IGameView> p_pGameView) { m_gameViews.push_back(p_pGameView); }
 
 };
 

@@ -1,4 +1,5 @@
 #pragma once
+#include "LocalPose.h"
 
 class Actor;
 class ActorComponent;
@@ -42,6 +43,7 @@ class Actor
 private:
     ActorID m_id;
     ActorComponents m_components;
+    LocalPose m_localPose;
 
     void AddComponent(StrongActorComponentPtr p_pComponent);
 
@@ -55,6 +57,7 @@ public:
     void Update(unsigned long p_deltaMillis);
 
     ActorID GetID(void) const { return m_id; }
+    LocalPose& GetPose(void) { return m_localPose; }
 
     template<class ComponentType>
     std::weak_ptr<ComponentType> GetComponent(ComponentID p_id)
