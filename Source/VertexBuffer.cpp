@@ -8,6 +8,11 @@ D3D11_INPUT_ELEMENT_DESC VertexBuffer::sm_pSimpleVertexElementDesc[2] = {
 };
 unsigned int VertexBuffer::sm_simpleVertexNumElements = 2;
 
+D3D11_INPUT_ELEMENT_DESC VertexBuffer::sm_pScreenQuadVertexElementDesc[1] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+};
+unsigned int VertexBuffer::sm_screenQuadVertexNumElements = 1;
+
 
 VertexBuffer::VertexBuffer(void):
 m_pBuffer(0)

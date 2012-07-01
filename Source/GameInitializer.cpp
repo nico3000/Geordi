@@ -6,6 +6,7 @@
 #include "HumanDisplay.h"
 #include "RenderComponent.h"
 #include "CameraComponent.h"
+#include "ParticleComponent.h"
 
 GameTimer* LostIsland::g_pTimer = 0;
 GraphicsLayer* LostIsland::g_pGraphics = 0;
@@ -29,9 +30,9 @@ bool GameInitializer::Init(HINSTANCE hInstance)
     }
 
     LostIsland::g_pApp = new GameApp;
-    if(LostIsland::g_pApp == 0 || !LostIsland::g_pApp->Init())
+    if(LostIsland::g_pApp == 0 || !LostIsland::g_pApp->InitConfig())
     {
-        LI_ERROR("GameApp initialization error");
+        LI_ERROR("GameApp or Config initialization error");
         return false;
     }
 
@@ -39,6 +40,12 @@ bool GameInitializer::Init(HINSTANCE hInstance)
     if(LostIsland::g_pGraphics == 0 || !LostIsland::g_pGraphics->Init(hInstance))
     {
         LI_ERROR("GraphicsLayer initialization error");
+        return false;
+    }
+
+    if(!LostIsland::g_pApp->Init())
+    {
+        LI_ERROR("GameApp initialization error");
         return false;
     }
 
@@ -52,6 +59,7 @@ bool GameInitializer::Init(HINSTANCE hInstance)
     //////////////////////////////////////////////////////////////////////////
     ////////////// static testing stuff goes here and only here. /////////////
     //////////////////////////////////////////////////////////////////////////
+    //LostIsland::g_pTimer->SetFactor(0.1f);
 
     // human view
     std::shared_ptr<HumanDisplay> pHumanDisplay(new HumanDisplay);
@@ -59,23 +67,43 @@ bool GameInitializer::Init(HINSTANCE hInstance)
 
     // actor testing
     StrongActorPtr pCamera = LostIsland::g_pApp->GetGameLogic()->VCreateActor("./Actors/CameraActor.xml");
-    StrongActorPtr pActor = LostIsland::g_pApp->GetGameLogic()->VCreateActor("./Actors/CubeActor.xml");
-    std::shared_ptr<RenderComponent> pComponent = pActor->GetComponent<RenderComponent>(RenderComponent::GetComponentID()).lock();
+    StrongActorPtr pCube = LostIsland::g_pApp->GetGameLogic()->VCreateActor("./Actors/CubeActor.xml");
+    
+    std::shared_ptr<RenderComponent> pComponent = pCube->GetComponent<RenderComponent>(RenderComponent::GetComponentID()).lock();
     if(pComponent)
     {
-        pHumanDisplay->GetScene().AddChild(pActor->GetID(), pComponent->GetSceneNode());
+        pHumanDisplay->GetScene().AddChild(pCube->GetID(), pComponent->GetSceneNode());
     }
     else
     {
         LI_ERROR("no render component");
     }
-    
+    StrongActorPtr pParticles = LostIsland::g_pApp->GetGameLogic()->VCreateActor("./Actors/ParticlesActor.xml");
+    std::shared_ptr<ParticleComponent> pParticleComp = pParticles->GetComponent<ParticleComponent>(ParticleComponent::sm_componentID).lock();
+    if(pParticleComp)
+    {
+        pHumanDisplay->GetScene().AddChild(pParticles->GetID(), pParticleComp->GetSceneNode());
+    }
+    else
+    {
+        LI_ERROR("no particle component");
+    }
+    StrongActorPtr pParticles2 = LostIsland::g_pApp->GetGameLogic()->VCreateActor("./Actors/ParticlesActor2.xml");
+    std::shared_ptr<ParticleComponent> pParticleComp2 = pParticles2->GetComponent<ParticleComponent>(ParticleComponent::sm_componentID).lock();
+    if(pParticleComp2)
+    {
+        pHumanDisplay->GetScene().AddChild(pParticles2->GetID(), pParticleComp2->GetSceneNode());
+    }
+    else
+    {
+        LI_ERROR("no particle component");
+    }
 
     // input testing
-     std::shared_ptr<FPSActorInputHandler> pFPSHandler(new FPSActorInputHandler(pActor->GetID()));
+     std::shared_ptr<FPSActorInputHandler> pFPSHandler(new FPSActorInputHandler(pCamera->GetID()));
      LostIsland::g_pInput->RegisterKeyboardHandler(pFPSHandler);
      LostIsland::g_pInput->RegisterPointerHandler(pFPSHandler);
-     LostIsland::g_pApp->GetGameLogic()->AttachView(pFPSHandler, pActor->GetID());
+     LostIsland::g_pApp->GetGameLogic()->AttachView(pFPSHandler, pCamera->GetID());
 
     return true;
 }

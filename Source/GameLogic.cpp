@@ -3,7 +3,8 @@
 #include "TestEventData.h"
 #include "ActorEvents.h"
 
-GameLogic::GameLogic(void)
+GameLogic::GameLogic(void) :
+m_pActorFactory(0), m_pParticleSystem(0), m_pProcessManager(0)
 {
 }
 
@@ -14,6 +15,7 @@ GameLogic::~GameLogic(void)
     this->VDestroy();
     SAFE_DELETE(m_pActorFactory);
     SAFE_DELETE(m_pProcessManager);
+    SAFE_DELETE(m_pParticleSystem);
 }
 
 
@@ -29,6 +31,12 @@ bool GameLogic::VInit(void)
     if(!m_pActorFactory)
     {
         LI_ERROR("ActorFactory initialization failed");
+        return false;
+    }
+    m_pParticleSystem = new ParticleSystem;
+    if(!m_pParticleSystem || !m_pParticleSystem->Init())
+    {
+        LI_ERROR("ParticleSystem initialization failed");
         return false;
     }
 
@@ -55,6 +63,8 @@ void GameLogic::VUpdate(unsigned long p_deltaMillis)
 
     m_pProcessManager->UpdateProcesses(p_deltaMillis);
     EventManager::Get()->VUpdate(20);
+    m_pParticleSystem->Simulate(p_deltaMillis);
+
     for(auto iter=m_actors.begin(); iter != m_actors.end(); ++iter)
     {
         iter->second->Update(p_deltaMillis);
@@ -72,6 +82,15 @@ void GameLogic::VRender(unsigned long p_deltaMillis)
     for(auto iter=m_gameViews.begin(); iter != m_gameViews.end(); ++iter)
     {
         (*iter)->VOnRender(p_deltaMillis);
+    }
+}
+
+
+void GameLogic::VRestore(void) 
+{
+    for(auto iter=m_gameViews.begin(); iter != m_gameViews.end(); ++iter)
+    {
+        (*iter)->VOnRestore();
     }
 }
 

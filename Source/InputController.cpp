@@ -40,8 +40,6 @@ bool InputController::Init(void)
         return false;
     }
 
-    SetCursor(0);
-
     return true;
 }
 
@@ -128,6 +126,11 @@ void InputController::Mouse(const RAWMOUSE& data)
 
 void InputController::Keyboard(const RAWKEYBOARD& data)
 {
+    if(data.VKey == VK_ESCAPE)
+    {
+        PostQuitMessage(0);
+    }
+
     int keyCode = data.VKey;
     bool keyUp = data.Flags & RI_KEY_BREAK;
     if(keyUp)
@@ -152,11 +155,6 @@ void InputController::Keyboard(const RAWKEYBOARD& data)
                 }
             }
         }
-    }
-
-    if(data.VKey == VK_ESCAPE)
-    {
-        PostQuitMessage(0);
     }
     if(data.VKey == VK_F1 && (data.Flags & RI_KEY_BREAK) == 0)
     {

@@ -2,6 +2,7 @@
 #include "XMMatrixStack.h"
 #include "RootNode.h"
 #include "Camera.h"
+#include "ConstantBuffer.h"
 
 class Scene
 {
@@ -15,6 +16,7 @@ private:
     std::shared_ptr<RootNode> m_pRoot;
     CameraMap m_cameras;
     std::shared_ptr<Camera> m_pCurrentCamera;
+    ConstantBuffer m_modelBuffer;
 
 public:
     Scene(void);
@@ -28,8 +30,9 @@ public:
     bool RemoveChild(ActorID p_actorID);
     void AddCamera(const std::string& p_name, std::shared_ptr<Camera> p_pCamera, bool p_activate = false);
 
-    XMMatrixStack& GetModelStack(void) { return m_modelStack; }
-    XMMatrixStack& GetModelInvStack(void) { return m_modelInvStack; }
+    void PushModelMatrices(const LocalPose::ModelMatrixData& p_modelMatrixData, bool p_updateBuffer = true);
+    void PopModelMatrices(bool p_updateBuffer = false);
+    bool UpdateModelMatrixBuffer(void) { return m_modelBuffer.Update(); }
 
 };
 

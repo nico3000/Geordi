@@ -7,8 +7,6 @@
 class GameApp
 {
 private:
-    
-
     bool m_continue;
     GameLogic* m_pLogic;
     Config* m_pConfig;
@@ -17,6 +15,7 @@ public:
     GameApp(void);
     ~GameApp(void);
 
+    bool InitConfig(void);
     bool Init(void);
     void OnNextFrame(void);
 

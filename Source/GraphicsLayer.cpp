@@ -2,6 +2,12 @@
 #include "GraphicsLayer.h"
 
 
+#include "ShaderProgram.h"
+#include "IndexBuffer.h"
+#include "VertexBuffer.h"
+#include "ConstantBuffer.h"
+
+
 #define CHECK_ERROR_BLOB(_hr, _blob) do \
 { \
     if(FAILED(_hr)) \
@@ -28,13 +34,14 @@
 
 
 GraphicsLayer::GraphicsLayer(void):
-m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBuffer(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_vsync(0)
+m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBufferRTV(0), m_pBackBufferDSV(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_onShutdown(false), m_vsync(0)
 {
 }
 
 
 GraphicsLayer::~GraphicsLayer(void)
 {
+    m_onShutdown = true;
     if(m_initialized)
     {
         this->SetFullscreen(false);
@@ -44,6 +51,10 @@ GraphicsLayer::~GraphicsLayer(void)
     {
         SAFE_RELEASE(shaderPair.second);
     }
+    for each(auto blobPair in m_vertexShaderBlobs)
+    {
+        SAFE_RELEASE(blobPair.second);
+    }
     for each(std::pair<std::string, ID3D11GeometryShader*> shaderPair in m_geometryShaders)
     {
         SAFE_RELEASE(shaderPair.second);
@@ -52,7 +63,8 @@ GraphicsLayer::~GraphicsLayer(void)
     {
         SAFE_RELEASE(shaderPair.second);
     }
-    SAFE_RELEASE(m_pBackBuffer);
+    SAFE_RELEASE(m_pBackBufferDSV);
+    SAFE_RELEASE(m_pBackBufferRTV);
     SAFE_RELEASE(m_pContext);
     SAFE_RELEASE(m_pDevice);
     SAFE_RELEASE(m_pSwapChain);
@@ -61,6 +73,20 @@ GraphicsLayer::~GraphicsLayer(void)
     {
         DestroyWindow(m_hWnd);
     }
+}
+
+
+
+bool GraphicsLayer::InitTest(void)
+{
+    //ID3D11ShaderResourceView* pTextureSRV;
+    //HRESULT hr = D3DX11CreateShaderResourceViewFromFileA(m_pDevice, "./Texture/nicotopia.png", 0, 0, &pTextureSRV, 0);
+    //RETURN_IF_FAILED(hr);
+
+    //m_pContext->PSSetShaderResources(1, 1, &pTextureSRV);
+    
+    
+    return true;
 }
 
 
@@ -79,21 +105,30 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     }    
     UpdateWindow(m_hWnd);
     ShowWindow(m_hWnd, SW_SHOW);
-    
-    return true;
+
+
+    return InitTest();
+
+    //return true;
 }
 
 
 void GraphicsLayer::Clear(void)
 {
     static const float pClearColor[] = { 0.0f, 0.2f, 0.2f, 1.0f };
-    m_pContext->ClearRenderTargetView(m_pBackBuffer, pClearColor);
+    m_pContext->ClearRenderTargetView(m_pBackBufferRTV, pClearColor);
+    m_pContext->ClearDepthStencilView(m_pBackBufferDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
-
 
 void GraphicsLayer::Present(void)
 {
     m_pSwapChain->Present(m_vsync, 0);
+}
+
+
+void GraphicsLayer::ActivateBackbuffer(void) const
+{
+    m_pContext->OMSetRenderTargets(1, &m_pBackBufferRTV, m_pBackBufferDSV);
 }
 
 
@@ -159,6 +194,7 @@ bool GraphicsLayer::CreateAppGraphics(void)
     scDesc.SampleDesc.Quality = 0;
     scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     scDesc.Windowed = LostIsland::g_pApp->GetConfig()->GetBoolAttribute("graphics", "display", "windowed");
+    if(!scDesc.Windowed) ShowCursor(false);
 
     DXGI_MODE_DESC desiredMode;
     ZeroMemory(&desiredMode, sizeof(DXGI_MODE_DESC));
@@ -190,12 +226,15 @@ bool GraphicsLayer::CreateAppGraphics(void)
                                                &scDesc,
                                                &m_pSwapChain));
 
+    this->SetDefaultSamplers();
+
     D3D11_RASTERIZER_DESC rasterizerDesc;
     ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
     rasterizerDesc.CullMode = D3D11_CULL_BACK;
     rasterizerDesc.DepthClipEnable = true;
     rasterizerDesc.FillMode = D3D11_FILL_SOLID;
     rasterizerDesc.FrontCounterClockwise = true;
+    
     ID3D11RasterizerState* pRasterizerState;
     HRESULT hr = m_pDevice->CreateRasterizerState(&rasterizerDesc, &pRasterizerState);
     if(FAILED(hr))
@@ -206,6 +245,33 @@ bool GraphicsLayer::CreateAppGraphics(void)
     {
         m_pContext->RSSetState(pRasterizerState);
         SAFE_RELEASE(pRasterizerState);   
+    }
+
+    D3D11_BLEND_DESC blendDesc;
+    blendDesc.AlphaToCoverageEnable = false;
+    blendDesc.IndependentBlendEnable = false;
+    blendDesc.RenderTarget[0].BlendEnable = false;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
+    
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
+    ID3D11BlendState* pBlendState;
+    hr = m_pDevice->CreateBlendState(&blendDesc, &pBlendState);
+    if(FAILED(hr))
+    {
+        HRESULT_TO_WARNING(hr);
+    }
+    else
+    {
+        FLOAT pFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        m_pContext->OMSetBlendState(pBlendState, pFactor, 0xffffffff);
+        SAFE_RELEASE(pBlendState);
     }
 
     m_initialized = true;
@@ -329,6 +395,7 @@ bool GraphicsLayer::CreateAppWindow(HINSTANCE hInstance)
     {
         m_width = rect.right - rect.left;
         m_height = rect.bottom - rect.top;
+        //ClipCursor(&rect);
     }
 
     m_hWnd = CreateWindow(pWindowClass,
@@ -354,7 +421,6 @@ bool GraphicsLayer::CreateAppWindow(HINSTANCE hInstance)
 
 bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 {
-    //return true;
     HRESULT hr = S_OK;
     if(m_initialized)
     {
@@ -405,7 +471,8 @@ bool GraphicsLayer::SetFullscreen(bool p_fullscreen)
 
 void GraphicsLayer::ReleaseBackbuffer(void)
 {
-    SAFE_RELEASE(m_pBackBuffer);
+    SAFE_RELEASE(m_pBackBufferRTV);
+    SAFE_RELEASE(m_pBackBufferDSV);
 }
 
 
@@ -413,15 +480,45 @@ bool GraphicsLayer::LoadBackbuffer(void)
 {
     HRESULT hr = S_OK;
 
+    D3D11_TEXTURE2D_DESC dsTexDesc;
     ID3D11Texture2D* pTexture;
     hr = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pTexture);
     RETURN_IF_FAILED(hr);
+    pTexture->GetDesc(&dsTexDesc);
 
-    hr = m_pDevice->CreateRenderTargetView(pTexture, NULL, &m_pBackBuffer);
+    hr = m_pDevice->CreateRenderTargetView(pTexture, NULL, &m_pBackBufferRTV);
     SAFE_RELEASE(pTexture);
     RETURN_IF_FAILED(hr);
 
-    m_pContext->OMSetRenderTargets(1, &m_pBackBuffer, 0);
+    dsTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    dsTexDesc.CPUAccessFlags = 0;
+    dsTexDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsTexDesc.Usage = D3D11_USAGE_DEFAULT;
+    hr = m_pDevice->CreateTexture2D(&dsTexDesc, 0, &pTexture);
+    RETURN_IF_FAILED(hr);
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+    dsvDesc.Flags = 0;
+    dsvDesc.Format = dsTexDesc.Format;
+    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Texture2D.MipSlice = 0;
+    hr = m_pDevice->CreateDepthStencilView(pTexture, &dsvDesc, &m_pBackBufferDSV);
+    SAFE_RELEASE(pTexture);
+    RETURN_IF_FAILED(hr);
+
+    D3D11_DEPTH_STENCIL_DESC dsDesc;
+    ZeroMemory(&dsDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+    dsDesc.DepthEnable = true;
+    dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+    dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    ID3D11DepthStencilState* pDSState;
+    hr = m_pDevice->CreateDepthStencilState(&dsDesc, &pDSState);
+    RETURN_IF_FAILED(hr);
+
+    m_pContext->OMSetDepthStencilState(pDSState, 0xffffffff);
+    SAFE_RELEASE(pDSState);
+
+    m_pContext->OMSetRenderTargets(1, &m_pBackBufferRTV, m_pBackBufferDSV);
 
     D3D11_VIEWPORT viewport;
     viewport.Width = (float)m_width;
@@ -448,23 +545,26 @@ bool GraphicsLayer::IsFullscreen(void) const
 }
 
 
-ID3D11VertexShader* GraphicsLayer::CompileVertexShader(LPCSTR p_file, LPCSTR p_function, ID3D10Blob*& p_pShaderData, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
+ID3D11VertexShader* GraphicsLayer::CompileVertexShader(LPCSTR p_file, LPCSTR p_function, ID3D10Blob*& p_pShaderData, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
 {
     std::string id = p_file + std::string("|") + p_function;
     if(m_vertexShaders.find(id) == m_vertexShaders.end())
     {
         HRESULT hr = S_OK;
         ID3D10Blob* pErrorData = 0;
-        hr = D3DX11CompileFromFileA(p_file, 0, 0, p_function, m_vertexShaderProfiles[p_version], 0, 0, 0, &p_pShaderData, &pErrorData, 0);
+        hr = D3DX11CompileFromFileA(p_file, p_pDefines, 0, p_function, m_vertexShaderProfiles[p_version], 0, 0, 0, &p_pShaderData, &pErrorData, 0);
         CHECK_ERROR_BLOB(hr, pErrorData);
+        m_vertexShaderBlobs[id] = p_pShaderData;
+        p_pShaderData->AddRef();
         hr = m_pDevice->CreateVertexShader(p_pShaderData->GetBufferPointer(), p_pShaderData->GetBufferSize(), 0, &m_vertexShaders[id]);
         RETURN_IF_FAILED(hr);
     }
+    p_pShaderData = m_vertexShaderBlobs[id];
     return m_vertexShaders[id];
 }
 
 
-ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCSTR p_file, LPCSTR p_function, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
+ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
 {
     std::string id = p_file + std::string("|") + p_function;
     if(m_geometryShaders.find(id) == m_geometryShaders.end())
@@ -472,7 +572,7 @@ ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCSTR p_file, LPCSTR
         HRESULT hr = S_OK;
         ID3D10Blob* pShaderData = 0;
         ID3D10Blob* pErrorData = 0;
-        hr = D3DX11CompileFromFileA(p_file, 0, 0, p_function, m_geometryShaderProfiles[p_version], 0, 0, 0, &pShaderData, &pErrorData, 0);
+        hr = D3DX11CompileFromFileA(p_file, p_pDefines, 0, p_function, m_geometryShaderProfiles[p_version], 0, 0, 0, &pShaderData, &pErrorData, 0);
         CHECK_ERROR_BLOB(hr, pErrorData);
         hr = m_pDevice->CreateGeometryShader(pShaderData->GetBufferPointer(), pShaderData->GetBufferSize(), 0, &m_geometryShaders[id]);
         RETURN_IF_FAILED(hr);
@@ -481,7 +581,7 @@ ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCSTR p_file, LPCSTR
 }
 
 
-ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCSTR p_file, LPCSTR p_function, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
+ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
 {
     std::string id = p_file + std::string("|") + p_function;
     if(m_pixelShaders.find(id) == m_pixelShaders.end())
@@ -489,7 +589,7 @@ ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCSTR p_file, LPCSTR p_fun
         HRESULT hr = S_OK;
         ID3D10Blob* pShaderData = 0;
         ID3D10Blob* pErrorData = 0;
-        hr = D3DX11CompileFromFileA(p_file, 0, 0, p_function, m_pixelShaderProfiles[p_version], 0, 0, 0, &pShaderData, &pErrorData, 0);
+        hr = D3DX11CompileFromFileA(p_file, p_pDefines, 0, p_function, m_pixelShaderProfiles[p_version], 0, 0, 0, &pShaderData, &pErrorData, 0);
         CHECK_ERROR_BLOB(hr, pErrorData);
         hr = m_pDevice->CreatePixelShader(pShaderData->GetBufferPointer(), pShaderData->GetBufferSize(), 0, &m_pixelShaders[id]);
         RETURN_IF_FAILED(hr);
@@ -535,6 +635,10 @@ bool GraphicsLayer::SetDefaultSamplers(void)
     {
         m_pContext->DSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
         m_pContext->HSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+    }
+    for(unsigned int i=0; i < SAMPLER_STATE_COUNT; ++i)
+    {
+        SAFE_RELEASE(ppStates[i]);
     }
     return true;
 }

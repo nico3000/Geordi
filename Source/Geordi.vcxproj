@@ -225,6 +225,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\Game\Shader\CommonDefinitions.hlsl" />
+    <None Include="..\Game\Shader\DeferredShading.fx" />
+    <None Include="..\Game\Shader\ParticleSystemCS.hlsl" />
+    <None Include="..\Game\Shader\NicotopiaTest.fx" />
+    <None Include="..\Game\Shader\ParticleStructs.hlsl" />
     <None Include="Geordi.ico" />
     <None Include="ReadMe.txt" />
     <None Include="small.ico" />
@@ -261,6 +266,10 @@
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="MeshNode.h" />
     <ClInclude Include="Octree.h" />
+    <ClInclude Include="ParticleCloud.h" />
+    <ClInclude Include="ParticleComponent.h" />
+    <ClInclude Include="ParticleNode.h" />
+    <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ProcessManager.h" />
     <ClInclude Include="RenderComponent.h" />
     <ClInclude Include="Resource.h" />
@@ -302,6 +311,10 @@
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="MeshNode.cpp" />
     <ClCompile Include="Octree.cpp" />
+    <ClCompile Include="ParticleCloud.cpp" />
+    <ClCompile Include="ParticleComponent.cpp" />
+    <ClCompile Include="ParticleNode.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="ProcessManager.cpp" />
     <ClCompile Include="RenderComponent.cpp" />
     <ClCompile Include="RootNode.cpp" />

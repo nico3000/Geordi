@@ -5,10 +5,8 @@
 #define CBUFFER_CAMERA_SLOT 0
 
 
-Camera::Camera(void):
-m_dirView(0.0f, 0.0f, 1.0f), m_dirUp(0.0f, 1.0f, 0.0f), m_dirSide(1.0f, 0.0f, 0.0f), m_anglePhi(0.0f), m_angleTheta(0.0f), m_fov(XM_PIDIV2)
+Camera::Camera(void)
 {
-    m_struct.viewDistance = 1e+2f;
 }
 
 
@@ -17,14 +15,24 @@ Camera::~Camera(void)
 }
 
 
-bool Camera::Init(float p_fov, float p_aspect, float p_minZ, float p_maxZ)
+bool Camera::Init(WeakActorPtr p_pActor)
 {
-    m_fov = p_fov;
-    m_aspect = p_aspect;
-    m_minZ = p_minZ;
-    m_struct.viewDistance = p_maxZ;
-    this->BuildMatrices(MATRIX_BOTH);
-    return m_buffer.Build(&m_struct, sizeof(CameraStruct));
+    m_pActor = p_pActor;
+    StrongActorPtr pActor = p_pActor.lock();
+    if(pActor)
+    {
+        m_pCameraComponent = pActor->GetComponent<CameraComponent>(CameraComponent::sm_componentID);
+        if(!m_pCameraComponent.lock())
+        {
+            LI_ERROR("Camera initialized with non-camera actor");
+            return false;
+        }
+        return m_buffer.BuildFromSharedData(&m_struct, sizeof(CameraStruct));
+    }
+    else
+    {
+        return false;
+    }
 }
 
 
@@ -43,15 +51,24 @@ void Camera::Bind(void)
 
 void Camera::BuildMatrices(Matrix p_matrix)
 {
-
-    if(p_matrix & MATRIX_VIEW)
-    {
-        XMStoreFloat4x4(&m_struct.view, XMMatrixLookToLH(XMLoadFloat3(&m_struct.positionWC), XMLoadFloat3(&m_dirView), XMLoadFloat3(&m_dirUp)));
-    }
     if(p_matrix & MATRIX_PROJECTION)
     {
-        float aspect = m_aspect == 0.0f ? (float)LostIsland::g_pGraphics->GetWidth() / (float)LostIsland::g_pGraphics->GetHeight() : m_aspect;
-        XMStoreFloat4x4(&m_struct.projection, XMMatrixPerspectiveFovLH(m_fov, aspect, m_minZ, m_struct.viewDistance));
+        std::shared_ptr<CameraComponent> pComp = m_pCameraComponent.lock();
+        if(pComp)
+        {
+            float aspect = pComp->GetAspectRatio() == 0.0f ? (float)LostIsland::g_pGraphics->GetWidth() / (float)LostIsland::g_pGraphics->GetHeight() : pComp->GetAspectRatio();
+            XMStoreFloat4x4(&m_struct.projection, XMMatrixPerspectiveFovLH(pComp->GetFoV(), aspect, pComp->GetMinZ(), pComp->GetMaxZ()));
+            m_struct.viewDistance = pComp->GetMaxZ();
+        }
+    }
+    if(p_matrix & MATRIX_VIEW)
+    {
+        StrongActorPtr pActor = m_pActor.lock();
+        if(pActor)
+        {
+            XMStoreFloat4x4(&m_struct.view, pActor->GetPose().GetModelMatrixBuffer(true).modelInv);
+            m_struct.positionWC = pActor->GetPose().GetPosition();
+        }
     }
     if(p_matrix & (MATRIX_BOTH))
     {
@@ -59,33 +76,3 @@ void Camera::BuildMatrices(Matrix p_matrix)
     }
 }
 
-
-void Camera::Rotate(float p_dPhi, float p_dTheta)
-{
-    m_anglePhi += p_dPhi;
-    m_angleTheta = CLAMP(m_angleTheta + p_dTheta, -XM_PIDIV2, +XM_PIDIV2);
-
-    float sinPhi = sin(m_anglePhi);
-    float cosPhi = cos(m_anglePhi);
-    float sinTheta = sin(m_angleTheta);
-    float cosTheta = cos(m_angleTheta);
-    m_dirSide.x = cosPhi;    m_dirSide.y = sinPhi * sinTheta; m_dirSide.z = cosPhi * sinTheta;
-    m_dirUp  .x = 0.0f;      m_dirUp  .y = cosPhi;            m_dirUp  .z = -sinPhi;
-    m_dirSide.x = -sinTheta; m_dirSide.y = sinPhi * cosTheta; m_dirSide.z = cosPhi * cosTheta;
-}
-
-
-void Camera::Move(float p_dForward, float p_dRight, float p_dUp)
-{
-    m_struct.positionWC.x += p_dForward * m_dirView.x + p_dRight * m_dirSide.x;
-    m_struct.positionWC.y += p_dForward * m_dirView.y + p_dRight * m_dirSide.y + p_dUp;
-    m_struct.positionWC.z += p_dForward * m_dirView.z + p_dRight * m_dirSide.z;
-}
-
-
-void Camera::SetPosition(float p_x, float p_y, float p_z)
-{
-    m_struct.positionWC.x = p_x;
-    m_struct.positionWC.y = p_y;
-    m_struct.positionWC.z = p_z;
-}

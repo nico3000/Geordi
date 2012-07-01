@@ -73,6 +73,19 @@
     <Filter Include="Source Files\GameView\HumanView\Scene">
       <UniqueIdentifier>{0ef64e33-adc6-4940-99c6-fe3d654df295}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GameLogic\ParticleSystem">
+      <UniqueIdentifier>{8b48df27-c2f3-4f44-be51-e0e82b0d1c7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameLogic\ParticleSystem">
+      <UniqueIdentifier>{1e437d51-b20a-45f9-9263-187987178d0e}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Shader">
+      <UniqueIdentifier>{6ec9454b-6aee-4d1c-a7b2-986b7a26c3ec}</UniqueIdentifier>
+      <ParseFiles>false</ParseFiles>
+    </Filter>
+    <Filter Include="Source Files\GameView\HumanView\Effects">
+      <UniqueIdentifier>{ed2f6c7f-867b-4f60-b2c0-fd1e22ec85c0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -81,6 +94,21 @@
     </None>
     <None Include="Geordi.ico">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\Game\Shader\CommonDefinitions.hlsl">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="..\Game\Shader\NicotopiaTest.fx">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="..\Game\Shader\ParticleStructs.hlsl">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="..\Game\Shader\ParticleSystemCS.hlsl">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="..\Game\Shader\DeferredShading.fx">
+      <Filter>Shader</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -216,6 +244,18 @@
     <ClInclude Include="LocalPose.h">
       <Filter>Header Files\GameLogic\ActorSystem</Filter>
     </ClInclude>
+    <ClInclude Include="ParticleSystem.h">
+      <Filter>Header Files\GameLogic\ParticleSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleCloud.h">
+      <Filter>Header Files\GameLogic\ParticleSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleNode.h">
+      <Filter>Header Files\GameView\HumanView\Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleComponent.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -325,6 +365,18 @@
     </ClCompile>
     <ClCompile Include="LocalPose.cpp">
       <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleSystem.cpp">
+      <Filter>Source Files\GameLogic\ParticleSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleNode.cpp">
+      <Filter>Source Files\GameView\HumanView\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleComponent.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleCloud.cpp">
+      <Filter>Source Files\GameLogic\ParticleSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

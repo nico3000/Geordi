@@ -7,6 +7,8 @@ m_position(0.0f, 0.0f, 0.0f), m_rotation(0.0f, 0.0f, 0.0f), m_scaling(1.0f),
     m_sideDir(1.0f, 0.0f, 0.0f), m_upDir(0.0f, 1.0f, 0.0f), m_viewDir(0.0f, 0.0f, 1.0f),
     m_fixed(false)
 {
+    this->RotationChanged();
+    this->UpdateMatrices();
 }
 
 
@@ -29,7 +31,7 @@ void LocalPose::Copy(const LocalPose& p_toCopy)
 void LocalPose::RotationChanged(void)
 {
     static XMFLOAT4X4 temp;
-    XMStoreFloat4x4(&temp, XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z));
+    XMStoreFloat4x4(&temp, m_rotMatrix = XMMatrixRotationZ(m_rotation.z) * XMMatrixRotationX(m_rotation.x) * XMMatrixRotationY(m_rotation.y));
     m_sideDir.x = temp._11; m_sideDir.y = temp._12; m_sideDir.z = temp._13;
     m_upDir  .x = temp._21; m_upDir  .y = temp._22; m_upDir  .z = temp._23;
     m_viewDir.x = temp._31; m_viewDir.y = temp._32; m_viewDir.z = temp._33;
@@ -110,10 +112,10 @@ void LocalPose::UpdateMatrices(void)
     if(!m_fixed)
     {
         m_buffer.model = XMMatrixScaling(m_scaling, m_scaling, m_scaling) *
-            XMMatrixRotationRollPitchYaw(m_rotation.x, m_rotation.y, m_rotation.z) *
+            m_rotMatrix *
             XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
         m_buffer.modelInv = XMMatrixTranslation(-m_position.x, -m_position.y, -m_position.z) *
-            XMMatrixRotationRollPitchYaw(-m_rotation.x, -m_rotation.y, -m_rotation.z) *
+            XMMatrixTranspose(m_rotMatrix) *
             XMMatrixScaling(1.0f / m_scaling, 1.0f / m_scaling, 1.0f / m_scaling);
     }
 }

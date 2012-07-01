@@ -40,8 +40,7 @@ void HumanDisplay::ActorCreatedDelegate(IEventDataPtr p_pEventData)
         if(pComp)
         {
             std::shared_ptr<Camera> pCamera(new Camera);
-            pCamera->Init(pComp->GetFoV(), pComp->GetAspectRatio(), pComp->GetMinZ(), pComp->GetMaxZ());
-            pCamera->SetPosition(0.0f, 0.0f, -2.0f);
+            pCamera->Init(pActor);
             m_scene.AddCamera("test", pCamera);
         }
     }

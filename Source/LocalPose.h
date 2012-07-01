@@ -16,6 +16,7 @@ private:
     float m_scaling;
     XMFLOAT3 m_rotation;
     // temp vectors for local delta translation
+    XMMATRIX m_rotMatrix;
     XMFLOAT3 m_sideDir;
     XMFLOAT3 m_upDir;
     XMFLOAT3 m_viewDir;

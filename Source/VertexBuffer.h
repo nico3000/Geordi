@@ -20,5 +20,12 @@ public:
     };
     static D3D11_INPUT_ELEMENT_DESC sm_pSimpleVertexElementDesc[2];
     static unsigned int sm_simpleVertexNumElements;
+
+    struct ScreenQuadVertex
+    {
+        XMFLOAT2 pos;
+    };
+    static D3D11_INPUT_ELEMENT_DESC sm_pScreenQuadVertexElementDesc[1];
+    static unsigned int sm_screenQuadVertexNumElements;
 };
 

@@ -16,15 +16,20 @@ GameApp::~GameApp(void)
 }
 
 
-bool GameApp::Init(void)
+bool GameApp::InitConfig(void)
 {
-
     m_pConfig = new Config;
     if(!m_pConfig->Init())
     {
         LI_ERROR("Config initialization error");
         return false;
     }
+    return true;
+}
+
+
+bool GameApp::Init(void)
+{
     m_pLogic = new GameLogic;
     if(!m_pLogic || !m_pLogic->VInit())
     {
@@ -66,6 +71,14 @@ LRESULT CALLBACK LostIsland::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             // something went horribly wrong :O
             PostQuitMessage(0);
         }
+        else
+        {
+            if(LostIsland::g_pApp->GetGameLogic() && LostIsland::g_pGraphics && !LostIsland::g_pGraphics->IsOnShutdown())
+            {
+                LostIsland::g_pApp->GetGameLogic()->VRestore();
+            }
+            
+        }
         break;
     case WM_ACTIVATE:   // something happened with focus
         if(wParam == WA_INACTIVE)   // lost focus
@@ -93,7 +106,6 @@ LRESULT CALLBACK LostIsland::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         }
         break;
     case WM_SETFOCUS:
-
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);

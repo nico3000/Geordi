@@ -2,6 +2,7 @@
 #include "Actor.h"
 #include "RenderComponent.h"
 #include "CameraComponent.h"
+#include "ParticleComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 //////// Component Creator Functions /////////////////////////////////////
@@ -12,9 +13,16 @@ ActorComponent* CreateRenderComponent(void)
     return new RenderComponent;
 }
 
+
 ActorComponent* CreateCameraComponent(void)
 {
     return new CameraComponent;
+}
+
+
+ActorComponent* CreateParticleComponent(void)
+{
+    return new ParticleComponent;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -94,6 +102,7 @@ ActorFactory::ActorFactory(void)
 {
     m_actorComponentCreators["RenderComponent"] = CreateRenderComponent;
     m_actorComponentCreators["CameraComponent"] = CreateCameraComponent;
+    m_actorComponentCreators["ParticleComponent"] = CreateParticleComponent;
 }
 
 

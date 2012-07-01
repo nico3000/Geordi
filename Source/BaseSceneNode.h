@@ -13,22 +13,25 @@ private:
 
 protected:
     SceneNodeProperties m_properties;
+    WeakActorPtr m_pActor;
 
 public:
     BaseSceneNode(ActorID p_actorID);
     ~BaseSceneNode(void) { }
 
-    virtual HRESULT VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis) { return S_OK; }
-    virtual HRESULT VPreRender(Scene* p_pScene) { return S_OK; }
-    virtual HRESULT VRender(Scene* p_pScene) { return S_OK; }
-    virtual HRESULT VPostRender(Scene* p_pScene) { return S_OK; }
+    virtual HRESULT VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis);
 
+    virtual HRESULT VPreRender(Scene* p_pScene);
+    virtual HRESULT VRender(Scene* p_pScene) = 0;
+    HRESULT VRenderChildren(Scene* p_pScene);
+    virtual HRESULT VPostRender(Scene* p_pScene);
+    
     virtual HRESULT VOnRestore(void);
     virtual HRESULT VOnLostDevice(void);
-
-    HRESULT VRenderChildren(Scene* p_pScene);
+    
     bool VAddChild(std::shared_ptr<ISceneNode> p_pChild);
     bool VRemoveChild(ActorID p_actorID);
+    virtual NodeType VGetNodeType(void) const { return DYNAMIC; }
 
     bool VIsVisible(Scene* p_pScene) const { return m_isVisible; }
 
