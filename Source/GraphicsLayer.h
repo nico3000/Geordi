@@ -30,6 +30,17 @@
 } while(0)
 
 
+enum ShaderTarget
+{
+    TARGET_VS = 1,
+    TARGET_GS = 2,
+    TARGET_PS = 4,
+    TARGET_CS = 8,
+    TARGET_VS_PS = TARGET_VS | TARGET_PS,
+    TARGET_ALL = TARGET_VS | TARGET_GS | TARGET_PS | TARGET_CS,
+};
+
+
 class GraphicsLayer
 {
 public:
@@ -56,8 +67,9 @@ private:
     IDXGIOutput *m_pOutput;
     ID3D11Device* m_pDevice;
     ID3D11DeviceContext* m_pContext;
-    ID3D11RenderTargetView* m_pBackBufferRTV;
-    ID3D11DepthStencilView* m_pBackBufferDSV;
+    ID3D11RenderTargetView* m_pBackbufferRTV;
+    ID3D11DepthStencilView* m_pBackbufferDSV;
+    ID3D11UnorderedAccessView* m_pBackbufferUAV;
     D3D_FEATURE_LEVEL m_featureLevel;
     int m_width;
     int m_height;
@@ -85,7 +97,6 @@ public:
     ~GraphicsLayer(void);
 
     bool Init(HINSTANCE p_hInstance);
-    bool IsOnShutdown(void) const { return m_onShutdown; }
     void Clear(void);
     void Present(void);
     bool OnWindowResized(int p_width, int p_height);
@@ -95,8 +106,14 @@ public:
     bool ToggleFullscreen(void);
     bool SetFullscreen(bool p_fullscreen);
     bool IsFullscreen(void) const;
-    void ActivateBackbuffer(void) const;
+    void BindBackbufferToRT(void) const;
+    void BindBackbufferToUA(unsigned int slot) const;
+    void ReleaseRenderTarget(void) const;
+    void ReleaseUnorderedAccess(unsigned int p_startSlot, unsigned int p_count) const;
+    void ReleaseShaderResources(unsigned int p_startSlot, unsigned int p_count, ShaderTarget p_target = TARGET_ALL) const;
 
+    bool IsOnShutdown(void) const { return m_onShutdown; }
+    bool IsInitialized(void) const { return m_initialized; }
     const D3D_FEATURE_LEVEL& GetFeatureLevel(void) const { return m_featureLevel; }
     ID3D11Device* GetDevice(void) { return m_pDevice; }
     ID3D11DeviceContext* GetContext(void) { return m_pContext; }

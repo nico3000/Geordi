@@ -34,8 +34,11 @@
 
 
 GraphicsLayer::GraphicsLayer(void):
-m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pBackBufferRTV(0), m_pBackBufferDSV(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_onShutdown(false), m_vsync(0)
+m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_onShutdown(false), m_vsync(false)
 {
+    m_pBackbufferDSV = 0;
+    m_pBackbufferRTV = 0;
+    m_pBackbufferUAV = 0;
 }
 
 
@@ -63,8 +66,9 @@ GraphicsLayer::~GraphicsLayer(void)
     {
         SAFE_RELEASE(shaderPair.second);
     }
-    SAFE_RELEASE(m_pBackBufferDSV);
-    SAFE_RELEASE(m_pBackBufferRTV);
+    SAFE_RELEASE(m_pBackbufferUAV);
+    SAFE_RELEASE(m_pBackbufferDSV);
+    SAFE_RELEASE(m_pBackbufferRTV);
     SAFE_RELEASE(m_pContext);
     SAFE_RELEASE(m_pDevice);
     SAFE_RELEASE(m_pSwapChain);
@@ -116,8 +120,8 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
 void GraphicsLayer::Clear(void)
 {
     static const float pClearColor[] = { 0.0f, 0.2f, 0.2f, 1.0f };
-    m_pContext->ClearRenderTargetView(m_pBackBufferRTV, pClearColor);
-    m_pContext->ClearDepthStencilView(m_pBackBufferDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    m_pContext->ClearRenderTargetView(m_pBackbufferRTV, pClearColor);
+    m_pContext->ClearDepthStencilView(m_pBackbufferDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 }
 
 void GraphicsLayer::Present(void)
@@ -126,9 +130,59 @@ void GraphicsLayer::Present(void)
 }
 
 
-void GraphicsLayer::ActivateBackbuffer(void) const
+void GraphicsLayer::BindBackbufferToRT(void) const
 {
-    m_pContext->OMSetRenderTargets(1, &m_pBackBufferRTV, m_pBackBufferDSV);
+    m_pContext->OMSetRenderTargets(1, &m_pBackbufferRTV, m_pBackbufferDSV);
+}
+
+
+void GraphicsLayer::ReleaseRenderTarget(void) const
+{
+    static ID3D11RenderTargetView* pNull = 0;
+    m_pContext->OMSetRenderTargets(1, &pNull, 0);
+}
+
+
+void GraphicsLayer::BindBackbufferToUA(unsigned int slot) const
+{
+    static unsigned int counts = 0;
+    m_pContext->CSSetUnorderedAccessViews(slot, 1, &m_pBackbufferUAV, &counts);
+}
+
+
+void GraphicsLayer::ReleaseUnorderedAccess(unsigned int p_startSlot, unsigned int p_count) const
+{
+    ID3D11UnorderedAccessView** ppNull = new ID3D11UnorderedAccessView*[p_count];
+    ZeroMemory(ppNull, p_count * sizeof(ID3D11UnorderedAccessView*));
+    unsigned int* pCounts = new unsigned int[p_count];
+    ZeroMemory(pCounts, p_count * sizeof(unsigned int));
+    m_pContext->CSSetUnorderedAccessViews(p_startSlot, p_count, ppNull, pCounts);
+    SAFE_DELETE(ppNull);
+    SAFE_DELETE(pCounts);
+}
+
+
+void GraphicsLayer::ReleaseShaderResources(unsigned int p_startSlot, unsigned int p_count, ShaderTarget p_target /* = TARGET_ALL */) const
+{
+    ID3D11ShaderResourceView** ppNull = new ID3D11ShaderResourceView*[p_count];
+    ZeroMemory(ppNull, p_count * sizeof(ID3D11ShaderResourceView*));
+    if(p_target & TARGET_VS)
+    {
+        m_pContext->VSSetShaderResources(p_startSlot, p_count, ppNull);
+    }
+    if(p_target & TARGET_GS)
+    {
+        m_pContext->GSSetShaderResources(p_startSlot, p_count, ppNull);
+    }
+    if(p_target & TARGET_PS)
+    {
+        m_pContext->PSSetShaderResources(p_startSlot, p_count, ppNull);
+    }
+    if(p_target & TARGET_CS)
+    {
+        m_pContext->CSSetShaderResources(p_startSlot, p_count, ppNull);
+    }
+    SAFE_DELETE(ppNull);
 }
 
 
@@ -187,7 +241,7 @@ bool GraphicsLayer::CreateAppGraphics(void)
 
     DXGI_SWAP_CHAIN_DESC scDesc;
     scDesc.BufferCount = 1;
-    scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_UNORDERED_ACCESS;
     scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
     scDesc.OutputWindow = m_hWnd;
     scDesc.SampleDesc.Count = 1;
@@ -198,6 +252,7 @@ bool GraphicsLayer::CreateAppGraphics(void)
 
     DXGI_MODE_DESC desiredMode;
     ZeroMemory(&desiredMode, sizeof(DXGI_MODE_DESC));
+    desiredMode.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     desiredMode.Width = m_width;
     desiredMode.Height = m_height;
     desiredMode.RefreshRate.Numerator = LostIsland::g_pApp->GetConfig()->GetIntAttribute("graphics", "display", "refresh");
@@ -435,6 +490,7 @@ bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 
         if(!this->LoadBackbuffer())
         {
+            LI_ERROR("error");
             return false;
         }
 
@@ -471,8 +527,9 @@ bool GraphicsLayer::SetFullscreen(bool p_fullscreen)
 
 void GraphicsLayer::ReleaseBackbuffer(void)
 {
-    SAFE_RELEASE(m_pBackBufferRTV);
-    SAFE_RELEASE(m_pBackBufferDSV);
+    SAFE_RELEASE(m_pBackbufferRTV);
+    SAFE_RELEASE(m_pBackbufferDSV);
+    SAFE_RELEASE(m_pBackbufferUAV);
 }
 
 
@@ -486,9 +543,11 @@ bool GraphicsLayer::LoadBackbuffer(void)
     RETURN_IF_FAILED(hr);
     pTexture->GetDesc(&dsTexDesc);
 
-    hr = m_pDevice->CreateRenderTargetView(pTexture, NULL, &m_pBackBufferRTV);
-    SAFE_RELEASE(pTexture);
+    hr = m_pDevice->CreateRenderTargetView(pTexture, NULL, &m_pBackbufferRTV);
     RETURN_IF_FAILED(hr);
+    hr = m_pDevice->CreateUnorderedAccessView(pTexture, 0, &m_pBackbufferUAV);
+    RETURN_IF_FAILED(hr);
+    SAFE_RELEASE(pTexture);
 
     dsTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
     dsTexDesc.CPUAccessFlags = 0;
@@ -502,7 +561,7 @@ bool GraphicsLayer::LoadBackbuffer(void)
     dsvDesc.Format = dsTexDesc.Format;
     dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
     dsvDesc.Texture2D.MipSlice = 0;
-    hr = m_pDevice->CreateDepthStencilView(pTexture, &dsvDesc, &m_pBackBufferDSV);
+    hr = m_pDevice->CreateDepthStencilView(pTexture, &dsvDesc, &m_pBackbufferDSV);
     SAFE_RELEASE(pTexture);
     RETURN_IF_FAILED(hr);
 
@@ -518,7 +577,7 @@ bool GraphicsLayer::LoadBackbuffer(void)
     m_pContext->OMSetDepthStencilState(pDSState, 0xffffffff);
     SAFE_RELEASE(pDSState);
 
-    m_pContext->OMSetRenderTargets(1, &m_pBackBufferRTV, m_pBackBufferDSV);
+    m_pContext->OMSetRenderTargets(1, &m_pBackbufferRTV, m_pBackbufferDSV);
 
     D3D11_VIEWPORT viewport;
     viewport.Width = (float)m_width;
@@ -531,6 +590,8 @@ bool GraphicsLayer::LoadBackbuffer(void)
 
     return true;
 }
+
+
 
 
 bool GraphicsLayer::IsFullscreen(void) const

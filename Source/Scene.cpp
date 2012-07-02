@@ -28,7 +28,7 @@ HRESULT Scene::OnRestore(void)
         LI_ERROR("model matrix buffer build error");
         return S_FALSE;
     }
-    m_modelBuffer.Bind(1, ConstantBuffer::TARGET_VS_PS);
+    m_modelBuffer.Bind(1, TARGET_VS_PS);
     return m_pRoot ? m_pRoot->VOnRestore() : S_OK;
 }
 

@@ -272,6 +272,7 @@
     <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="ProcessManager.h" />
     <ClInclude Include="RenderComponent.h" />
+    <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RootNode.h" />
     <ClInclude Include="Scene.h" />
@@ -317,6 +318,7 @@
     <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="ProcessManager.cpp" />
     <ClCompile Include="RenderComponent.cpp" />
+    <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="RootNode.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneNodeProperties.cpp" />

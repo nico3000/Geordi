@@ -2,6 +2,7 @@
 #include "ISceneNode.h"
 #include "Geometry.h"
 #include "ShaderProgram.h"
+#include "RenderTarget.h"
 #define DS_NUM_TARGETS 3
 
 class RootNode :
@@ -12,11 +13,9 @@ private:
 
     NodeList m_staticNodes;
     NodeList m_dynamicNodes;
-    ID3D11Texture2D* m_ppTex[DS_NUM_TARGETS];
-    ID3D11ShaderResourceView* m_ppSRV[DS_NUM_TARGETS];
-    ID3D11RenderTargetView* m_ppRTV[DS_NUM_TARGETS];
-    ID3D11Texture2D* m_pDSVTex;
-    ID3D11DepthStencilView* m_pDSV;
+    RenderTarget m_base;
+    RenderTarget m_enlightened;
+    ID3D11ComputeShader* m_pPostFXCS;
     Geometry m_screenQuad;
     ShaderProgram m_dsTest;
 

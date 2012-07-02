@@ -1,4 +1,5 @@
 #pragma once
+#include "GraphicsLayer.h"
 class ConstantBuffer
 {
 private:
@@ -10,16 +11,6 @@ private:
     bool Build(void);
 
 public:
-    enum ShaderTarget
-    {
-        TARGET_VS = 1,
-        TARGET_GS = 2,
-        TARGET_PS = 4,
-        TARGET_CS = 8,
-        TARGET_VS_PS = TARGET_VS | TARGET_PS,
-        TARGET_ALL = TARGET_VS | TARGET_GS | TARGET_PS | TARGET_CS,
-    };
-
     ConstantBuffer(void);
     ~ConstantBuffer(void);
 

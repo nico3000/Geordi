@@ -86,7 +86,7 @@ void ParticleSystem::Simulate(unsigned long p_deltaMillis)
     m_time.y = 1e-3f * (float)p_deltaMillis;
     m_time.x += m_time.y;
     m_timeBuffer.Update();
-    m_timeBuffer.Bind(2, ConstantBuffer::TARGET_CS);
+    m_timeBuffer.Bind(2, TARGET_CS);
 
     LostIsland::g_pGraphics->GetContext()->CSSetShader(m_pComputeShader, 0, 0);
     ID3D11UnorderedAccessView* ppUAVs[3] = { 0, 0, 0 };

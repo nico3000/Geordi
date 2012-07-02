@@ -45,7 +45,7 @@ bool Camera::Update(Matrix p_toRebuild /* = MATRIX_BOTH */)
 
 void Camera::Bind(void)
 {
-    m_buffer.Bind(CBUFFER_CAMERA_SLOT, ConstantBuffer::TARGET_ALL);
+    m_buffer.Bind(CBUFFER_CAMERA_SLOT, TARGET_ALL);
 }
 
 

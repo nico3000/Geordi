@@ -10,7 +10,10 @@ m_pLogic(0), m_pConfig(0), m_continue(true)
 
 GameApp::~GameApp(void)
 {
-    m_pLogic->VDestroy();
+    if(m_pLogic)
+    {
+        m_pLogic->VDestroy();
+    }
     SAFE_DELETE(m_pLogic);
     SAFE_DELETE(m_pConfig);
 }
@@ -73,9 +76,9 @@ LRESULT CALLBACK LostIsland::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
         }
         else
         {
-            if(LostIsland::g_pApp->GetGameLogic() && LostIsland::g_pGraphics && !LostIsland::g_pGraphics->IsOnShutdown())
+            if(g_pApp->GetGameLogic() && g_pGraphics && g_pGraphics->IsInitialized() &&  !g_pGraphics->IsOnShutdown())
             {
-                LostIsland::g_pApp->GetGameLogic()->VRestore();
+                g_pApp->GetGameLogic()->VRestore();
             }
             
         }

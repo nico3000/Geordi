@@ -15,10 +15,9 @@ struct ScreenQuadFragment
 
 uint g_sampleCount : register(b3);
 
-//#define SAMPLE_COUNT 1.0
-Texture2DMS<float4, SAMPLE_COUNT> g_DiffuseTex : register(t1);
-Texture2DMS<float4, SAMPLE_COUNT> g_ViewTex : register(t2);
-Texture2DMS<float4, SAMPLE_COUNT> g_NormalTex : register(t3);
+Texture2DMS<float4, SAMPLE_COUNT> g_DiffuseTex : register(t0);
+Texture2DMS<float4, SAMPLE_COUNT> g_ViewTex : register(t1);
+Texture2DMS<float4, SAMPLE_COUNT> g_NormalTex : register(t2);
 
 
 ScreenQuadFragment ScreenQuadVS(ScreenQuadVertex input)
@@ -42,4 +41,27 @@ float4 TexOutPS(ScreenQuadFragment input) : SV_Target0
         color += g_DiffuseTex.Load(input.tex * float2(width, height), i);
     }
     return color / SAMPLE_COUNT;
+}
+
+
+RWTexture2D<float4> g_backbuffer : register(u0);
+Texture2D<float4> g_finalImage : register(t0);
+
+#define TILE_SIZE 16
+[numthreads(TILE_SIZE, TILE_SIZE, 1)] 
+void PostFXCS(uint3 dtid : SV_DispatchThreadID)
+{
+    const int kernelSize = 9;
+    const uint weights[9] = { 1, 8, 28, 56, 70, 56, 28, 7, 1 };
+    float sum = 4096.0;
+
+    float4 color = float4(0,0,0,0);
+    for(int x=-kernelSize / 2; x <= kernelSize / 2; ++x)
+    {
+        for(int y=-kernelSize / 2; y <= kernelSize / 2; ++y)
+        {
+            color += weights[y + kernelSize / 2] * weights[x + kernelSize / 2] * g_finalImage[dtid.xy + int2(x, y)];
+        }
+    }
+    g_backbuffer[dtid.xy] = color / sum;
 }
