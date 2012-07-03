@@ -260,7 +260,7 @@
       <Filter>Header Files\GameLogic\ActorSystem</Filter>
     </ClInclude>
     <ClInclude Include="RenderTarget.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -385,7 +385,7 @@
       <Filter>Source Files\GameLogic\ParticleSystem</Filter>
     </ClCompile>
     <ClCompile Include="RenderTarget.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GameApplicationLayer\Graphics</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -60,6 +60,12 @@ void GameApp::OnNextFrame(void)
 LRESULT CALLBACK LostIsland::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static bool lostFocusInFullscreen = false;
+    static bool fullscreen = g_pGraphics->IsFullscreen();
+    if(fullscreen != g_pGraphics->IsFullscreen())
+    {
+        ShowCursor(fullscreen);
+        fullscreen ^= true;
+    }
     switch (message)
     {
     case WM_DESTROY:
@@ -82,32 +88,32 @@ LRESULT CALLBACK LostIsland::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
             }
             
         }
-        break;
-    case WM_ACTIVATE:   // something happened with focus
-        if(wParam == WA_INACTIVE)   // lost focus
-        {
-            g_pTimer->Pause();
-            lostFocusInFullscreen = g_pGraphics->IsFullscreen();
-            if(!g_pGraphics->SetFullscreen(false))
-            {
-                // something went horribly wrong :O
-                PostQuitMessage(0);
-            }
-        }
-        else                        // got focus
-        {
-            g_pTimer->Resume();
-            if(lostFocusInFullscreen)
-            {
-                if(!g_pGraphics->SetFullscreen(true))
-                {
-                    // something went horribly wrong :O
-                    PostQuitMessage(0);
-                }
-            }
-            lostFocusInFullscreen = false;
-        }
-        break;
+        return 1;
+//     case WM_ACTIVATE:   // something happened with focus
+//         if(wParam == WA_INACTIVE)   // lost focus
+//         {
+//             g_pTimer->Pause();
+//             lostFocusInFullscreen = g_pGraphics->IsFullscreen();
+//             if(!g_pGraphics->SetFullscreen(false))
+//             {
+//                 // something went horribly wrong :O
+//                 PostQuitMessage(0);
+//             }
+//         }
+//         else                        // got focus
+//         {
+//             g_pTimer->Resume();
+//             if(lostFocusInFullscreen)
+//             {
+//                 if(!g_pGraphics->SetFullscreen(true))
+//                 {
+//                     // something went horribly wrong :O
+//                     PostQuitMessage(0);
+//                 }
+//             }
+//             lostFocusInFullscreen = false;
+//         }
+//         break;
     case WM_SETFOCUS:
         break;
     default:

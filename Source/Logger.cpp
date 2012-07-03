@@ -157,6 +157,10 @@ namespace Logger
 
     LogMgr::ErrorDialogResult LogMgr::Error(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
     {
+        if(LostIsland::g_pGraphics)
+        {
+            LostIsland::g_pGraphics->SetFullscreen(false);
+        }
         std::string out;
         this->GetOutputBuffer(out, p_isFatal ? LOGMGR_TAG_ERROR : LOGMGR_TAG_WARNING, p_errorMsg, p_function, p_file, p_line);
         Logger::Log("ERROR", p_errorMsg, p_isFatal, p_function, p_file, p_line);

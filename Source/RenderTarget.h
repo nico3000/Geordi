@@ -26,10 +26,13 @@ public:
     RenderTarget(void);
     ~RenderTarget(void);
 
-    bool Init2D(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats, const DXGI_SAMPLE_DESC& p_sampleDesc);
+    bool Init2DMS(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats, const DXGI_SAMPLE_DESC& p_sampleDesc);
+    bool Init2D(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats);
     void Destroy(void);
     void BindSingleShaderResource(unsigned int p_nr, unsigned int p_slot, ShaderTarget p_target);
     void BindAllShaderResources(unsigned int p_startSlot, ShaderTarget p_target);
+    void BindSingleUnorderedAccess(unsigned int p_nr, unsigned int p_slot);
+    void BindAllUnorderedAccess(unsigned int p_startSlot);
     void BindAllRenderTargets(void);
     void ClearColor(const float p_pColor[4]);
     void ClearDepthStencil(float p_depth, unsigned int p_stencil);

@@ -53,10 +53,11 @@ public:
     };
 
 private:
+    typedef std::map<std::string, ID3D10Blob*> VertexShaderBlobs;
     typedef std::map<std::string, ID3D11VertexShader*> VertexShaders;
     typedef std::map<std::string, ID3D11GeometryShader*> GeometryShaders;
     typedef std::map<std::string, ID3D11PixelShader*> PixelShaders;
-    typedef std::map<std::string, ID3D10Blob*> VertexShaderBlobs;
+    typedef std::map<std::string, ID3D11ComputeShader*> ComputeShaders;
     typedef std::map<ShaderVersion, LPCSTR> ShaderProfiles;
 
     bool m_initialized;
@@ -67,6 +68,7 @@ private:
     IDXGIOutput *m_pOutput;
     ID3D11Device* m_pDevice;
     ID3D11DeviceContext* m_pContext;
+    ID3D11Debug* m_pDebug;
     ID3D11RenderTargetView* m_pBackbufferRTV;
     ID3D11DepthStencilView* m_pBackbufferDSV;
     ID3D11UnorderedAccessView* m_pBackbufferUAV;
@@ -76,10 +78,12 @@ private:
     VertexShaders m_vertexShaders;
     GeometryShaders m_geometryShaders;
     PixelShaders m_pixelShaders;
+    ComputeShaders m_computeShaders;
     VertexShaderBlobs m_vertexShaderBlobs;
     ShaderProfiles m_vertexShaderProfiles;
     ShaderProfiles m_geometryShaderProfiles;
     ShaderProfiles m_pixelShaderProfiles;
+    ShaderProfiles m_computeShaderProfiles;
 
     bool CreateAppWindow(HINSTANCE p_hInstance);
     bool CreateAppGraphics(VOID);
@@ -89,6 +93,7 @@ private:
     bool PrintAdapterString(IDXGIAdapter1* p_pAdapter) const;
     std::string GetAdapterOutputString(IDXGIOutput* p_pOutput) const;
     bool SetDefaultSamplers(void);
+    bool CompileShader(const char* p_file, const char* p_function, const char* p_pProfile, ID3D10Blob*& p_pShaderBlob, const D3D10_SHADER_MACRO* p_pDefines) const;
 
     bool InitTest(void);
 
@@ -103,6 +108,7 @@ public:
     ID3D11VertexShader* CompileVertexShader(LPCSTR p_file, LPCSTR p_function, ID3D10Blob*& p_pShaderData, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
     ID3D11GeometryShader* CompileGeometryShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
     ID3D11PixelShader* CompilePixelShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
+    ID3D11ComputeShader* CompileComputeShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
     bool ToggleFullscreen(void);
     bool SetFullscreen(bool p_fullscreen);
     bool IsFullscreen(void) const;

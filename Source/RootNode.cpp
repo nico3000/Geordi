@@ -4,14 +4,14 @@
 
 RootNode::RootNode(void)
 {
-    m_pPostFXCS = 0;
+    m_pBlurVer = 0;
     m_pBlurHor = 0;
 }
 
 
 RootNode::~RootNode(void)
 {
-    SAFE_RELEASE(m_pPostFXCS);
+    SAFE_RELEASE(m_pBlurVer);
     SAFE_RELEASE(m_pBlurHor);
 }
 
@@ -53,20 +53,17 @@ HRESULT RootNode::VOnRestore(void)
         DXGI_FORMAT_R32G32B32A32_FLOAT,
         DXGI_FORMAT_R32G32B32A32_FLOAT,
     };
-    if(!m_base.Init2D(width, height, 3, RenderTarget::RTV_DSV_SRV, pBaseFormats, sampleDesc))
+    if(!m_base.Init2DMS(width, height, 3, RenderTarget::RTV_DSV_SRV, pBaseFormats, sampleDesc))
     {
         return S_FALSE;
     }
 
     DXGI_FORMAT enlightenedFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-    DXGI_SAMPLE_DESC enlightenedSampleDesc;
-    enlightenedSampleDesc.Count = 1;
-    enlightenedSampleDesc.Quality = 0;
-    if(!m_enlightened.Init2D(width, height, 1, RenderTarget::RTV_SRV, &enlightenedFormat, enlightenedSampleDesc))
+    if(!m_enlightened.Init2D(width, height, 1, RenderTarget::RTV_SRV, &enlightenedFormat))
     {
         return S_FALSE;
     } 
-    if(!m_temp.Init2D(width, height, 1, RenderTarget::RTV_SRV_UAV, &enlightenedFormat, sampleDesc))
+    if(!m_temp.Init2D(width, height, 1, RenderTarget::RTV_SRV_UAV, &enlightenedFormat))
     {
         return S_FALSE;
     }
@@ -108,43 +105,8 @@ HRESULT RootNode::VOnRestore(void)
     }
     m_screenQuad.SetIndices(pIndexBuffer);
 
-    ID3D10Blob* pShaderBlob = 0;
-    ID3D10Blob* pErrorBlob = 0;
-    HRESULT hr = D3DX11CompileFromFileA("./Shader/DeferredShading.fx", pDefines, 0, "PostFXCS", "cs_5_0", 0, 0, 0, &pShaderBlob, &pErrorBlob, 0);
-    if(pErrorBlob)
-    {
-        std::string error((char*)pErrorBlob->GetBufferPointer(), (char*)pErrorBlob->GetBufferPointer() + pErrorBlob->GetBufferSize());
-        if(FAILED(hr))
-        {
-            LI_ERROR(error);
-            return S_FALSE;
-        }
-        else
-        {
-            LI_WARNING(error);
-        }
-    }
-    RETURN_IF_FAILED(hr);
-    RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateComputeShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), 0, &m_pPostFXCS));
-
-    pShaderBlob = 0;
-    pErrorBlob = 0;
-    hr = D3DX11CompileFromFileA("./Shader/BloomCS.hlsl", pDefines, 0, "BlurHorCS", "cs_5_0", 0, 0, 0, &pShaderBlob, &pErrorBlob, 0);
-    if(pErrorBlob)
-    {
-        std::string error((char*)pErrorBlob->GetBufferPointer(), (char*)pErrorBlob->GetBufferPointer() + pErrorBlob->GetBufferSize());
-        if(FAILED(hr))
-        {
-            LI_ERROR(error);
-            return S_FALSE;
-        }
-        else
-        {
-            LI_WARNING(error);
-        }
-    }
-    RETURN_IF_FAILED(hr);
-    RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateComputeShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), 0, &m_pBlurHor));
+    m_pBlurHor = LostIsland::g_pGraphics->CompileComputeShader("./Shader/BloomCS.hlsl", "BlurHorCS", 0, GraphicsLayer::SHADER_VERSION_MAX);
+    m_pBlurVer = LostIsland::g_pGraphics->CompileComputeShader("./Shader/BloomCS.hlsl", "BlurVerCS", 0, GraphicsLayer::SHADER_VERSION_MAX);
 
     for(auto iter=m_staticNodes.begin(); iter != m_staticNodes.end(); ++iter)
     {
@@ -227,12 +189,21 @@ HRESULT RootNode::VPostRender(Scene* p_pScene)
     unsigned int width = LostIsland::g_pGraphics->GetWidth();
     unsigned int height = LostIsland::g_pGraphics->GetHeight();
     
-    LostIsland::g_pGraphics->BindBackbufferToUA(0);
+    m_temp.BindAllUnorderedAccess(0);
     m_enlightened.BindAllShaderResources(0, TARGET_CS);
     LostIsland::g_pGraphics->GetContext()->CSSetShader(m_pBlurHor, 0, 0);
-    LostIsland::g_pGraphics->GetContext()->Dispatch(width / 128 + 1, height, 1);
+    LostIsland::g_pGraphics->GetContext()->Dispatch((unsigned int)ceil((float)width / 128.0f), height, 1);
     LostIsland::g_pGraphics->ReleaseShaderResources(0, m_enlightened.GetCount(), TARGET_CS);
     LostIsland::g_pGraphics->ReleaseUnorderedAccess(0, 1);
+
+    LostIsland::g_pGraphics->BindBackbufferToUA(0);
+    m_enlightened.BindAllShaderResources(1, TARGET_CS);
+    m_temp.BindAllShaderResources(0, TARGET_CS);
+    LostIsland::g_pGraphics->GetContext()->CSSetShader(m_pBlurVer, 0, 0);
+    LostIsland::g_pGraphics->GetContext()->Dispatch(width, (unsigned int)ceil((float)height / 128.0f), 1);
+    LostIsland::g_pGraphics->ReleaseShaderResources(0, 1 + m_enlightened.GetCount(), TARGET_CS);
+    LostIsland::g_pGraphics->ReleaseUnorderedAccess(0, 1);
+
     return S_OK;
 }
 

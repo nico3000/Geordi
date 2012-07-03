@@ -79,14 +79,21 @@ bool ParticleSystem::Init(void)
 #define GROUP_SIZE 256 // WARNING: also in shader ParticleSystemCS.hlsl!!!
 void ParticleSystem::Simulate(unsigned long p_deltaMillis)
 {
+    static unsigned long dTime = 0;
+    dTime += p_deltaMillis;
+    if(dTime < 20 || p_deltaMillis == 0)
+    {
+        return;
+    }
     if(!m_initialized)
     {
         LI_ERROR("ParticleSystem not initialized!");
     }
-    m_time.y = 1e-3f * (float)p_deltaMillis;
+    m_time.y = 1e-3f * (float)dTime;
     m_time.x += m_time.y;
     m_timeBuffer.Update();
     m_timeBuffer.Bind(2, TARGET_CS);
+    dTime = 0;
 
     LostIsland::g_pGraphics->GetContext()->CSSetShader(m_pComputeShader, 0, 0);
     ID3D11UnorderedAccessView* ppUAVs[3] = { 0, 0, 0 };

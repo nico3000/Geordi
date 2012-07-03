@@ -7,34 +7,11 @@
 #include "VertexBuffer.h"
 #include "ConstantBuffer.h"
 
-
-#define CHECK_ERROR_BLOB(_hr, _blob) do \
-{ \
-    if(FAILED(_hr)) \
-    { \
-        if(_blob != 0) \
-        { \
-            std::string error((char*)(_blob)->GetBufferPointer(), (char*)(_blob)->GetBufferPointer() + (_blob)->GetBufferSize()); \
-            LI_ERROR(error); \
-            SAFE_RELEASE(_blob); \
-            return false; \
-        } \
-        else \
-        { \
-            RETURN_IF_FAILED(_hr); \
-        } \
-    } \
-    else \
-    { \
-        SAFE_RELEASE(_blob); \
-    } \
-} while(0)
-
 #define LI_LOGGER_TAG "Direct3D"
 
 
 GraphicsLayer::GraphicsLayer(void):
-m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_onShutdown(false), m_vsync(false)
+m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pDebug(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_onShutdown(false), m_vsync(false)
 {
     m_pBackbufferDSV = 0;
     m_pBackbufferRTV = 0;
@@ -50,29 +27,41 @@ GraphicsLayer::~GraphicsLayer(void)
         this->SetFullscreen(false);
     }
     m_initialized = false;
-    for each(std::pair<std::string, ID3D11VertexShader*> shaderPair in m_vertexShaders)
-    {
-        SAFE_RELEASE(shaderPair.second);
-    }
     for each(auto blobPair in m_vertexShaderBlobs)
     {
         SAFE_RELEASE(blobPair.second);
     }
-    for each(std::pair<std::string, ID3D11GeometryShader*> shaderPair in m_geometryShaders)
+    for each(auto shaderPair in m_vertexShaders)
     {
         SAFE_RELEASE(shaderPair.second);
     }
-    for each(std::pair<std::string, ID3D11PixelShader*> shaderPair in m_pixelShaders)
+    for each(auto shaderPair in m_geometryShaders)
+    {
+        SAFE_RELEASE(shaderPair.second);
+    }
+    for each(auto shaderPair in m_pixelShaders)
+    {
+        SAFE_RELEASE(shaderPair.second);
+    }
+    for each(auto shaderPair in m_computeShaders)
     {
         SAFE_RELEASE(shaderPair.second);
     }
     SAFE_RELEASE(m_pBackbufferUAV);
     SAFE_RELEASE(m_pBackbufferDSV);
     SAFE_RELEASE(m_pBackbufferRTV);
+    
+    if(m_pSwapChain)
+    {
+        m_pSwapChain->SetFullscreenState(FALSE, 0);
+        SAFE_RELEASE(m_pSwapChain);
+    }
+    SAFE_RELEASE(m_pOutput);
+    SAFE_RELEASE(m_pDebug);
     SAFE_RELEASE(m_pContext);
     SAFE_RELEASE(m_pDevice);
-    SAFE_RELEASE(m_pSwapChain);
-    SAFE_RELEASE(m_pOutput);
+    
+    
     if(m_hWnd)
     {
         DestroyWindow(m_hWnd);
@@ -102,14 +91,13 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     if(!this->CreateAppWindow(hInstance))
     {
         return false;
-    }
-    if(!this->CreateAppGraphics())
-    {
-        return false;
     }    
     UpdateWindow(m_hWnd);
     ShowWindow(m_hWnd, SW_SHOW);
-
+    if(!this->CreateAppGraphics())
+    {
+        return false;
+    }
 
     return InitTest();
 
@@ -126,7 +114,9 @@ void GraphicsLayer::Clear(void)
 
 void GraphicsLayer::Present(void)
 {
-    m_pSwapChain->Present(m_vsync, 0);
+    static bool occluded = false;
+    HRESULT hr = m_pSwapChain->Present(m_vsync, occluded ? DXGI_PRESENT_TEST : 0);
+    occluded = hr == DXGI_STATUS_OCCLUDED;
 }
 
 
@@ -196,6 +186,8 @@ bool GraphicsLayer::CreateAppGraphics(void)
     m_pixelShaderProfiles[SHADER_VERSION_3_0] = "ps_3_0";
     m_pixelShaderProfiles[SHADER_VERSION_4_0] = "ps_4_0";
     m_pixelShaderProfiles[SHADER_VERSION_5_0] = "ps_5_0";
+    m_computeShaderProfiles[SHADER_VERSION_4_0] = "vs_4_0";
+    m_computeShaderProfiles[SHADER_VERSION_5_0] = "cs_5_0";
 
     UINT flags = 0;
 #if defined(_DEBUG)
@@ -212,6 +204,7 @@ bool GraphicsLayer::CreateAppGraphics(void)
 
     IDXGIFactory1* pFactory;
     RETURN_IF_FAILED(CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&pFactory));
+    RETURN_IF_FAILED(pFactory->MakeWindowAssociation(m_hWnd, 0));
 
     IDXGIAdapter1* pAdapter;
     for(int i=0; 1; ++i)
@@ -237,6 +230,9 @@ bool GraphicsLayer::CreateAppGraphics(void)
                                        &m_pDevice,
                                        &m_featureLevel,
                                        &m_pContext));
+#ifdef _DEBUG
+    RETURN_IF_FAILED(m_pDevice->QueryInterface(__uuidof(ID3D11Debug), (void**)&m_pDebug));
+#endif
     this->PrepareFeatureLevel();
 
     DXGI_SWAP_CHAIN_DESC scDesc;
@@ -248,7 +244,6 @@ bool GraphicsLayer::CreateAppGraphics(void)
     scDesc.SampleDesc.Quality = 0;
     scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
     scDesc.Windowed = LostIsland::g_pApp->GetConfig()->GetBoolAttribute("graphics", "display", "windowed");
-    if(!scDesc.Windowed) ShowCursor(false);
 
     DXGI_MODE_DESC desiredMode;
     ZeroMemory(&desiredMode, sizeof(DXGI_MODE_DESC));
@@ -280,6 +275,10 @@ bool GraphicsLayer::CreateAppGraphics(void)
     RETURN_IF_FAILED(pFactory->CreateSwapChain(m_pDevice,
                                                &scDesc,
                                                &m_pSwapChain));
+    //m_pSwapChain->GetContainingOutput(&m_pOutput);
+    //m_pSwapChain->
+
+    //m_pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 
     this->SetDefaultSamplers();
 
@@ -347,6 +346,7 @@ void GraphicsLayer::PrepareFeatureLevel(void)
         m_vertexShaderProfiles[SHADER_VERSION_MAX] = m_vertexShaderProfiles[SHADER_VERSION_5_0];
         m_geometryShaderProfiles[SHADER_VERSION_MAX] = m_geometryShaderProfiles[SHADER_VERSION_5_0];
         m_pixelShaderProfiles[SHADER_VERSION_MAX] = m_pixelShaderProfiles[SHADER_VERSION_5_0];
+        m_computeShaderProfiles[SHADER_VERSION_MAX] = m_computeShaderProfiles[SHADER_VERSION_5_0];
         LI_LOG_WITH_TAG("Your GPU supports Direct3D11.");
         break;
     case D3D_FEATURE_LEVEL_10_1:
@@ -355,6 +355,7 @@ void GraphicsLayer::PrepareFeatureLevel(void)
         m_vertexShaderProfiles[SHADER_VERSION_MAX] = m_vertexShaderProfiles[SHADER_VERSION_4_0];
         m_geometryShaderProfiles[SHADER_VERSION_MAX] = m_geometryShaderProfiles[SHADER_VERSION_4_0];
         m_pixelShaderProfiles[SHADER_VERSION_MAX] = m_pixelShaderProfiles[SHADER_VERSION_4_0];
+        m_computeShaderProfiles[SHADER_VERSION_MAX] = m_computeShaderProfiles[SHADER_VERSION_4_0];
         LI_LOG_WITH_TAG("Your GPU does not support Direct3D 11. Falling back to Direct3D10.");
         break;
     case D3D_FEATURE_LEVEL_9_3:
@@ -485,17 +486,16 @@ bool GraphicsLayer::OnWindowResized(int p_width, int p_height)
 
         this->ReleaseBackbuffer();
         
-        hr = m_pSwapChain->ResizeBuffers(0, p_width, p_height, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
+        hr = m_pSwapChain->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH);
         RETURN_IF_FAILED(hr);
-
-        if(!this->LoadBackbuffer())
-        {
-            LI_ERROR("error");
-            return false;
-        }
 
         m_width = p_width;
         m_height = p_height;
+
+        if(!this->LoadBackbuffer())
+        {
+            return false;
+        }
     }
     return true;
 }
@@ -513,13 +513,8 @@ bool GraphicsLayer::SetFullscreen(bool p_fullscreen)
     bool wasFullscreen = this->IsFullscreen();
     if(wasFullscreen != p_fullscreen)
     {
-        hr = m_pSwapChain->SetFullscreenState(p_fullscreen, 0);
+        hr = m_pSwapChain->SetFullscreenState(p_fullscreen, p_fullscreen ? m_pOutput : 0);
         RETURN_IF_FAILED(hr);
-
-        if(wasFullscreen)
-        {
-            ShowWindow(m_hWnd, SW_SHOW);
-        }
     }
     return true;
 }
@@ -611,14 +606,12 @@ ID3D11VertexShader* GraphicsLayer::CompileVertexShader(LPCSTR p_file, LPCSTR p_f
     std::string id = p_file + std::string("|") + p_function;
     if(m_vertexShaders.find(id) == m_vertexShaders.end())
     {
-        HRESULT hr = S_OK;
-        ID3D10Blob* pErrorData = 0;
-        hr = D3DX11CompileFromFileA(p_file, p_pDefines, 0, p_function, m_vertexShaderProfiles[p_version], 0, 0, 0, &p_pShaderData, &pErrorData, 0);
-        CHECK_ERROR_BLOB(hr, pErrorData);
+        if(!this->CompileShader(p_file, p_function, m_vertexShaderProfiles[p_version], p_pShaderData, p_pDefines))
+        {
+            return 0;
+        }
         m_vertexShaderBlobs[id] = p_pShaderData;
-        p_pShaderData->AddRef();
-        hr = m_pDevice->CreateVertexShader(p_pShaderData->GetBufferPointer(), p_pShaderData->GetBufferSize(), 0, &m_vertexShaders[id]);
-        RETURN_IF_FAILED(hr);
+        RETURN_IF_FAILED(m_pDevice->CreateVertexShader(p_pShaderData->GetBufferPointer(), p_pShaderData->GetBufferSize(), 0, &m_vertexShaders[id]));
     }
     p_pShaderData = m_vertexShaderBlobs[id];
     return m_vertexShaders[id];
@@ -630,12 +623,13 @@ ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCSTR p_file, LPCSTR
     std::string id = p_file + std::string("|") + p_function;
     if(m_geometryShaders.find(id) == m_geometryShaders.end())
     {
-        HRESULT hr = S_OK;
         ID3D10Blob* pShaderData = 0;
-        ID3D10Blob* pErrorData = 0;
-        hr = D3DX11CompileFromFileA(p_file, p_pDefines, 0, p_function, m_geometryShaderProfiles[p_version], 0, 0, 0, &pShaderData, &pErrorData, 0);
-        CHECK_ERROR_BLOB(hr, pErrorData);
-        hr = m_pDevice->CreateGeometryShader(pShaderData->GetBufferPointer(), pShaderData->GetBufferSize(), 0, &m_geometryShaders[id]);
+        if(!this->CompileShader(p_file, p_function, m_geometryShaderProfiles[p_version], pShaderData, p_pDefines))
+        {
+            return 0;
+        }
+        HRESULT hr = m_pDevice->CreateGeometryShader(pShaderData->GetBufferPointer(), pShaderData->GetBufferSize(), 0, &m_geometryShaders[id]);
+        SAFE_RELEASE(pShaderData);
         RETURN_IF_FAILED(hr);
     }
     return m_geometryShaders[id];
@@ -647,15 +641,56 @@ ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCSTR p_file, LPCSTR p_fun
     std::string id = p_file + std::string("|") + p_function;
     if(m_pixelShaders.find(id) == m_pixelShaders.end())
     {
-        HRESULT hr = S_OK;
         ID3D10Blob* pShaderData = 0;
-        ID3D10Blob* pErrorData = 0;
-        hr = D3DX11CompileFromFileA(p_file, p_pDefines, 0, p_function, m_pixelShaderProfiles[p_version], 0, 0, 0, &pShaderData, &pErrorData, 0);
-        CHECK_ERROR_BLOB(hr, pErrorData);
-        hr = m_pDevice->CreatePixelShader(pShaderData->GetBufferPointer(), pShaderData->GetBufferSize(), 0, &m_pixelShaders[id]);
+        if(!this->CompileShader(p_file, p_function, m_pixelShaderProfiles[p_version], pShaderData, p_pDefines))
+        {
+            return 0;
+        }
+        HRESULT hr = m_pDevice->CreatePixelShader(pShaderData->GetBufferPointer(), pShaderData->GetBufferSize(), 0, &m_pixelShaders[id]);
+        SAFE_RELEASE(pShaderData);
         RETURN_IF_FAILED(hr);
     }
     return m_pixelShaders[id];
+}
+
+
+ID3D11ComputeShader* GraphicsLayer::CompileComputeShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
+{
+    std::string id = p_file + std::string("|") + p_function;
+    if(m_computeShaders.find(id) == m_computeShaders.end())
+    {
+        ID3D10Blob* pShaderData = 0;
+        if(!this->CompileShader(p_file, p_function, m_computeShaderProfiles[p_version], pShaderData, p_pDefines))
+        {
+            return 0;
+        }
+        HRESULT hr = m_pDevice->CreateComputeShader(pShaderData->GetBufferPointer(), pShaderData->GetBufferSize(), 0, &m_computeShaders[id]);
+        SAFE_RELEASE(pShaderData);
+        RETURN_IF_FAILED(hr);
+    }
+    return m_computeShaders[id];
+}
+
+
+bool GraphicsLayer::CompileShader(const char* p_file, const char* p_function, const char* p_pProfile, ID3D10Blob*& p_pShaderBlob, const D3D10_SHADER_MACRO* p_pDefines) const
+{
+    ID3D10Blob* pErrorBlob = 0;
+    HRESULT hr = D3DX11CompileFromFileA(p_file, p_pDefines, 0, p_function, p_pProfile, 0, 0, 0, &p_pShaderBlob, &pErrorBlob, 0);
+    if(pErrorBlob)
+    {
+        std::string errorMsg((char*)pErrorBlob->GetBufferPointer(), (char*)pErrorBlob->GetBufferPointer() + pErrorBlob->GetBufferSize());
+        SAFE_RELEASE(pErrorBlob);
+        if(FAILED(hr))
+        {
+            LI_ERROR(errorMsg);
+            return false;
+        }
+        else
+        {
+            LI_WARNING(errorMsg);
+        }
+    }
+    return true;
 }
 
 
