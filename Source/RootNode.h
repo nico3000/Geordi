@@ -15,7 +15,9 @@ private:
     NodeList m_dynamicNodes;
     RenderTarget m_base;
     RenderTarget m_enlightened;
+    RenderTarget m_temp;
     ID3D11ComputeShader* m_pPostFXCS;
+    ID3D11ComputeShader* m_pBlurHor;
     Geometry m_screenQuad;
     ShaderProgram m_dsTest;
 

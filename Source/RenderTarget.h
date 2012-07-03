@@ -16,7 +16,10 @@ public:
         UAV = 1 << 3,
         RTV_DSV = RTV | DSV,
         RTV_SRV = RTV | SRV,
+        RTV_UAV = RTV | UAV,
         RTV_DSV_SRV = RTV | DSV | SRV,
+        RTV_DSV_UAV = RTV | DSV | SRV,
+        RTV_SRV_UAV = RTV | SRV | UAV,
         RTV_DSV_SRV_UAV = RTV | DSV | SRV | UAV,
     };
 

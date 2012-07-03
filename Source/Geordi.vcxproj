@@ -225,6 +225,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <None Include="..\Game\Shader\BloomCS.hlsl" />
     <None Include="..\Game\Shader\CommonDefinitions.hlsl" />
     <None Include="..\Game\Shader\DeferredShading.fx" />
     <None Include="..\Game\Shader\ParticleSystemCS.hlsl" />

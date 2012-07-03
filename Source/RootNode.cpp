@@ -5,12 +5,14 @@
 RootNode::RootNode(void)
 {
     m_pPostFXCS = 0;
+    m_pBlurHor = 0;
 }
 
 
 RootNode::~RootNode(void)
 {
     SAFE_RELEASE(m_pPostFXCS);
+    SAFE_RELEASE(m_pBlurHor);
 }
 
 
@@ -63,7 +65,12 @@ HRESULT RootNode::VOnRestore(void)
     if(!m_enlightened.Init2D(width, height, 1, RenderTarget::RTV_SRV, &enlightenedFormat, enlightenedSampleDesc))
     {
         return S_FALSE;
-    }    
+    } 
+    if(!m_temp.Init2D(width, height, 1, RenderTarget::RTV_SRV_UAV, &enlightenedFormat, sampleDesc))
+    {
+        return S_FALSE;
+    }
+    
 
     std::ostringstream str;
     str << sampleDesc.Count;
@@ -119,6 +126,25 @@ HRESULT RootNode::VOnRestore(void)
     }
     RETURN_IF_FAILED(hr);
     RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateComputeShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), 0, &m_pPostFXCS));
+
+    pShaderBlob = 0;
+    pErrorBlob = 0;
+    hr = D3DX11CompileFromFileA("./Shader/BloomCS.hlsl", pDefines, 0, "BlurHorCS", "cs_5_0", 0, 0, 0, &pShaderBlob, &pErrorBlob, 0);
+    if(pErrorBlob)
+    {
+        std::string error((char*)pErrorBlob->GetBufferPointer(), (char*)pErrorBlob->GetBufferPointer() + pErrorBlob->GetBufferSize());
+        if(FAILED(hr))
+        {
+            LI_ERROR(error);
+            return S_FALSE;
+        }
+        else
+        {
+            LI_WARNING(error);
+        }
+    }
+    RETURN_IF_FAILED(hr);
+    RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateComputeShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), 0, &m_pBlurHor));
 
     for(auto iter=m_staticNodes.begin(); iter != m_staticNodes.end(); ++iter)
     {
@@ -189,10 +215,10 @@ HRESULT RootNode::VRenderChildren(Scene* p_pScene)
 HRESULT RootNode::VPostRender(Scene* p_pScene)
 {
     // todo postfx!
+    m_dsTest.Bind();
     m_enlightened.BindAllRenderTargets();
     m_base.BindAllShaderResources(0, TARGET_PS);
 
-    m_dsTest.Bind();
     m_screenQuad.Draw();
 
     LostIsland::g_pGraphics->ReleaseShaderResources(0, m_base.GetCount());
@@ -203,8 +229,8 @@ HRESULT RootNode::VPostRender(Scene* p_pScene)
     
     LostIsland::g_pGraphics->BindBackbufferToUA(0);
     m_enlightened.BindAllShaderResources(0, TARGET_CS);
-    LostIsland::g_pGraphics->GetContext()->CSSetShader(m_pPostFXCS, 0, 0);
-    LostIsland::g_pGraphics->GetContext()->Dispatch(width / 16, height / 16, 1);
+    LostIsland::g_pGraphics->GetContext()->CSSetShader(m_pBlurHor, 0, 0);
+    LostIsland::g_pGraphics->GetContext()->Dispatch(width / 128 + 1, height, 1);
     LostIsland::g_pGraphics->ReleaseShaderResources(0, m_enlightened.GetCount(), TARGET_CS);
     LostIsland::g_pGraphics->ReleaseUnorderedAccess(0, 1);
     return S_OK;

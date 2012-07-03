@@ -18,8 +18,10 @@ void FPSActorInputHandler::VOnAttach(GameViewID p_gameViewID, ActorID p_actorID)
 
 void FPSActorInputHandler::VOnUpdate(unsigned long p_deltaMillis)
 {
+    static unsigned int id = LostIsland::g_pTimer->Tick(REALTIME);
+    unsigned long deltaMillisRealtime = LostIsland::g_pTimer->Tock(id, RESET);
     static const XMFLOAT3 rotation(0.0f, 0.0f, 0.0f);
-    float distance = 1e-3f * (float)p_deltaMillis;
+    float distance = 1e-3f * (float)deltaMillisRealtime;
     XMFLOAT3 moveDir(0.0f, 0.0f, 0.0f);
     if(m_keys[VK_SHIFT])
     {
@@ -48,7 +50,7 @@ void FPSActorInputHandler::VOnUpdate(unsigned long p_deltaMillis)
     if(m_keys['C'])
     {
         moveDir.y -= distance;
-    }
+    }    
 
     if(abs(moveDir.x) + abs(moveDir.y) + abs(moveDir.z) != 0.0f)
     {
@@ -73,6 +75,17 @@ bool FPSActorInputHandler::VOnKeyDown(int keycode)
 
 bool FPSActorInputHandler::VOnKeyUp(int keycode)
 {
+    if(keycode == 'P')
+    {
+        if(LostIsland::g_pTimer->IsPaused())
+        {
+            LostIsland::g_pTimer->Resume();
+        }
+        else
+        {
+            LostIsland::g_pTimer->Pause();
+        }
+    }
     m_keys[keycode] = false;
     return true;
 }

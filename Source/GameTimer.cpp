@@ -40,27 +40,29 @@ void GameTimer::Next(void)
     QueryPerformanceCounter(&now);
     LONGLONG deltaTicks = now.QuadPart - m_lastStop;
 
+    LONGLONG sysDeltaTicks = deltaTicks + m_sysAccumulator;
+    m_sysDeltaMillis = (unsigned long)((double)sysDeltaTicks / (1e-3 * m_sysFrequency));
+    m_sysAccumulator = (unsigned long)(sysDeltaTicks - (LONGLONG)((double)m_sysDeltaMillis * (1e-3 * m_sysFrequency)));
+    for(auto iter = m_realtime.begin(); iter != m_realtime.end(); ++iter) 
+    {
+        iter->second += m_sysDeltaMillis;
+    }
+
     if(!m_paused)
     {
-        LONGLONG sysDeltaTicks = deltaTicks + m_sysAccumulator;
-        m_sysDeltaMillis = (unsigned long)((double)sysDeltaTicks / (1e-3 * m_sysFrequency));
-        m_sysAccumulator = (unsigned long)(sysDeltaTicks - (LONGLONG)((double)m_sysDeltaMillis * (1e-3 * m_sysFrequency)));
-        StopWatchMap::iterator rtend = m_realtime.end();
-        for(StopWatchMap::iterator iter = m_realtime.begin(); iter != rtend; ++iter) 
-        {
-            iter->second += m_sysDeltaMillis;
-        }
-
         LONGLONG gameDeltaTicks = deltaTicks + m_gameAccumulator;
         m_gameDeltaMillis = (unsigned long)((double)gameDeltaTicks / (1e-3 * m_gameFrequency));
         m_gameAccumulator = (unsigned long)(gameDeltaTicks - (LONGLONG)((double)m_gameDeltaMillis * (1e-3 * m_gameFrequency)));
-        StopWatchMap::iterator gtend = m_gametime.end();
-        for(StopWatchMap::iterator iter = m_gametime.begin(); iter != gtend; ++iter) 
+        for(auto iter = m_gametime.begin(); iter != m_gametime.end(); ++iter) 
         {
             iter->second += m_gameDeltaMillis;
         }
     }
-
+    else
+    {
+        m_gameDeltaMillis = 0;
+        m_gameAccumulator = 0;
+    }
     m_lastStop = now.QuadPart;
 }
 

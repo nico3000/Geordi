@@ -42,6 +42,7 @@ public:
     int Tick(TickOption p_option) { return this->Tick(this->GetTickTockID(), p_option); }
     void Pause(void) { m_paused = true; }
     void Resume(void) { m_paused = false; }
+    bool IsPaused(void) { return m_paused; }
     void SetFactor(double p_factor) { m_gameFrequency = m_sysFrequency / p_factor; }
     unsigned long GetGameDeltaMillis(void) const { return m_gameDeltaMillis; }
     unsigned long GetSysDeltaMillis(void) const { return m_sysDeltaMillis; }

@@ -110,6 +110,9 @@
     <None Include="..\Game\Shader\DeferredShading.fx">
       <Filter>Shader</Filter>
     </None>
+    <None Include="..\Game\Shader\BloomCS.hlsl">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
