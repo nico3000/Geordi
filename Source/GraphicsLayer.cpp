@@ -1,21 +1,13 @@
 #include "StdAfx.h"
 #include "GraphicsLayer.h"
-
-
-#include "ShaderProgram.h"
-#include "IndexBuffer.h"
-#include "VertexBuffer.h"
-#include "ConstantBuffer.h"
+#include "RenderTarget.h"
 
 #define LI_LOGGER_TAG "Direct3D"
 
 
 GraphicsLayer::GraphicsLayer(void):
-m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pDebug(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_onShutdown(false), m_vsync(false)
+m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pDebug(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_onShutdown(false), m_vsync(false), m_pBackbuffer(new RenderTarget)
 {
-    m_pBackbufferDSV = 0;
-    m_pBackbufferRTV = 0;
-    m_pBackbufferUAV = 0;
 }
 
 
@@ -47,9 +39,6 @@ GraphicsLayer::~GraphicsLayer(void)
     {
         SAFE_RELEASE(shaderPair.second);
     }
-    SAFE_RELEASE(m_pBackbufferUAV);
-    SAFE_RELEASE(m_pBackbufferDSV);
-    SAFE_RELEASE(m_pBackbufferRTV);
     
     if(m_pSwapChain)
     {
@@ -108,8 +97,8 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
 void GraphicsLayer::Clear(void)
 {
     static const float pClearColor[] = { 0.0f, 0.2f, 0.2f, 1.0f };
-    m_pContext->ClearRenderTargetView(m_pBackbufferRTV, pClearColor);
-    m_pContext->ClearDepthStencilView(m_pBackbufferDSV, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+    m_pBackbuffer->ClearColor(pClearColor);
+    m_pBackbuffer->ClearDepthStencil(1.0f, 0);
 }
 
 void GraphicsLayer::Present(void)
@@ -120,23 +109,10 @@ void GraphicsLayer::Present(void)
 }
 
 
-void GraphicsLayer::BindBackbufferToRT(void) const
-{
-    m_pContext->OMSetRenderTargets(1, &m_pBackbufferRTV, m_pBackbufferDSV);
-}
-
-
 void GraphicsLayer::ReleaseRenderTarget(void) const
 {
     static ID3D11RenderTargetView* pNull = 0;
     m_pContext->OMSetRenderTargets(1, &pNull, 0);
-}
-
-
-void GraphicsLayer::BindBackbufferToUA(unsigned int slot) const
-{
-    static unsigned int counts = 0;
-    m_pContext->CSSetUnorderedAccessViews(slot, 1, &m_pBackbufferUAV, &counts);
 }
 
 
@@ -237,7 +213,7 @@ bool GraphicsLayer::CreateAppGraphics(void)
 
     DXGI_SWAP_CHAIN_DESC scDesc;
     scDesc.BufferCount = 1;
-    scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_UNORDERED_ACCESS;
+    scDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT | DXGI_USAGE_SHADER_INPUT| DXGI_USAGE_UNORDERED_ACCESS;
     scDesc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
     scDesc.OutputWindow = m_hWnd;
     scDesc.SampleDesc.Count = 1;
@@ -522,9 +498,7 @@ bool GraphicsLayer::SetFullscreen(bool p_fullscreen)
 
 void GraphicsLayer::ReleaseBackbuffer(void)
 {
-    SAFE_RELEASE(m_pBackbufferRTV);
-    SAFE_RELEASE(m_pBackbufferDSV);
-    SAFE_RELEASE(m_pBackbufferUAV);
+    m_pBackbuffer->Destroy();
 }
 
 
@@ -532,33 +506,17 @@ bool GraphicsLayer::LoadBackbuffer(void)
 {
     HRESULT hr = S_OK;
 
-    D3D11_TEXTURE2D_DESC dsTexDesc;
     ID3D11Texture2D* pTexture;
     hr = m_pSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&pTexture);
     RETURN_IF_FAILED(hr);
-    pTexture->GetDesc(&dsTexDesc);
-
-    hr = m_pDevice->CreateRenderTargetView(pTexture, NULL, &m_pBackbufferRTV);
-    RETURN_IF_FAILED(hr);
-    hr = m_pDevice->CreateUnorderedAccessView(pTexture, 0, &m_pBackbufferUAV);
-    RETURN_IF_FAILED(hr);
+    
+    if(!m_pBackbuffer->Init2D(pTexture, RenderTarget::RTV_DSV_SRV_UAV))
+    {
+        return false;
+    }
     SAFE_RELEASE(pTexture);
 
-    dsTexDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    dsTexDesc.CPUAccessFlags = 0;
-    dsTexDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    dsTexDesc.Usage = D3D11_USAGE_DEFAULT;
-    hr = m_pDevice->CreateTexture2D(&dsTexDesc, 0, &pTexture);
-    RETURN_IF_FAILED(hr);
-
-    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-    dsvDesc.Flags = 0;
-    dsvDesc.Format = dsTexDesc.Format;
-    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-    dsvDesc.Texture2D.MipSlice = 0;
-    hr = m_pDevice->CreateDepthStencilView(pTexture, &dsvDesc, &m_pBackbufferDSV);
-    SAFE_RELEASE(pTexture);
-    RETURN_IF_FAILED(hr);
+    m_pBackbuffer->BindAllRenderTargets();
 
     D3D11_DEPTH_STENCIL_DESC dsDesc;
     ZeroMemory(&dsDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
@@ -572,21 +530,8 @@ bool GraphicsLayer::LoadBackbuffer(void)
     m_pContext->OMSetDepthStencilState(pDSState, 0xffffffff);
     SAFE_RELEASE(pDSState);
 
-    m_pContext->OMSetRenderTargets(1, &m_pBackbufferRTV, m_pBackbufferDSV);
-
-    D3D11_VIEWPORT viewport;
-    viewport.Width = (float)m_width;
-    viewport.Height = (float)m_height;
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
-    m_pContext->RSSetViewports(1, &viewport);
-
     return true;
 }
-
-
 
 
 bool GraphicsLayer::IsFullscreen(void) const
@@ -613,6 +558,8 @@ ID3D11VertexShader* GraphicsLayer::CompileVertexShader(LPCSTR p_file, LPCSTR p_f
         m_vertexShaderBlobs[id] = p_pShaderData;
         RETURN_IF_FAILED(m_pDevice->CreateVertexShader(p_pShaderData->GetBufferPointer(), p_pShaderData->GetBufferSize(), 0, &m_vertexShaders[id]));
     }
+    m_vertexShaderBlobs[id]->AddRef();
+    m_vertexShaders[id]->AddRef();
     p_pShaderData = m_vertexShaderBlobs[id];
     return m_vertexShaders[id];
 }
@@ -632,6 +579,7 @@ ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCSTR p_file, LPCSTR
         SAFE_RELEASE(pShaderData);
         RETURN_IF_FAILED(hr);
     }
+    m_geometryShaders[id]->AddRef();
     return m_geometryShaders[id];
 }
 
@@ -650,6 +598,7 @@ ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCSTR p_file, LPCSTR p_fun
         SAFE_RELEASE(pShaderData);
         RETURN_IF_FAILED(hr);
     }
+    m_pixelShaders[id]->AddRef();
     return m_pixelShaders[id];
 }
 
@@ -668,6 +617,7 @@ ID3D11ComputeShader* GraphicsLayer::CompileComputeShader(LPCSTR p_file, LPCSTR p
         SAFE_RELEASE(pShaderData);
         RETURN_IF_FAILED(hr);
     }
+    m_computeShaders[id]->AddRef();
     return m_computeShaders[id];
 }
 
@@ -689,6 +639,10 @@ bool GraphicsLayer::CompileShader(const char* p_file, const char* p_function, co
         {
             LI_WARNING(errorMsg);
         }
+    }
+    else
+    {
+        RETURN_IF_FAILED(hr);
     }
     return true;
 }

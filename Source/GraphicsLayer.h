@@ -40,6 +40,7 @@ enum ShaderTarget
     TARGET_ALL = TARGET_VS | TARGET_GS | TARGET_PS | TARGET_CS,
 };
 
+class RenderTarget;
 
 class GraphicsLayer
 {
@@ -69,9 +70,7 @@ private:
     ID3D11Device* m_pDevice;
     ID3D11DeviceContext* m_pContext;
     ID3D11Debug* m_pDebug;
-    ID3D11RenderTargetView* m_pBackbufferRTV;
-    ID3D11DepthStencilView* m_pBackbufferDSV;
-    ID3D11UnorderedAccessView* m_pBackbufferUAV;
+    std::shared_ptr<RenderTarget> m_pBackbuffer;
     D3D_FEATURE_LEVEL m_featureLevel;
     int m_width;
     int m_height;
@@ -112,12 +111,11 @@ public:
     bool ToggleFullscreen(void);
     bool SetFullscreen(bool p_fullscreen);
     bool IsFullscreen(void) const;
-    void BindBackbufferToRT(void) const;
-    void BindBackbufferToUA(unsigned int slot) const;
     void ReleaseRenderTarget(void) const;
     void ReleaseUnorderedAccess(unsigned int p_startSlot, unsigned int p_count) const;
     void ReleaseShaderResources(unsigned int p_startSlot, unsigned int p_count, ShaderTarget p_target = TARGET_ALL) const;
-
+    
+    std::weak_ptr<RenderTarget> GetBackbuffer(void) const { return m_pBackbuffer; }
     bool IsOnShutdown(void) const { return m_onShutdown; }
     bool IsInitialized(void) const { return m_initialized; }
     const D3D_FEATURE_LEVEL& GetFeatureLevel(void) const { return m_featureLevel; }

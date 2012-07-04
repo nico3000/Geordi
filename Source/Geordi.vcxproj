@@ -239,6 +239,7 @@
     <ClInclude Include="Actor.h" />
     <ClInclude Include="ActorEvents.h" />
     <ClInclude Include="BaseSceneNode.h" />
+    <ClInclude Include="BloomEffect.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraComponent.h" />
     <ClInclude Include="Config.h" />
@@ -291,6 +292,7 @@
     <ClCompile Include="Actor.cpp" />
     <ClCompile Include="ActorEvents.cpp" />
     <ClCompile Include="BaseSceneNode.cpp" />
+    <ClCompile Include="BloomEffect.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
     <ClCompile Include="Config.cpp" />

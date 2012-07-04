@@ -32,11 +32,6 @@ bool ShaderProgram::Load(LPCSTR p_file, LPCSTR p_functionVS, LPCSTR p_functionGS
         {
             return false;
         }
-        else
-        {
-            m_pVSBlob->AddRef();
-            m_pVS->AddRef();
-        }
     }
     if(p_functionGS != 0)
     {
@@ -45,10 +40,6 @@ bool ShaderProgram::Load(LPCSTR p_file, LPCSTR p_functionVS, LPCSTR p_functionGS
         {
             return false;
         }
-        else
-        {
-            m_pGS->AddRef();
-        }
     }
     if(p_functionPS != 0)
     {
@@ -56,10 +47,6 @@ bool ShaderProgram::Load(LPCSTR p_file, LPCSTR p_functionVS, LPCSTR p_functionGS
         if(m_pPS == 0)
         {
             return false;
-        }
-        else
-        {
-            m_pPS->AddRef();
         }
     }
     return true;    

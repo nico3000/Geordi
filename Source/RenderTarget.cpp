@@ -9,6 +9,7 @@ RenderTarget::RenderTarget(void)
     m_ppUAV = 0;
     m_pDSV = 0;
     m_count = 0;
+    m_pFormats = 0;
 }
 
 
@@ -30,6 +31,7 @@ void RenderTarget::Destroy(void)
     SAFE_DELETE(m_ppRTV);
     SAFE_DELETE(m_ppSRV);
     SAFE_DELETE(m_ppUAV);
+    SAFE_DELETE(m_pFormats);
     m_count = 0;
 }
 
@@ -43,16 +45,8 @@ bool RenderTarget::Init2DMS(unsigned int p_width, unsigned int p_height, unsigne
     }
 
     this->Destroy();
-    m_count = p_count;
-    m_ppRTV = new ID3D11RenderTargetView*[m_count];
-    m_ppSRV = new ID3D11ShaderResourceView*[m_count];
-    m_ppUAV = new ID3D11UnorderedAccessView*[m_count];
-    for(unsigned int i=0; i < m_count; ++i)
-    {
-        m_ppRTV[i] = 0;
-        m_ppSRV[i] = 0;
-        m_ppUAV[i] = 0;
-    }
+    this->Reset(p_count, p_width, p_height, p_pFormats);
+    m_sampleDesc = p_sampleDesc;
     
     unsigned int bindFlags = 0;
     if(p_viewsToCreate & RTV)
@@ -65,69 +59,25 @@ bool RenderTarget::Init2DMS(unsigned int p_width, unsigned int p_height, unsigne
     }
     for(unsigned int i=0; i < m_count; ++i)
     {
-        D3D11_TEXTURE2D_DESC texDesc;
-        texDesc.ArraySize = 1;
-        texDesc.BindFlags = bindFlags;
-        texDesc.CPUAccessFlags = 0;
-        texDesc.Format = p_pFormats[i];
-        texDesc.Width = p_width;
-        texDesc.Height = p_height;
-        texDesc.MipLevels = 1;
-        texDesc.MiscFlags = 0;
-        texDesc.SampleDesc = p_sampleDesc;
-        texDesc.Usage = D3D11_USAGE_DEFAULT;
-        ID3D11Texture2D* pTex = 0;
-        RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateTexture2D(&texDesc, 0, &pTex));
-
-        if(p_viewsToCreate & RTV)
+        ID3D11Texture2D* pTex = this->CreateTexture2D(p_pFormats[i], bindFlags);
+        if(!pTex)
         {
-            D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-            rtvDesc.Format = p_pFormats[i];
-            rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2DMS;
-            rtvDesc.Texture2D.MipSlice = 0;
-            RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateRenderTargetView(pTex, &rtvDesc, &m_ppRTV[i]));
+            return false;
         }
-
-        if(p_viewsToCreate & SRV)
+        if((p_viewsToCreate & RTV) && !this->CreateRTV2D(pTex, i))
         {
-            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-            srvDesc.Format = p_pFormats[i];
-            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DMS;
-            srvDesc.Texture2D.MipLevels = 1;
-            srvDesc.Texture2D.MostDetailedMip = 0;
-            RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateShaderResourceView(pTex, &srvDesc, &m_ppSRV[i]));
+            return false;
         }
-
+        if((p_viewsToCreate & SRV) && !this->CreateSRV2D(pTex, i))
+        {
+            return false;
+        }
         SAFE_RELEASE(pTex);
     }
-
-    m_pDSV = 0;
-    if(p_viewsToCreate & DSV)
+    if((p_viewsToCreate & DSV) && !this->CreateDSV2D())
     {
-        D3D11_TEXTURE2D_DESC texDesc;
-        texDesc.ArraySize = 1;
-        texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-        texDesc.CPUAccessFlags = 0;
-        texDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        texDesc.Width = p_width;
-        texDesc.Height = p_height;
-        texDesc.MipLevels = 1;
-        texDesc.MiscFlags = 0;
-        texDesc.SampleDesc = p_sampleDesc;
-        texDesc.Usage = D3D11_USAGE_DEFAULT;
-        ID3D11Texture2D* pTex = 0;
-        RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateTexture2D(&texDesc, 0, &pTex));
-
-        D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-        dsvDesc.Flags = 0;
-        dsvDesc.Format = texDesc.Format;
-        dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
-        dsvDesc.Texture2D.MipSlice = 0;
-        RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateDepthStencilView(pTex, &dsvDesc, &m_pDSV));
-
-        SAFE_RELEASE(pTex);
+        return false;
     }
-
     return true;
 }
 
@@ -135,16 +85,7 @@ bool RenderTarget::Init2DMS(unsigned int p_width, unsigned int p_height, unsigne
 bool RenderTarget::Init2D(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats)
 {
     this->Destroy();
-    m_count = p_count;
-    m_ppRTV = new ID3D11RenderTargetView*[m_count];
-    m_ppSRV = new ID3D11ShaderResourceView*[m_count];
-    m_ppUAV = new ID3D11UnorderedAccessView*[m_count];
-    for(unsigned int i=0; i < m_count; ++i)
-    {
-        m_ppRTV[i] = 0;
-        m_ppSRV[i] = 0;
-        m_ppUAV[i] = 0;
-    }
+    this->Reset(p_count, p_width, p_height, p_pFormats);
 
     unsigned int bindFlags = 0;
     if(p_viewsToCreate & RTV)
@@ -161,87 +102,186 @@ bool RenderTarget::Init2D(unsigned int p_width, unsigned int p_height, unsigned 
     }
     for(unsigned int i=0; i < m_count; ++i)
     {
-        D3D11_TEXTURE2D_DESC texDesc;
-        texDesc.ArraySize = 1;
-        texDesc.BindFlags = bindFlags;
-        texDesc.CPUAccessFlags = 0;
-        texDesc.Format = p_pFormats[i];
-        texDesc.Width = p_width;
-        texDesc.Height = p_height;
-        texDesc.MipLevels = 1;
-        texDesc.MiscFlags = 0;
-        texDesc.SampleDesc.Count = 1;
-        texDesc.SampleDesc.Quality = 0;
-        texDesc.Usage = D3D11_USAGE_DEFAULT;
-        ID3D11Texture2D* pTex = 0;
-        RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateTexture2D(&texDesc, 0, &pTex));
-
-        if(p_viewsToCreate & RTV)
+        ID3D11Texture2D* pTex = this->CreateTexture2D(p_pFormats[i], bindFlags);
+        if(!pTex)
         {
-            D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
-            rtvDesc.Format = p_pFormats[i];
-            rtvDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-            rtvDesc.Texture2D.MipSlice = 0;
-            RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateRenderTargetView(pTex, &rtvDesc, &m_ppRTV[i]));
+            return false;
         }
-
-        if(p_viewsToCreate & SRV)
+        if((p_viewsToCreate & RTV) && !this->CreateRTV2D(pTex, i))
         {
-            D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-            srvDesc.Format = p_pFormats[i];
-            srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-            srvDesc.Texture2D.MipLevels = 1;
-            srvDesc.Texture2D.MostDetailedMip = 0;
-            RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateShaderResourceView(pTex, &srvDesc, &m_ppSRV[i]));
+            return false;
         }
-
-        if(p_viewsToCreate & UAV)
+        if((p_viewsToCreate & SRV) && !this->CreateSRV2D(pTex, i))
         {
-            D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
-            uavDesc.Format = p_pFormats[i];
-            uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
-            uavDesc.Texture2D.MipSlice = 0;
-            RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateUnorderedAccessView(pTex, &uavDesc, &m_ppUAV[i]));
+            return false;
         }
-
+        if((p_viewsToCreate & UAV) && !this->CreateUAV2D(pTex, i))
+        {
+            return false;
+        }
         SAFE_RELEASE(pTex);
     }
-
-    m_pDSV = 0;
-    if(p_viewsToCreate & DSV)
+    if((p_viewsToCreate & DSV) && !this->CreateDSV2D())
     {
-        D3D11_TEXTURE2D_DESC texDesc;
-        texDesc.ArraySize = 1;
-        texDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-        texDesc.CPUAccessFlags = 0;
-        texDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-        texDesc.Width = p_width;
-        texDesc.Height = p_height;
-        texDesc.MipLevels = 1;
-        texDesc.MiscFlags = 0;
-        texDesc.SampleDesc.Count = 1;
-        texDesc.SampleDesc.Quality = 0;
-        texDesc.Usage = D3D11_USAGE_DEFAULT;
-        ID3D11Texture2D* pTex = 0;
-        RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateTexture2D(&texDesc, 0, &pTex));
+        return false;
+    }
+    return true;
+}
 
-        D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
-        dsvDesc.Flags = 0;
-        dsvDesc.Format = texDesc.Format;
-        dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2DMS;
-        dsvDesc.Texture2D.MipSlice = 0;
-        RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateDepthStencilView(pTex, &dsvDesc, &m_pDSV));
 
-        SAFE_RELEASE(pTex);
+bool RenderTarget::Init2D(ID3D11Texture2D* p_pResource, View p_viewsToCreate)
+{
+    D3D11_TEXTURE2D_DESC texDesc;
+    p_pResource->GetDesc(&texDesc);
+
+    this->Destroy();
+    this->Reset(1, texDesc.Width, texDesc.Height, &texDesc.Format);
+
+    unsigned int bindFlags = 0;
+    if(p_viewsToCreate & RTV)
+    {
+        bindFlags |= D3D11_BIND_RENDER_TARGET;
+    }
+    if(p_viewsToCreate & SRV)
+    {
+        bindFlags |= D3D11_BIND_SHADER_RESOURCE;
+    }
+    if(p_viewsToCreate & UAV)
+    {
+        bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+    }
+    if((p_viewsToCreate & RTV) && !this->CreateRTV2D(p_pResource, 0))
+    {
+        return false;
+    }
+    if((p_viewsToCreate & SRV) && !this->CreateSRV2D(p_pResource, 0))
+    {
+        return false;
+    }
+    if((p_viewsToCreate & UAV) && !this->CreateUAV2D(p_pResource, 0))
+    {
+        return false;
+    }
+    if((p_viewsToCreate & DSV) && !this->CreateDSV2D())
+    {
+        return false;
+    }
+    return true;
+}
+
+
+ID3D11Texture2D* RenderTarget::CreateTexture2D(DXGI_FORMAT p_format, unsigned int p_bindFlags) const
+{
+    D3D11_TEXTURE2D_DESC texDesc;
+    texDesc.ArraySize = 1;
+    texDesc.BindFlags = p_bindFlags;
+    texDesc.CPUAccessFlags = 0;
+    texDesc.Format = p_format;
+    texDesc.Width = m_width;
+    texDesc.Height = m_height;
+    texDesc.MipLevels = 1;
+    texDesc.MiscFlags = 0;
+    texDesc.SampleDesc = m_sampleDesc;
+    texDesc.Usage = D3D11_USAGE_DEFAULT;
+
+    ID3D11Texture2D* pTex = 0;
+    RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateTexture2D(&texDesc, 0, &pTex));
+    return pTex;
+}
+
+
+bool RenderTarget::CreateRTV2D(ID3D11Texture2D* p_pResource, unsigned int p_index)
+{
+    D3D11_RENDER_TARGET_VIEW_DESC rtvDesc;
+    rtvDesc.Format = m_pFormats[p_index];
+    rtvDesc.ViewDimension = m_sampleDesc.Count > 1 ? D3D11_RTV_DIMENSION_TEXTURE2DMS : D3D11_RTV_DIMENSION_TEXTURE2D;
+    rtvDesc.Texture2D.MipSlice = 0;
+    RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateRenderTargetView(p_pResource, &rtvDesc, &m_ppRTV[p_index]));
+    return true;
+}
+
+
+bool RenderTarget::CreateSRV2D(ID3D11Texture2D* p_pResource, unsigned int p_index)
+{
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    srvDesc.Format = m_pFormats[p_index];
+    srvDesc.ViewDimension = m_sampleDesc.Count > 1 ? D3D11_SRV_DIMENSION_TEXTURE2DMS : D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateShaderResourceView(p_pResource, &srvDesc, &m_ppSRV[p_index]));
+    return true;
+}
+
+
+bool RenderTarget::CreateUAV2D(ID3D11Texture2D* p_pResource, unsigned int p_index)
+{
+    if(m_sampleDesc.Count > 1)
+    {
+        LI_ERROR("Unordered access views for multisampled textures are not supported");
+        return false;
+    }
+    D3D11_UNORDERED_ACCESS_VIEW_DESC uavDesc;
+    uavDesc.Format = m_pFormats[p_index];
+    uavDesc.ViewDimension = D3D11_UAV_DIMENSION_TEXTURE2D;
+    uavDesc.Texture2D.MipSlice = 0;
+    RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateUnorderedAccessView(p_pResource, &uavDesc, &m_ppUAV[p_index]));
+    return true;
+}
+
+
+bool RenderTarget::CreateDSV2D(void)
+{
+    ID3D11Texture2D* pTex = this->CreateTexture2D(DXGI_FORMAT_D24_UNORM_S8_UINT, D3D11_BIND_DEPTH_STENCIL);
+    if(!pTex)
+    {
+        return false;
     }
 
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+    dsvDesc.Flags = 0;
+    dsvDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    dsvDesc.ViewDimension = m_sampleDesc.Count > 1 ? D3D11_DSV_DIMENSION_TEXTURE2DMS : D3D11_DSV_DIMENSION_TEXTURE2D;
+    dsvDesc.Texture2D.MipSlice = 0;
+    RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateDepthStencilView(pTex, &dsvDesc, &m_pDSV));
+    SAFE_RELEASE(pTex);
     return true;
+}
+
+
+void RenderTarget::Reset(unsigned int p_count, unsigned int p_width, unsigned int p_height, const DXGI_FORMAT* p_pFormats)
+{
+    m_count = p_count;
+    m_width = p_width;
+    m_height = p_height;
+    m_ppRTV = new ID3D11RenderTargetView*[m_count];
+    m_ppSRV = new ID3D11ShaderResourceView*[m_count];
+    m_ppUAV = new ID3D11UnorderedAccessView*[m_count];
+    m_pFormats = new DXGI_FORMAT[m_count];
+    for(unsigned int i=0; i < m_count; ++i)
+    {
+        m_ppRTV[i] = 0;
+        m_ppSRV[i] = 0;
+        m_ppUAV[i] = 0;
+        m_pFormats[i] = p_pFormats[i];
+    }
+    m_pDSV = 0;
+    m_sampleDesc.Count = 1;
+    m_sampleDesc.Quality = 0;
 }
 
 
 void RenderTarget::BindAllRenderTargets(void)
 {
     LostIsland::g_pGraphics->GetContext()->OMSetRenderTargets(m_count, m_ppRTV, m_pDSV);
+
+    D3D11_VIEWPORT viewport;
+    viewport.Width = (float)m_width;
+    viewport.Height = (float)m_height;
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+    LostIsland::g_pGraphics->GetContext()->RSSetViewports(1, &viewport);
 }
 
 
@@ -266,12 +306,40 @@ void RenderTarget::BindAllShaderResources(unsigned int p_startSlot, ShaderTarget
 }
 
 
+void RenderTarget::BindSingleShaderResource(unsigned int p_nr, unsigned int p_slot, ShaderTarget p_target)
+{
+    if(p_target & TARGET_VS)
+    {
+        LostIsland::g_pGraphics->GetContext()->VSSetShaderResources(p_slot, 1, &m_ppSRV[p_nr]);
+    }
+    if(p_target & TARGET_GS)
+    {
+        LostIsland::g_pGraphics->GetContext()->GSSetShaderResources(p_slot, 1, &m_ppSRV[p_nr]);
+    }
+    if(p_target & TARGET_PS)
+    {
+        LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(p_slot, 1, &m_ppSRV[p_nr]);
+    }
+    if(p_target & TARGET_CS)
+    {
+        LostIsland::g_pGraphics->GetContext()->CSSetShaderResources(p_slot, 1, &m_ppSRV[p_nr]);
+    }
+}
+
+
 void RenderTarget::BindAllUnorderedAccess(unsigned int p_startSlot)
 {
     unsigned int *pCounts = new unsigned int[m_count];
     ZeroMemory(pCounts, m_count * sizeof(unsigned int));
     LostIsland::g_pGraphics->GetContext()->CSSetUnorderedAccessViews(p_startSlot, m_count, m_ppUAV, pCounts);
     SAFE_DELETE(pCounts);
+}
+
+
+void RenderTarget::BindSingleUnorderedAccess(unsigned int p_nr, unsigned int p_slot)
+{
+    unsigned int count = 0;
+    LostIsland::g_pGraphics->GetContext()->CSSetUnorderedAccessViews(p_slot, 1, &m_ppUAV[p_nr], &count);
 }
 
 

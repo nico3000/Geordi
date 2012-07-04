@@ -1,18 +1,17 @@
 #include "StdAfx.h"
 #include "RootNode.h"
 
+#include "BloomEffect.h"
 
-RootNode::RootNode(void)
+RootNode::RootNode(void) :
+m_pBase(new RenderTarget), m_pEnlightened(new RenderTarget)
 {
-    m_pBlurVer = 0;
-    m_pBlurHor = 0;
+    m_effects.push_back(std::shared_ptr<IPostEffect>(new BloomEffect(m_pEnlightened, 0)));
 }
 
 
 RootNode::~RootNode(void)
 {
-    SAFE_RELEASE(m_pBlurVer);
-    SAFE_RELEASE(m_pBlurHor);
 }
 
 
@@ -49,25 +48,15 @@ HRESULT RootNode::VOnRestore(void)
     unsigned int width = LostIsland::g_pGraphics->GetWidth();
     unsigned int height = LostIsland::g_pGraphics->GetHeight();
     DXGI_FORMAT pBaseFormats[3] = {
-        DXGI_FORMAT_R8G8B8A8_UNORM,
+        DXGI_FORMAT_R16G16B16A16_FLOAT,
         DXGI_FORMAT_R32G32B32A32_FLOAT,
         DXGI_FORMAT_R32G32B32A32_FLOAT,
     };
-    if(!m_base.Init2DMS(width, height, 3, RenderTarget::RTV_DSV_SRV, pBaseFormats, sampleDesc))
+    DXGI_FORMAT enlightenedFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
+    if(!m_pBase->Init2DMS(width, height, 3, RenderTarget::RTV_DSV_SRV, pBaseFormats, sampleDesc) || !m_pEnlightened->Init2D(width, height, 1, RenderTarget::RTV_SRV_UAV, &enlightenedFormat))
     {
         return S_FALSE;
     }
-
-    DXGI_FORMAT enlightenedFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-    if(!m_enlightened.Init2D(width, height, 1, RenderTarget::RTV_SRV, &enlightenedFormat))
-    {
-        return S_FALSE;
-    } 
-    if(!m_temp.Init2D(width, height, 1, RenderTarget::RTV_SRV_UAV, &enlightenedFormat))
-    {
-        return S_FALSE;
-    }
-    
 
     std::ostringstream str;
     str << sampleDesc.Count;
@@ -105,9 +94,6 @@ HRESULT RootNode::VOnRestore(void)
     }
     m_screenQuad.SetIndices(pIndexBuffer);
 
-    m_pBlurHor = LostIsland::g_pGraphics->CompileComputeShader("./Shader/BloomCS.hlsl", "BlurHorCS", 0, GraphicsLayer::SHADER_VERSION_MAX);
-    m_pBlurVer = LostIsland::g_pGraphics->CompileComputeShader("./Shader/BloomCS.hlsl", "BlurVerCS", 0, GraphicsLayer::SHADER_VERSION_MAX);
-
     for(auto iter=m_staticNodes.begin(); iter != m_staticNodes.end(); ++iter)
     {
         RETURN_IF_FAILED((*iter)->VOnRestore());
@@ -117,6 +103,12 @@ HRESULT RootNode::VOnRestore(void)
     {
         RETURN_IF_FAILED((*iter)->VOnRestore());
     }
+
+    for(auto iter=m_effects.begin(); iter != m_effects.end(); ++iter)
+    {
+        RETURN_IF_FAILED((*iter)->VOnRestore());
+    }
+
     return S_OK;
 }
 
@@ -139,9 +131,9 @@ HRESULT RootNode::VOnLostDevice(void)
 HRESULT RootNode::VPreRender(Scene* p_pScene)
 {
     static float pColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
-    m_base.BindAllRenderTargets();
-    m_base.ClearDepthStencil(1.0f, 0);
-    m_base.ClearColor(pColor);
+    m_pBase->BindAllRenderTargets();
+    m_pBase->ClearDepthStencil(1.0f, 0);
+    m_pBase->ClearColor(pColor);
     // TODO activate deferred shading
     return S_OK;
 }
@@ -178,31 +170,18 @@ HRESULT RootNode::VPostRender(Scene* p_pScene)
 {
     // todo postfx!
     m_dsTest.Bind();
-    m_enlightened.BindAllRenderTargets();
-    m_base.BindAllShaderResources(0, TARGET_PS);
+    m_pEnlightened->BindAllRenderTargets();
+    m_pBase->BindAllShaderResources(0, TARGET_PS);
 
     m_screenQuad.Draw();
 
-    LostIsland::g_pGraphics->ReleaseShaderResources(0, m_base.GetCount());
+    LostIsland::g_pGraphics->ReleaseShaderResources(0, m_pBase->GetCount(), TARGET_PS);
     LostIsland::g_pGraphics->ReleaseRenderTarget();
 
-    unsigned int width = LostIsland::g_pGraphics->GetWidth();
-    unsigned int height = LostIsland::g_pGraphics->GetHeight();
-    
-    m_temp.BindAllUnorderedAccess(0);
-    m_enlightened.BindAllShaderResources(0, TARGET_CS);
-    LostIsland::g_pGraphics->GetContext()->CSSetShader(m_pBlurHor, 0, 0);
-    LostIsland::g_pGraphics->GetContext()->Dispatch((unsigned int)ceil((float)width / 128.0f), height, 1);
-    LostIsland::g_pGraphics->ReleaseShaderResources(0, m_enlightened.GetCount(), TARGET_CS);
-    LostIsland::g_pGraphics->ReleaseUnorderedAccess(0, 1);
-
-    LostIsland::g_pGraphics->BindBackbufferToUA(0);
-    m_enlightened.BindAllShaderResources(1, TARGET_CS);
-    m_temp.BindAllShaderResources(0, TARGET_CS);
-    LostIsland::g_pGraphics->GetContext()->CSSetShader(m_pBlurVer, 0, 0);
-    LostIsland::g_pGraphics->GetContext()->Dispatch(width, (unsigned int)ceil((float)height / 128.0f), 1);
-    LostIsland::g_pGraphics->ReleaseShaderResources(0, 1 + m_enlightened.GetCount(), TARGET_CS);
-    LostIsland::g_pGraphics->ReleaseUnorderedAccess(0, 1);
+    for(auto iter=m_effects.begin(); iter != m_effects.end(); ++iter)
+    {
+        (*iter)->VExecute();
+    }
 
     return S_OK;
 }

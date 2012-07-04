@@ -16,11 +16,8 @@ private:
     NodeList m_staticNodes;
     NodeList m_dynamicNodes;
     PoseEffectList m_effects;
-    RenderTarget m_base;
-    RenderTarget m_enlightened;
-    RenderTarget m_temp;
-    ID3D11ComputeShader* m_pBlurHor;
-    ID3D11ComputeShader* m_pBlurVer;
+    std::shared_ptr<RenderTarget> m_pBase;
+    std::shared_ptr<RenderTarget> m_pEnlightened;
     Geometry m_screenQuad;
     ShaderProgram m_dsTest;
 
