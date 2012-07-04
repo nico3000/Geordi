@@ -261,6 +261,7 @@
     <ClInclude Include="IndexBuffer.h" />
     <ClInclude Include="InputController.h" />
     <ClInclude Include="IPointerHandler.h" />
+    <ClInclude Include="IPostEffect.h" />
     <ClInclude Include="ISceneNode.h" />
     <ClInclude Include="LocalPose.h" />
     <ClInclude Include="Logger.h" />

@@ -3,6 +3,7 @@
 #include "Geometry.h"
 #include "ShaderProgram.h"
 #include "RenderTarget.h"
+#include "IPostEffect.h"
 #define DS_NUM_TARGETS 3
 
 class RootNode :
@@ -10,9 +11,11 @@ class RootNode :
 {
 private:
     typedef std::vector<std::shared_ptr<ISceneNode>> NodeList;
+    typedef std::vector<std::shared_ptr<IPostEffect>> PoseEffectList;
 
     NodeList m_staticNodes;
     NodeList m_dynamicNodes;
+    PoseEffectList m_effects;
     RenderTarget m_base;
     RenderTarget m_enlightened;
     RenderTarget m_temp;

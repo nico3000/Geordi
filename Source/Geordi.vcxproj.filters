@@ -262,6 +262,9 @@
     <ClInclude Include="RenderTarget.h">
       <Filter>Header Files\GameApplicationLayer\Graphics</Filter>
     </ClInclude>
+    <ClInclude Include="IPostEffect.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
