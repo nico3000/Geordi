@@ -36,9 +36,9 @@ void RenderTarget::Destroy(void)
 }
 
 
-bool RenderTarget::Init2DMS(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats,  const DXGI_SAMPLE_DESC& p_sampleDesc)
+bool RenderTarget::Init2D(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats,  const DXGI_SAMPLE_DESC& p_sampleDesc)
 {
-    if(p_viewsToCreate & UAV)
+    if(p_sampleDesc.Count > 1 && (p_viewsToCreate & UAV))
     {
         LI_ERROR("multisampled unordered access views are not supported");
         return false;
@@ -84,48 +84,10 @@ bool RenderTarget::Init2DMS(unsigned int p_width, unsigned int p_height, unsigne
 
 bool RenderTarget::Init2D(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats)
 {
-    this->Destroy();
-    this->Reset(p_count, p_width, p_height, p_pFormats);
-
-    unsigned int bindFlags = 0;
-    if(p_viewsToCreate & RTV)
-    {
-        bindFlags |= D3D11_BIND_RENDER_TARGET;
-    }
-    if(p_viewsToCreate & SRV)
-    {
-        bindFlags |= D3D11_BIND_SHADER_RESOURCE;
-    }
-    if(p_viewsToCreate & UAV)
-    {
-        bindFlags |= D3D11_BIND_UNORDERED_ACCESS;
-    }
-    for(unsigned int i=0; i < m_count; ++i)
-    {
-        ID3D11Texture2D* pTex = this->CreateTexture2D(p_pFormats[i], bindFlags);
-        if(!pTex)
-        {
-            return false;
-        }
-        if((p_viewsToCreate & RTV) && !this->CreateRTV2D(pTex, i))
-        {
-            return false;
-        }
-        if((p_viewsToCreate & SRV) && !this->CreateSRV2D(pTex, i))
-        {
-            return false;
-        }
-        if((p_viewsToCreate & UAV) && !this->CreateUAV2D(pTex, i))
-        {
-            return false;
-        }
-        SAFE_RELEASE(pTex);
-    }
-    if((p_viewsToCreate & DSV) && !this->CreateDSV2D())
-    {
-        return false;
-    }
-    return true;
+    DXGI_SAMPLE_DESC sampleDesc;
+    sampleDesc.Count = 1;
+    sampleDesc.Quality = 0;
+    return this->Init2D(p_width, p_height, p_count, p_viewsToCreate, p_pFormats, sampleDesc);
 }
 
 

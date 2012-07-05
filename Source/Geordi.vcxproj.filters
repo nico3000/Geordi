@@ -277,6 +277,9 @@
     <ClInclude Include="BloomEffect.h">
       <Filter>Header Files\GameView\HumanView\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="ScreenQuad.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -404,6 +407,9 @@
     </ClCompile>
     <ClCompile Include="BloomEffect.cpp">
       <Filter>Source Files\GameView\HumanView\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="ScreenQuad.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -18,7 +18,6 @@ private:
     PoseEffectList m_effects;
     std::shared_ptr<RenderTarget> m_pBase;
     std::shared_ptr<RenderTarget> m_pEnlightened;
-    Geometry m_screenQuad;
     ShaderProgram m_dsTest;
 
 public:

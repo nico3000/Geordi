@@ -282,6 +282,7 @@
     <ClInclude Include="RootNode.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneNodeProperties.h" />
+    <ClInclude Include="ScreenQuad.h" />
     <ClInclude Include="ShaderProgram.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
@@ -328,6 +329,7 @@
     <ClCompile Include="RootNode.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="SceneNodeProperties.cpp" />
+    <ClCompile Include="ScreenQuad.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

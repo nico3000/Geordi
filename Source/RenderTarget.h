@@ -37,7 +37,7 @@ public:
     RenderTarget(void);
     ~RenderTarget(void);
 
-    bool Init2DMS(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats, const DXGI_SAMPLE_DESC& p_sampleDesc);
+    bool Init2D(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats, const DXGI_SAMPLE_DESC& p_sampleDesc);
     bool Init2D(unsigned int p_width, unsigned int p_height, unsigned int p_count, View p_viewsToCreate, const DXGI_FORMAT* p_pFormats);
     bool Init2D(ID3D11Texture2D* p_pResource, View p_viewsToCreate);
     void Destroy(void);

@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "BloomEffect.h"
+#include "ScreenQuad.h"
 
 
 BloomEffectCS::BloomEffectCS(std::weak_ptr<RenderTarget> p_pInput, unsigned int p_inputIndex, std::weak_ptr<RenderTarget> p_pOutput) :
@@ -98,8 +99,22 @@ BloomEffectPS::~BloomEffectPS(void)
 
 HRESULT BloomEffectPS::VOnRestore(void)
 {
-    m_blurHor.Load("./Shader/BloomPS.hlsl", "ScreenQuadVS", 0, "BlurHorPS");
-    m_blurVer.Load("./Shader/BloomPS.hlsl", "ScreenQuadVS", 0, "BlurVerPS");
+    if(!m_blurHor.Load("./Shader/BloomPS.hlsl", "ScreenQuadVS", 0, "BlurHorPS"))
+    {
+        return S_FALSE;
+    }
+    if(!ScreenQuad::CreateInputLayoutForShader(m_blurHor))
+    {
+        return S_FALSE;
+    }
+    if(!m_blurVer.Load("./Shader/BloomPS.hlsl", "ScreenQuadVS", 0, "BlurVerPS"))
+    {
+        return S_FALSE;
+    }
+    if(!ScreenQuad::CreateInputLayoutForShader(m_blurVer))
+    {
+        return S_FALSE;
+    }
 
     m_temp.Destroy();
     unsigned int width = LostIsland::g_pGraphics->GetWidth();
@@ -121,5 +136,28 @@ HRESULT BloomEffectPS::VOnUpdate(unsigned long m_deltaGameMillis, unsigned long 
 
 void BloomEffectPS::VExecute(void)
 {
+    std::shared_ptr<RenderTarget> pInput = m_pInput.lock();
+    std::shared_ptr<RenderTarget> pOutput = m_pOutput.lock();
+    std::shared_ptr<ScreenQuad> pScreenQuad = ScreenQuad::GetScreenQuad().lock();
+    if(pInput && pOutput && pScreenQuad)
+    {
+        pInput->BindSingleShaderResource(m_inputIndex, 0, TARGET_PS);
+        
+        m_blurHor.Bind();
+        m_temp.BindAllRenderTargets();
 
+        pScreenQuad->Draw();
+
+        LostIsland::g_pGraphics->ReleaseRenderTarget();
+
+        m_blurVer.Bind();
+        m_temp.BindSingleShaderResource(0, 1, TARGET_PS);
+        pOutput->BindAllRenderTargets();
+
+        pScreenQuad->Draw();
+
+        LostIsland::g_pGraphics->ReleaseRenderTarget();
+
+        LostIsland::g_pGraphics->ReleaseShaderResources(0, 2, TARGET_PS);
+    }
 }

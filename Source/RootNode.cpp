@@ -1,12 +1,13 @@
 #include "StdAfx.h"
 #include "RootNode.h"
 
+#include "ScreenQuad.h"
 #include "BloomEffect.h"
 
 RootNode::RootNode(void) :
 m_pBase(new RenderTarget), m_pEnlightened(new RenderTarget)
 {
-    m_effects.push_back(std::shared_ptr<IPostEffect>(new BloomEffectCS(m_pEnlightened, 0, LostIsland::g_pGraphics->GetBackbuffer())));
+    m_effects.push_back(std::shared_ptr<IPostEffect>(new BloomEffectPS(m_pEnlightened, 0, LostIsland::g_pGraphics->GetBackbuffer())));
 }
 
 
@@ -53,7 +54,7 @@ HRESULT RootNode::VOnRestore(void)
         DXGI_FORMAT_R32G32B32A32_FLOAT,
     };
     DXGI_FORMAT enlightenedFormat = DXGI_FORMAT_R16G16B16A16_FLOAT;
-    if(!m_pBase->Init2DMS(width, height, 3, RenderTarget::RTV_DSV_SRV, pBaseFormats, sampleDesc) || !m_pEnlightened->Init2D(width, height, 1, RenderTarget::RTV_SRV_UAV, &enlightenedFormat))
+    if(!m_pBase->Init2D(width, height, 3, RenderTarget::RTV_DSV_SRV, pBaseFormats, sampleDesc) || !m_pEnlightened->Init2D(width, height, 1, RenderTarget::RTV_SRV_UAV, &enlightenedFormat))
     {
         return S_FALSE;
     }
@@ -66,33 +67,14 @@ HRESULT RootNode::VOnRestore(void)
         { "SAMPLE_COUNT", val.c_str() },
         { 0, 0 },
     };
-    if(!m_dsTest.Load("./Shader/MergeLightingMS.hlsl", "ScreenQuadVS", 0, "TexOutPS", pDefines))
+    if(!m_dsTest.Load("./Shader/MergeLightingMS.hlsl", "ScreenQuadVS", 0, sampleDesc.Count == 1 ? "TexOutPS" : "TexOutMSPS", pDefines))
     {
         return S_FALSE;
     }
-    if(!m_dsTest.CreateInputLayout(VertexBuffer::sm_pScreenQuadVertexElementDesc, VertexBuffer::sm_screenQuadVertexNumElements))
+    if(!ScreenQuad::CreateInputLayoutForShader(m_dsTest))
     {
         return S_FALSE;
     }
-
-    VertexBuffer::ScreenQuadVertex pVertices[] = { { XMFLOAT2(-1.0f, -1.0f) },
-    { XMFLOAT2(+1.0f, -1.0f) },
-    { XMFLOAT2(-1.0f, +1.0f) },
-    { XMFLOAT2(+1.0f, +1.0f) } };
-    Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);
-    if(!pVertexBuffer->Build(pVertices, ARRAYSIZE(pVertices), sizeof(VertexBuffer::ScreenQuadVertex)))
-    {
-        return S_FALSE;
-    }
-    m_screenQuad.SetVertices(pVertexBuffer);
-
-    unsigned int pIndices[] = { 0, 1, 2, 3 };
-    Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
-    if(!pIndexBuffer->Build(pIndices, ARRAYSIZE(pIndices), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP))
-    {
-        return S_FALSE;
-    }
-    m_screenQuad.SetIndices(pIndexBuffer);
 
     for(auto iter=m_staticNodes.begin(); iter != m_staticNodes.end(); ++iter)
     {
@@ -171,9 +153,15 @@ HRESULT RootNode::VPostRender(Scene* p_pScene)
     // todo postfx!
     m_dsTest.Bind();
     m_pEnlightened->BindAllRenderTargets();
+    //LostIsland::g_pGraphics->GetBackbuffer().lock()->BindAllRenderTargets();
     m_pBase->BindAllShaderResources(0, TARGET_PS);
 
-    m_screenQuad.Draw();
+    std::shared_ptr<ScreenQuad> pScreenQuad = ScreenQuad::GetScreenQuad().lock();
+    if(!pScreenQuad)
+    {
+        return S_FALSE;
+    }
+    pScreenQuad->Draw();
 
     LostIsland::g_pGraphics->ReleaseShaderResources(0, m_pBase->GetCount(), TARGET_PS);
     LostIsland::g_pGraphics->ReleaseRenderTarget();
