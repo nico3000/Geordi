@@ -110,10 +110,16 @@
     <None Include="..\Game\Shader\ParticleSystemCS.hlsl">
       <Filter>Shader</Filter>
     </None>
-    <None Include="..\Game\Shader\DeferredShading.fx">
+    <None Include="..\Game\Shader\BloomCS.hlsl">
       <Filter>Shader</Filter>
     </None>
-    <None Include="..\Game\Shader\BloomCS.hlsl">
+    <None Include="..\Game\Shader\BloomPS.hlsl">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="..\Game\Shader\DeferredShadingDefinitions.hlsl">
+      <Filter>Shader</Filter>
+    </None>
+    <None Include="..\Game\Shader\MergeLightingMS.hlsl">
       <Filter>Shader</Filter>
     </None>
   </ItemGroup>

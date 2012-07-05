@@ -1,6 +1,5 @@
 Texture2D<float4> g_Input : register(t0);
 RWTexture2D<float4> g_PrimaryOutput : register(u0);
-RWTexture2D<float4> g_SecondaryOutput : register(u1);
 
 Texture2D<float4> g_Source : register(t1);
 
@@ -24,13 +23,8 @@ void BlurHorCS(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID, uint3 dtid
     float4 texel = g_Input[uint2(texCoord, dtid.y)];
     float brightness = dot(texel.rgb, g_BrightnessFactors);
     localMem[gtid.x] = ceil(clamp(brightness, 0.0, 2.0) - 1.0) * texel;
-    if(KERNEL_SIZE / 2 < gtid.x && gtid.x <= TILE_SIZE + KERNEL_SIZE / 2)
-    {
-        g_SecondaryOutput[uint2(gid.x * TILE_SIZE + gtid.x - KERNEL_SIZE / 2, dtid.y)] = texel;
-    }
 
 	GroupMemoryBarrierWithGroupSync();
-
 
 	if(gtid.x < TILE_SIZE)
 	{

@@ -6,7 +6,7 @@
 RootNode::RootNode(void) :
 m_pBase(new RenderTarget), m_pEnlightened(new RenderTarget)
 {
-    m_effects.push_back(std::shared_ptr<IPostEffect>(new BloomEffect(m_pEnlightened, 0)));
+    m_effects.push_back(std::shared_ptr<IPostEffect>(new BloomEffectCS(m_pEnlightened, 0, LostIsland::g_pGraphics->GetBackbuffer())));
 }
 
 
@@ -66,7 +66,7 @@ HRESULT RootNode::VOnRestore(void)
         { "SAMPLE_COUNT", val.c_str() },
         { 0, 0 },
     };
-    if(!m_dsTest.Load("./Shader/DeferredShading.fx", "ScreenQuadVS", 0, "TexOutPS", pDefines))
+    if(!m_dsTest.Load("./Shader/MergeLightingMS.hlsl", "ScreenQuadVS", 0, "TexOutPS", pDefines))
     {
         return S_FALSE;
     }

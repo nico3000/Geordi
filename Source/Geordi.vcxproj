@@ -226,8 +226,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="..\Game\Shader\BloomCS.hlsl" />
+    <None Include="..\Game\Shader\BloomPS.hlsl" />
     <None Include="..\Game\Shader\CommonDefinitions.hlsl" />
-    <None Include="..\Game\Shader\DeferredShading.fx" />
+    <None Include="..\Game\Shader\MergeLightingMS.hlsl" />
+    <None Include="..\Game\Shader\DeferredShadingDefinitions.hlsl" />
     <None Include="..\Game\Shader\ParticleSystemCS.hlsl" />
     <None Include="..\Game\Shader\NicotopiaTest.fx" />
     <None Include="..\Game\Shader\ParticleStructs.hlsl" />
