@@ -277,33 +277,6 @@ bool GraphicsLayer::CreateAppGraphics(void)
         SAFE_RELEASE(pRasterizerState);   
     }
 
-    D3D11_BLEND_DESC blendDesc;
-    blendDesc.AlphaToCoverageEnable = false;
-    blendDesc.IndependentBlendEnable = false;
-    blendDesc.RenderTarget[0].BlendEnable = false;
-    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-
-    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-
-    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ZERO;
-    
-    blendDesc.RenderTarget[0].RenderTargetWriteMask = 0x0f;
-    ID3D11BlendState* pBlendState;
-    hr = m_pDevice->CreateBlendState(&blendDesc, &pBlendState);
-    if(FAILED(hr))
-    {
-        HRESULT_TO_WARNING(hr);
-    }
-    else
-    {
-        FLOAT pFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
-        m_pContext->OMSetBlendState(pBlendState, pFactor, 0xffffffff);
-        SAFE_RELEASE(pBlendState);
-    }
-
     m_initialized = true;
 
     SAFE_RELEASE(pAdapter);
@@ -423,11 +396,10 @@ bool GraphicsLayer::CreateAppWindow(HINSTANCE hInstance)
     rect.right = m_width;
     rect.bottom = m_height;
     
-    if(AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, false))
+    if(!AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, false))
     {
-        m_width = rect.right - rect.left;
-        m_height = rect.bottom - rect.top;
-        //ClipCursor(&rect);
+        LI_ERROR("AdjustWindowRect() failed");
+        return false;
     }
 
     m_hWnd = CreateWindow(pWindowClass,
@@ -435,8 +407,8 @@ bool GraphicsLayer::CreateAppWindow(HINSTANCE hInstance)
                           WS_OVERLAPPEDWINDOW,
                           CW_USEDEFAULT,
                           0,
-                          m_width,
-                          m_height,
+                          rect.right - rect.left,
+                          rect.bottom - rect.top,
                           0,
                           0,
                           hInstance,

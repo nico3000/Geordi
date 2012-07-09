@@ -16,8 +16,6 @@ Texture2D<float4> g_BlurredTex : register(t1);
 
 float4 BlurHorPS(ScreenQuadFragment input) : SV_Target0
 {
-	return g_SourceTex.Sample(PointSampler, input.tex);
-
 	uint width, height;
 	g_SourceTex.GetDimensions(width, height);
 	float2 offset = float2(0.0, 0.0);
@@ -35,8 +33,6 @@ float4 BlurHorPS(ScreenQuadFragment input) : SV_Target0
 
 float4 BlurVerPS(ScreenQuadFragment input) : SV_Target0
 {
-	return g_SourceTex.Sample(PointSampler, input.tex);
-
 	uint width, height;
 	g_BlurredTex.GetDimensions(width, height);
 	float2 offset = float2(0.0, 0.0);

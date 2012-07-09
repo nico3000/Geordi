@@ -25,8 +25,14 @@ void HumanDisplay::VOnAttach(GameViewID p_viewID, ActorID p_actorID)
     m_actorID = p_actorID;
     m_viewID = p_viewID;
 
-    EventListenerDelegate actorCreatedDelegate = fastdelegate::MakeDelegate(this, &HumanDisplay::ActorCreatedDelegate);
-    EventManager::Get()->VAddListener(actorCreatedDelegate, ActorCreatedEvent::sm_eventType);
+    EventListenerDelegate onActorCreated = fastdelegate::MakeDelegate(this, &HumanDisplay::ActorCreatedDelegate);
+    EventManager::Get()->VAddListener(onActorCreated, ActorCreatedEvent::sm_eventType);
+
+    EventListenerDelegate onRenderComponentCreated = fastdelegate::MakeDelegate(&m_scene, &Scene::RenderComponentCreatedDelegate);
+    EventManager::Get()->VAddListener(onRenderComponentCreated, RenderComponentCreatedEvent::sm_eventType);
+
+    EventListenerDelegate onParticleComponentCreated = fastdelegate::MakeDelegate(&m_scene, &Scene::ParticleComponentCreatedDelegate);
+    EventManager::Get()->VAddListener(onParticleComponentCreated, ParticleComponentCreatedEvent::sm_eventType);
 }
 
 

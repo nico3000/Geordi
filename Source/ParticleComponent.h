@@ -16,6 +16,7 @@ public:
     ~ParticleComponent(void);
 
     bool VInit(tinyxml2::XMLElement* p_pData);
+    void VPostInit(void);
     std::shared_ptr<ISceneNode> GetSceneNode(void);
 
     std::weak_ptr<ParticleCloud> GetParticleCloud(void) const { return m_pCloud; }

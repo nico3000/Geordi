@@ -1,7 +1,7 @@
 <Actor>
-    <InitialPose>
+    <TransformComponent>
         <Position x="0.0" y="0.0" z="-4.0" />
-    </InitialPose>
+    </TransformComponent>
     <CameraComponent>
         <Settings fov="90.0" aspect="auto" minZ="0.01" maxZ="100.0" />
         <Cameratype type="freelook">

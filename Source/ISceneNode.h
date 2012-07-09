@@ -7,9 +7,10 @@ class ISceneNode
 public:
     enum NodeType
     {
-        UNKNOWN = 0,
-        STATIC,
-        DYNAMIC,
+        UNKNOWN_NODE = 0,
+        STATIC_NODE,
+        DYNAMIC_NODE,
+        TRANSPARENT_NODE,
     };
 
     virtual ~ISceneNode(void) { }

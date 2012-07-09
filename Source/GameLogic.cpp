@@ -2,6 +2,7 @@
 #include "GameLogic.h"
 #include "TestEventData.h"
 #include "ActorEvents.h"
+#include "TransformComponent.h"
 
 GameLogic::GameLogic(void) :
 m_pActorFactory(0), m_pParticleSystem(0), m_pProcessManager(0)
@@ -57,7 +58,7 @@ void GameLogic::VDestroy(void)
 }
 
 
-void GameLogic::VUpdate(unsigned long p_deltaMillis)
+void GameLogic::VUpdate(unsigned long p_deltaMillis, unsigned long p_gameMillis)
 {
     //LI_INFO("next frame");
 
@@ -67,7 +68,7 @@ void GameLogic::VUpdate(unsigned long p_deltaMillis)
 
     for(auto iter=m_actors.begin(); iter != m_actors.end(); ++iter)
     {
-        iter->second->Update(p_deltaMillis);
+        iter->second->Update(p_deltaMillis, p_gameMillis);
     }
 
     for(auto iter=m_gameViews.begin(); iter != m_gameViews.end(); ++iter)
@@ -122,9 +123,9 @@ void GameLogic::VDeleteActor(ActorID p_id)
 }
 
 
-StrongActorPtr GameLogic::VCreateActor(const char* p_actorResource)
+StrongActorPtr GameLogic::VCreateActor(const char* p_actorResource, tinyxml2::XMLElement* p_pOverrideData)
 {
-    StrongActorPtr pActor = m_pActorFactory->CreateActor(p_actorResource);
+    StrongActorPtr pActor = m_pActorFactory->CreateActor(p_actorResource, p_pOverrideData);
     if(pActor)
     {
         IEventDataPtr pEvent(new ActorCreatedEvent(pActor->GetID()));
@@ -157,15 +158,46 @@ void GameLogic::ActorMoveDelegate(IEventDataPtr p_pEventData)
     if(pEventData)
     {
         StrongActorPtr pActor = this->VGetActor(pEventData->GetActorID()).lock();
-        if(pActor)
+        std::shared_ptr<TransformComponent> pTransform = pActor ? pActor->GetComponent<TransformComponent>(TransformComponent::sm_componentID).lock() : 0;
+        if(pTransform)
         {
-            pActor->GetPose().TranslateLocal(pEventData->GetDeltaTranslation());
-            pActor->GetPose().RotateLocal(pEventData->GetDeltaRotation().x, pEventData->GetDeltaRotation().y, pEventData->GetDeltaRotation().z);
-            pActor->GetPose().Scale(pEventData->GetDeltaScaling());
+            pTransform->GetPose().TranslateLocal(pEventData->GetDeltaTranslation());
+            pTransform->GetPose().RotateLocal(pEventData->GetDeltaRotation().x, pEventData->GetDeltaRotation().y, pEventData->GetDeltaRotation().z);
+            pTransform->GetPose().Scale(pEventData->GetDeltaScaling());
 
             //LI_INFO("actor moved");
             std::shared_ptr<ActorMovedEvent> pActorMoved(new ActorMovedEvent(pActor->GetID()));
             EventManager::Get()->VQueueEvent(pActorMoved);
         }
     }
+}
+
+
+bool GameLogic::VLoadGame(const char* p_levelResource)
+{
+    std::string levelName(p_levelResource);
+    tinyxml2::XMLDocument doc;
+    if(doc.LoadFile(p_levelResource) != tinyxml2::XML_NO_ERROR)
+    {
+        LI_ERROR("Loading level file failed: " + levelName);
+        return false;
+    }
+    tinyxml2::XMLElement* pLevelData = doc.FirstChildElement("Level");
+    if(!pLevelData)
+    {
+        LI_ERROR("No Level element in " + levelName);
+        return false;
+    }
+    tinyxml2::XMLElement* pActorList = pLevelData->FirstChildElement("ActorList");
+    tinyxml2::XMLElement* pActorData = pActorList ? pActorList->FirstChildElement("Actor") : 0;
+    while(pActorData)
+    {
+        std::string actorType(pActorData->Attribute("type"));
+        std::string actorResource("./Actors/" + actorType + ".xml");
+        StrongActorPtr pActor = this->VCreateActor(actorResource.c_str(), pActorData->FirstChildElement());
+
+        pActorData = pActorData->NextSiblingElement("Actor");
+    }
+
+    return true;
 }

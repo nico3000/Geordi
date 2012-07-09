@@ -15,7 +15,7 @@ float4 TexOutMSPS(ScreenQuadFragment input) : SV_Target0
     for(int i=0; i < samples; ++i)
     {	
 		float2 samplePosition = g_DiffuseTexMS.GetSamplePosition(i);
-        color += g_DiffuseTexMS.Load(tex + float2(0.5, 0.5), i);
+        color += g_DiffuseTexMS.Load(tex, i);
     }
     return color / SAMPLE_COUNT;
 }

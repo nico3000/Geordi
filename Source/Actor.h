@@ -1,10 +1,9 @@
 #pragma once
-#include "LocalPose.h"
+#include "Pose.h"
 
 class Actor;
 class ActorComponent;
 typedef ActorComponent* (*ActorComponentCreator)(void);
-typedef std::map<std::string, ActorComponentCreator> ActorComponentCreatorMap;
 typedef unsigned long ActorID;
 typedef unsigned int ComponentID;
 typedef std::shared_ptr<Actor> StrongActorPtr;
@@ -28,7 +27,7 @@ public:
     virtual ~ActorComponent(void) {}
     virtual bool VInit(tinyxml2::XMLElement* p_pData) = 0;
     virtual void VPostInit(void) {}
-    virtual void VUpdate(unsigned long deltaMillis) {}
+    virtual void VUpdate(unsigned long p_deltaMillis, unsigned long p_gameMillis) {}
     virtual ComponentID VGetComponentID(void) const = 0;
 
 };
@@ -43,7 +42,7 @@ class Actor
 private:
     ActorID m_id;
     ActorComponents m_components;
-    LocalPose m_localPose;
+    //Pose m_localPose;
 
     void AddComponent(StrongActorComponentPtr p_pComponent);
 
@@ -54,10 +53,10 @@ public:
     bool Init(tinyxml2::XMLElement* p_pData);
     void PostInit(void);
     void Destroy(void);
-    void Update(unsigned long p_deltaMillis);
+    void Update(unsigned long p_deltaMillis, unsigned long p_gameMillis);
 
     ActorID GetID(void) const { return m_id; }
-    LocalPose& GetPose(void) { return m_localPose; }
+    //Pose& GetPose(void) { return m_localPose; }
 
     template<class ComponentType>
     std::weak_ptr<ComponentType> GetComponent(ComponentID p_id)
@@ -85,14 +84,19 @@ private:
 
     ActorID GetNextActorID(void) { return m_lastActorID++; }
 
+private:
+    typedef std::map<std::string, ActorComponentCreator> ActorComponentCreatorMap;
+    typedef std::map<std::string, ComponentID> ActorComponentIDMap;
+
 protected:
     ActorComponentCreatorMap m_actorComponentCreators;
+    ActorComponentIDMap m_actorComponentIDs;
     virtual StrongActorComponentPtr CreateComponent(tinyxml2::XMLElement* p_pData);
 
 public:
     ActorFactory(void);
     ~ActorFactory(void);
 
-    StrongActorPtr CreateActor(const char* p_actorResource);
+    StrongActorPtr CreateActor(const char* p_actorResource, tinyxml2::XMLElement* p_pOverrideData);
 
 };

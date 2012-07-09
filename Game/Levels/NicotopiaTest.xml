@@ -1,0 +1,22 @@
+<Level>
+    <ActorList>
+        <Actor type="Cube" id="cube1">
+            <TransformComponent>
+                <Position x="-0.1" y="2.0" z="0.1" />
+                <Rotation pitch="1.0" yaw="1.2" />
+                <Scaling scaling="0.99" />
+            </TransformComponent>
+        </Actor>
+        <Actor type="Cube" id="cube2">
+            <TransformComponent>
+                <Position x="-0.2" y="0.0" z="0.1" />
+            </TransformComponent>
+        </Actor>
+        <Actor type="Cube" id="cube3">
+            <TransformComponent>
+                <Position x="0.1" y="4.0" z="0.1" />
+            </TransformComponent>
+        </Actor>
+        <Actor type="HeightField" id="height1" />
+    </ActorList>
+</Level>

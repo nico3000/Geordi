@@ -2,10 +2,11 @@
 #include "BaseSceneNode.h"
 #include "GraphicsLayer.h"
 #include "Scene.h"
+#include "TransformComponent.h"
 
 
 BaseSceneNode::BaseSceneNode(ActorID p_actorID) :
-m_isVisible(true)
+m_isVisible(true), m_valid(true)
 {
     m_properties.m_actorID = p_actorID;
     if(p_actorID != INVALID_ACTOR_ID)
@@ -92,6 +93,7 @@ bool BaseSceneNode::VAddChild(std::shared_ptr<ISceneNode> p_pChild)
         }
     }
     m_children.push_back(p_pChild);
+    p_pChild->VOnRestore();
     return true;
 }
 
@@ -120,12 +122,27 @@ HRESULT BaseSceneNode::VPreRender(Scene* p_pScene)
         StrongActorPtr pActor = m_pActor.lock();
         if(pActor)
         {
-            const LocalPose::ModelMatrixData& data = pActor->GetPose().GetModelMatrixBuffer(true);
-            p_pScene->PushModelMatrices(pActor->GetPose().GetModelMatrixBuffer(true), false);
+            std::shared_ptr<TransformComponent> pComp = pActor->GetComponent<TransformComponent>(TransformComponent::sm_componentID).lock();
+            if(pComp)
+            {
+                const Pose::ModelMatrixData& data = pComp->GetPose().GetModelMatrixBuffer(true);
+                p_pScene->PushModelMatrices(pComp->GetPose().GetModelMatrixBuffer(true), false);
+            }
+            else
+            {
+                std::ostringstream str;
+                str << "no transform component for actor: " << m_properties.GetActorID();
+                LI_ERROR(str.str());
+                m_valid = false;
+                return S_FALSE;
+            }
         }
         else
         {
-            LI_ERROR("no actor");
+            std::ostringstream str;
+            str << "no such actor: " << m_properties.GetActorID();
+            LI_ERROR(str.str());
+            m_valid = false;
             return S_FALSE;
         }
     }
@@ -135,7 +152,7 @@ HRESULT BaseSceneNode::VPreRender(Scene* p_pScene)
 
 HRESULT BaseSceneNode::VPostRender(Scene* p_pScene)
 {
-    if(m_properties.GetActorID() != INVALID_ACTOR_ID)
+    if(m_valid)
     {
         p_pScene->PopModelMatrices();
     }

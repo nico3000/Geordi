@@ -10,6 +10,7 @@ private:
     
     SceneNodeList m_children;
     bool m_isVisible;
+    bool m_valid;
 
 protected:
     SceneNodeProperties m_properties;
@@ -31,7 +32,7 @@ public:
     
     bool VAddChild(std::shared_ptr<ISceneNode> p_pChild);
     bool VRemoveChild(ActorID p_actorID);
-    virtual NodeType VGetNodeType(void) const { return DYNAMIC; }
+    virtual NodeType VGetNodeType(void) const { return DYNAMIC_NODE; }
 
     bool VIsVisible(Scene* p_pScene) const { return m_isVisible; }
 

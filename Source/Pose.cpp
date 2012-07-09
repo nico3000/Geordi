@@ -1,8 +1,8 @@
 #include "StdAfx.h"
-#include "LocalPose.h"
+#include "Pose.h"
 
 
-LocalPose::LocalPose(void) :
+Pose::Pose(void) :
 m_position(0.0f, 0.0f, 0.0f), m_rotation(0.0f, 0.0f, 0.0f), m_scaling(1.0f),
     m_sideDir(1.0f, 0.0f, 0.0f), m_upDir(0.0f, 1.0f, 0.0f), m_viewDir(0.0f, 0.0f, 1.0f),
     m_fixed(false)
@@ -12,12 +12,12 @@ m_position(0.0f, 0.0f, 0.0f), m_rotation(0.0f, 0.0f, 0.0f), m_scaling(1.0f),
 }
 
 
-LocalPose::~LocalPose(void)
+Pose::~Pose(void)
 {
 }
 
 
-void LocalPose::Copy(const LocalPose& p_toCopy)
+void Pose::Copy(const Pose& p_toCopy)
 {
     this->SetPosition(p_toCopy.m_position);
     this->SetScaling(p_toCopy.m_scaling);
@@ -28,7 +28,7 @@ void LocalPose::Copy(const LocalPose& p_toCopy)
 }
 
 
-void LocalPose::RotationChanged(void)
+void Pose::RotationChanged(void)
 {
     static XMFLOAT4X4 temp;
     XMStoreFloat4x4(&temp, m_rotMatrix = XMMatrixRotationZ(m_rotation.z) * XMMatrixRotationX(m_rotation.x) * XMMatrixRotationY(m_rotation.y));
@@ -38,19 +38,19 @@ void LocalPose::RotationChanged(void)
 }
 
 
-void LocalPose::SetPosition(const XMFLOAT3& p_position)
+void Pose::SetPosition(const XMFLOAT3& p_position)
 {
     m_position = p_position;
 }
 
 
-void LocalPose::SetScaling(float p_scaling)
+void Pose::SetScaling(float p_scaling)
 {
     m_scaling = p_scaling;
 }
 
 
-void LocalPose::SetPitchYawRoll(float p_pitch, float p_yaw, float p_roll)
+void Pose::SetPitchYawRoll(float p_pitch, float p_yaw, float p_roll)
 {
     m_rotation.x = p_pitch;
     m_rotation.y = p_yaw;
@@ -59,7 +59,7 @@ void LocalPose::SetPitchYawRoll(float p_pitch, float p_yaw, float p_roll)
 }
 
 
-void LocalPose::TranslateLocal(const XMFLOAT3& p_translation)
+void Pose::TranslateLocal(const XMFLOAT3& p_translation)
 {
     m_position.x += p_translation.x * m_sideDir.x + p_translation.y * m_upDir.x + p_translation.z * m_viewDir.x;
     m_position.y += p_translation.x * m_sideDir.y + p_translation.y * m_upDir.y + p_translation.z * m_viewDir.y;
@@ -67,7 +67,7 @@ void LocalPose::TranslateLocal(const XMFLOAT3& p_translation)
 }
 
 
-void LocalPose::TranslateWorld(const XMFLOAT3& p_translation)
+void Pose::TranslateWorld(const XMFLOAT3& p_translation)
 {
     m_position.x += p_translation.x;
     m_position.y += p_translation.y;
@@ -75,7 +75,7 @@ void LocalPose::TranslateWorld(const XMFLOAT3& p_translation)
 }
 
 
-void LocalPose::RotateLocal(float p_dPitch, float p_dYaw, float p_dRoll)
+void Pose::RotateLocal(float p_dPitch, float p_dYaw, float p_dRoll)
 {
     m_rotation.x += p_dPitch;
     m_rotation.y += p_dYaw;
@@ -84,20 +84,20 @@ void LocalPose::RotateLocal(float p_dPitch, float p_dYaw, float p_dRoll)
 }
 
 
-void LocalPose::RotateWorld(float p_dPitch, float p_dYaw, float p_dRoll)
+void Pose::RotateWorld(float p_dPitch, float p_dYaw, float p_dRoll)
 {
     // TODO!!!
     LI_ERROR("RotateWorld() not supported yet! Why the heck do you need it???");
 }
 
 
-void LocalPose::Scale(float p_dScale)
+void Pose::Scale(float p_dScale)
 {
     m_scaling *= p_dScale;
 }
 
 
-const LocalPose::ModelMatrixData& LocalPose::GetModelMatrixBuffer(bool p_update /* = false */)
+const Pose::ModelMatrixData& Pose::GetModelMatrixBuffer(bool p_update /* = false */)
 {
     if(p_update)
     {
@@ -107,7 +107,7 @@ const LocalPose::ModelMatrixData& LocalPose::GetModelMatrixBuffer(bool p_update 
 }
 
 
-void LocalPose::UpdateMatrices(void)
+void Pose::UpdateMatrices(void)
 {
     if(!m_fixed)
     {
@@ -118,4 +118,20 @@ void LocalPose::UpdateMatrices(void)
             XMMatrixTranspose(m_rotMatrix) *
             XMMatrixScaling(1.0f / m_scaling, 1.0f / m_scaling, 1.0f / m_scaling);
     }
+}
+
+
+void Pose::SetMatrices(const XMFLOAT4X4& p_model, const XMFLOAT4X4* p_pModelInv /* = 0 */)
+{
+    m_buffer.model = XMLoadFloat4x4(&p_model);
+    if(!p_pModelInv)
+    {
+        XMVECTOR det;
+        m_buffer.modelInv = XMMatrixInverse(&det, m_buffer.model);
+    }
+    else
+    {
+        m_buffer.modelInv = XMLoadFloat4x4(p_pModelInv);
+    }
+    this->Fix();
 }

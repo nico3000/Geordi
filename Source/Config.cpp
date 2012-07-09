@@ -14,6 +14,7 @@ Config::~Config(void)
 
 bool Config::Init(void)
 {
+    std::ifstream str("config.xml");
     return m_doc.LoadFile("config.xml") == tinyxml2::XML_NO_ERROR;
 }
 

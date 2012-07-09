@@ -1,0 +1,15 @@
+<Actor>
+    <TransformComponent>
+        <Scaling scaling="1.0" />
+        <Rotation pitch="0.0" />
+    </TransformComponent>
+    <RenderComponent>
+        <Geometry type="heightfield" file="./Texture/heightfield.jpg" />
+    </RenderComponent>
+    <!--RigidbodyComponent>
+        <Shape type="box">
+            <Center x="0.0" y="0.0" z="0.0" />
+            <Size x="1.0" y="1.0" z="1.0" />
+        </Shape>
+    </RigidbodyComponent-->
+</Actor>

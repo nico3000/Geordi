@@ -5,6 +5,22 @@
 
 #pragma once
 
+//////////////////////////////////////////////////////////////////////////
+// PhysX vs. crtdbg
+//////////////////////////////////////////////////////////////////////////
+#include <PxPhysicsAPI.h>
+#include <extensions\PxSimpleFactory.h>
+#include <pvd/PxVisualDebugger.h>
+#ifdef _DEBUG
+#define DEBUG
+#pragma comment (lib, "PhysX3CHECKED_x64.lib")
+#pragma comment (lib, "PhysX3ExtensionsCHECKED.lib")
+#pragma comment (lib, "PhysX3CommonCHECKED_x64.lib")
+#pragma comment (lib, "PhysXVisualDebuggerSDKCHECKED.lib")
+#pragma comment (lib, "PxTaskCHECKED.lib")
+#pragma comment (lib, "PhysXVisualDebuggerSDKCHECKED.lib")
+#endif
+
 #include "targetver.h"
 
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -21,10 +37,6 @@
 #include <tchar.h>
 
 // TODO: reference additional headers your program requires here
-
-// used for status bar
-#include <Commctrl.h>
-#pragma comment(lib, "Comctl32.lib")
 
 #include <tinyxml2.h>
 #pragma comment(lib, "tinyxml2.lib")

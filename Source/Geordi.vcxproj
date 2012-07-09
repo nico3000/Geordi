@@ -92,43 +92,43 @@
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\Test\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\Lib\x86\$(Configuration);$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PHYSXSDK_DIR)Include;$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(PHYSXSDK_DIR)\Lib\win32;$(SolutionDir)..\..\Lib\x86\$(Configuration);$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\Test\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\Lib\x64\$(Configuration);$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PHYSXSDK_DIR)Include;$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(PHYSXSDK_DIR)\Lib\win64;$(SolutionDir)..\..\Lib\x64\$(Configuration);$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\Game\Build\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\Lib\x86\$(Configuration);$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PHYSXSDK_DIR)Include;$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(PHYSXSDK_DIR)\Lib\win32;$(SolutionDir)..\..\Lib\x86\$(Configuration);$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\Game\Build\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\Lib\x86\$(Configuration);$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PHYSXSDK_DIR)Include;$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(PHYSXSDK_DIR)\Lib\win32;$(SolutionDir)..\..\Lib\x86\$(Configuration);$(DXSDK_DIR)Lib\x86;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\Game\Build\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
-    <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)..\..\Lib\x64\$(Configuration);$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PHYSXSDK_DIR)Include;$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(PHYSXSDK_DIR)\Lib\win64;$(SolutionDir)..\..\Lib\x64\$(Configuration);$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Profile|x64'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>$(SolutionDir)..\..\Game\Build\$(PlatformName)_$(Configuration)\</OutDir>
     <IntDir>$(SolutionDir)..\..\Temp\$(ProjectName)_$(PlatformName)_$(Configuration)\</IntDir>
-    <LibraryPath>$(SolutionDir)..\..\Lib\x64\$(Configuration);$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(PHYSXSDK_DIR)\Lib\win64;$(SolutionDir)..\..\Lib\x64\$(Configuration);$(DXSDK_DIR)Lib\x64;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(PHYSXSDK_DIR)Include;$(SolutionDir)..\..\Lib\Include;$(DXSDK_DIR)Include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -266,7 +266,9 @@
     <ClInclude Include="IPointerHandler.h" />
     <ClInclude Include="IPostEffect.h" />
     <ClInclude Include="ISceneNode.h" />
-    <ClInclude Include="LocalPose.h" />
+    <ClInclude Include="RigidbodyComponent.h" />
+    <ClInclude Include="PhysicsLayer.h" />
+    <ClInclude Include="Pose.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="MemoryPool.h" />
     <ClInclude Include="MeshNode.h" />
@@ -288,6 +290,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TerrainData.h" />
     <ClInclude Include="TestEventData.h" />
+    <ClInclude Include="TransformComponent.h" />
     <ClInclude Include="VertexBuffer.h" />
     <ClInclude Include="XMMatrixStack.h" />
   </ItemGroup>
@@ -314,7 +317,9 @@
     <ClCompile Include="HumanDisplay.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="InputController.cpp" />
-    <ClCompile Include="LocalPose.cpp" />
+    <ClCompile Include="RigidbodyComponent.cpp" />
+    <ClCompile Include="PhysicsLayer.cpp" />
+    <ClCompile Include="Pose.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="MemoryPool.cpp" />
     <ClCompile Include="MeshNode.cpp" />
@@ -341,6 +346,7 @@
     </ClCompile>
     <ClCompile Include="TerrainData.cpp" />
     <ClCompile Include="TestEventData.cpp" />
+    <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -253,9 +253,6 @@
     <ClInclude Include="FPSActorInputHandler.h">
       <Filter>Header Files\GameView\HumanView</Filter>
     </ClInclude>
-    <ClInclude Include="LocalPose.h">
-      <Filter>Header Files\GameLogic\ActorSystem</Filter>
-    </ClInclude>
     <ClInclude Include="ParticleSystem.h">
       <Filter>Header Files\GameLogic\ParticleSystem</Filter>
     </ClInclude>
@@ -277,8 +274,20 @@
     <ClInclude Include="BloomEffect.h">
       <Filter>Header Files\GameView\HumanView\Effects</Filter>
     </ClInclude>
+    <ClInclude Include="Pose.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="PhysicsLayer.h">
+      <Filter>Header Files\GameApplicationLayer</Filter>
+    </ClInclude>
     <ClInclude Include="ScreenQuad.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\GameView\HumanView\Effects</Filter>
+    </ClInclude>
+    <ClInclude Include="RigidbodyComponent.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
+    <ClInclude Include="TransformComponent.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -387,9 +396,6 @@
     <ClCompile Include="FPSActorInputHandler.cpp">
       <Filter>Source Files\GameView\HumanView</Filter>
     </ClCompile>
-    <ClCompile Include="LocalPose.cpp">
-      <Filter>Source Files\GameLogic\ActorSystem</Filter>
-    </ClCompile>
     <ClCompile Include="ParticleSystem.cpp">
       <Filter>Source Files\GameLogic\ParticleSystem</Filter>
     </ClCompile>
@@ -408,8 +414,20 @@
     <ClCompile Include="BloomEffect.cpp">
       <Filter>Source Files\GameView\HumanView\Effects</Filter>
     </ClCompile>
+    <ClCompile Include="Pose.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="PhysicsLayer.cpp">
+      <Filter>Source Files\GameApplicationLayer</Filter>
+    </ClCompile>
     <ClCompile Include="ScreenQuad.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GameView\HumanView\Effects</Filter>
+    </ClCompile>
+    <ClCompile Include="RigidbodyComponent.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="TransformComponent.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

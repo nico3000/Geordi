@@ -138,6 +138,14 @@ HRESULT RootNode::VRender(Scene* p_pScene)
         RETURN_IF_FAILED((*iter)->VRenderChildren(p_pScene));
         RETURN_IF_FAILED((*iter)->VPostRender(p_pScene));
     }
+
+    for(auto iter=m_transparentNodes.begin(); iter != m_transparentNodes.end(); ++iter)
+    {
+        RETURN_IF_FAILED((*iter)->VPreRender(p_pScene));
+        RETURN_IF_FAILED((*iter)->VRender(p_pScene));
+        RETURN_IF_FAILED((*iter)->VRenderChildren(p_pScene));
+        RETURN_IF_FAILED((*iter)->VPostRender(p_pScene));
+    }
     return S_OK;
 }
 
@@ -179,10 +187,14 @@ bool RootNode::VAddChild(std::shared_ptr<ISceneNode> p_pChild)
 {
     switch(p_pChild->VGetNodeType())
     {
-    case UNKNOWN: return false;
-    case DYNAMIC: m_dynamicNodes.push_back(p_pChild); break;
-    case STATIC: m_staticNodes.push_back(p_pChild); break;
+    
+    case DYNAMIC_NODE: m_dynamicNodes.push_back(p_pChild); break;
+    case STATIC_NODE: m_staticNodes.push_back(p_pChild); break;
+    case TRANSPARENT_NODE: m_transparentNodes.push_back(p_pChild); break;
+    case UNKNOWN_NODE:
+    default: return false;
     }
+    p_pChild->VOnRestore();
     return true;
 }
 

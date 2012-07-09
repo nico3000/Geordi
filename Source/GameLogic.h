@@ -18,17 +18,20 @@ private:
     GameViewList m_gameViews;
     ParticleSystem* m_pParticleSystem;
 
+    bool LoadActors(tinyxml2::XMLElement* p_pActorList);
+
 public:
     GameLogic(void);
     ~GameLogic(void);
 
     bool VInit(void);
+    bool VLoadGame(const char* p_levelResource);
     void VDestroy(void);
-    void VUpdate(unsigned long p_deltaMillis);
+    void VUpdate(unsigned long p_deltaMillis, unsigned long p_gameMillis);
     void VRender(unsigned long p_deltaMillis);
     void VRestore(void);
     void VDeleteActor(ActorID p_id);
-    StrongActorPtr VCreateActor(const char* p_actorResource);
+    StrongActorPtr VCreateActor(const char* p_actorResource, tinyxml2::XMLElement* p_pOverrideData);
     WeakActorPtr VGetActor(ActorID p_id);
 
     void AttachProcess(StrongProcessPtr p_pProcess) { if(m_pProcessManager) m_pProcessManager->AttachProcess(p_pProcess); }

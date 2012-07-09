@@ -1,15 +1,16 @@
 ﻿<Actor>
+    <TransformComponent />
     <ParticleComponent>
         <Particles>
-            <Count value="65536" />
+            <Count value="16384" />
             <MassVariation min="0.001" max="0.002" />
             <SpeedVariation min="0.0" max="0.5" />
             <LifetimeVariation min="0" max="10" />
-            <Color r="1.2" g="1.1" b="2.0" />
+            <Color r="2.2" g="2.0" b="1.1" />
         </Particles>
         <Emitter>
-            <Center x="-2.0" y="-2.0" z="-2.0" />
-            <Velocity x="0.35" y="0.29" z="0.28" />
+            <Center x="2.0" y="2.0" z="2.0" />
+            <Velocity x="-0.27" y="-0.33" z="-0.31" />
             <Mass value="0.001" />
             <Lifetime value="5" />
         </Emitter>

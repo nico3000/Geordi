@@ -1,8 +1,6 @@
 #include "ParticleStructs.hlsl"
 #include "CommonDefinitions.hlsl"
 
-#define GROUP_SIZE 256
-
 RWStructuredBuffer<Particle> g_Particles : register(u0);
 RWStructuredBuffer<Emitter> g_Emitter : register(u1);
 StructuredBuffer<Attractor> g_Attractors : register(u2);

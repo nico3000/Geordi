@@ -5,6 +5,8 @@ cbuffer Camera : register(b0)
 	float4x4 g_projectionView;
 	float3 g_camPosition;
 	float g_viewDistance;
+    float g_aspect;
+    float3 Camera_unused;
 };
 
 
@@ -19,7 +21,7 @@ cbuffer Timing : register(b2)
 {
     float g_time;
     float g_dTime;
-    float2 g_unused;
+    float2 Timing_unused;
 };
 
 SamplerState PointSampler : register(s0);

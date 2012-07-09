@@ -1,0 +1,15 @@
+<Actor>
+    <TransformComponent>
+        <Scaling scaling="1.0" />
+        <Rotation pitch="0.0" />
+    </TransformComponent>
+    <RenderComponent>
+        <Geometry type="cube" />
+    </RenderComponent>
+    <RigidbodyComponent>
+        <Shape type="box">
+            <Center x="0.0" y="0.0" z="0.0" />
+            <Halfextents x="0.5" y="0.5" z="0.5" />
+        </Shape>
+    </RigidbodyComponent>
+</Actor>

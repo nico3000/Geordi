@@ -1,5 +1,5 @@
 #pragma once
-class LocalPose
+class Pose
 {
 public:
     struct ModelMatrixData
@@ -24,13 +24,13 @@ private:
     void RotationChanged(void);
 
 public:
-    LocalPose(void);
-    ~LocalPose(void);
+    Pose(void);
+    ~Pose(void);
 
     void SetPosition(const XMFLOAT3& p_position);
     void SetPitchYawRoll(float p_pitch, float p_yaw, float p_roll);
     void SetScaling(float p_scaling);
-    void Copy(const LocalPose& p_toCopy);
+    void Copy(const Pose& p_toCopy);
 
     void TranslateWorld(const XMFLOAT3& p_translation);
     void RotateWorld(float p_dPitch, float p_dYaw, float p_dRoll);
@@ -47,6 +47,7 @@ public:
     void Fix(void) { m_fixed = true; }
     void Unfix(void) { m_fixed = false; }
     void UpdateMatrices(void);
+    void SetMatrices(const XMFLOAT4X4& p_model, const XMFLOAT4X4* p_pModelInv = 0);
 
     const ModelMatrixData& GetModelMatrixBuffer(bool p_update = false);
 };

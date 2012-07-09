@@ -12,12 +12,13 @@ public:
     enum GeometryType
     {
         GEOMETRY_CUBE,
+        GEOMETRY_HEIGHTFIELD,
     };
 
     struct GeometryProperties
     {
         GeometryType type;
-        const char* resource;
+        std::string resource;
     };
 
 private:
@@ -25,15 +26,17 @@ private:
     std::shared_ptr<ISceneNode> m_pSceneNode;
 
 public:
+    static ComponentID sm_componentID;
+
     RenderComponent(void) : m_pSceneNode(0) {}
     ~RenderComponent(void) {}
 
-    virtual bool VInit(tinyxml2::XMLElement* p_pData);
+    bool VInit(tinyxml2::XMLElement* p_pData);
+    void VPostInit(void);
     std::shared_ptr<ISceneNode> GetSceneNode(void);
     const GeometryProperties& GetProperties(void) const { return m_properties; }
-    ComponentID VGetComponentID(void) const { return GetComponentID(); }
+    ComponentID VGetComponentID(void) const { return sm_componentID; }
 
-    static ComponentID GetComponentID(void) { return 0xd08283ae; }
     static StrongGeometryPtr GetGeometry(GeometryType p_type);
 
 };

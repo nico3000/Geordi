@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "FPSActorInputHandler.h"
 #include "ActorEvents.h"
+#include "TransformComponent.h"
 
 
 FPSActorInputHandler::FPSActorInputHandler(ActorID p_cameraActorID) :
@@ -100,10 +101,11 @@ bool FPSActorInputHandler::VOnButtonUp(unsigned int button) { return false; }
 bool FPSActorInputHandler::VOnPointerMoved(int p_x, int p_y, int p_dx, int p_dy)
 {
     StrongActorPtr pActor = m_pActor.lock();
-    if(pActor)
+    std::shared_ptr<TransformComponent> pTransform = pActor ? pActor->GetComponent<TransformComponent>(TransformComponent::sm_componentID).lock() : 0;
+    if(pTransform)
     {
-        float pitch = pActor->GetPose().GetPitch();
-        float yaw = pActor->GetPose().GetYaw();
+        float pitch = pTransform->GetPose().GetPitch();
+        float yaw = pTransform->GetPose().GetYaw();
         float newPitch = CLAMP(pitch + 1e-2f * (float)p_dy, -XM_PIDIV2, +XM_PIDIV2);
         float newYaw = yaw + 1e-2f * (float)p_dx;
         static const XMFLOAT3 translation(0.0f, 0.0f, 0.0f);

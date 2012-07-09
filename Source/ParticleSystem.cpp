@@ -33,33 +33,23 @@ bool ParticleSystem::AddParticleCloud(std::weak_ptr<ParticleCloud> p_pParticleCl
 }
 
 
+#define GROUP_SIZE 16
 bool ParticleSystem::Init(void)
 {
     ID3D10Blob* pShaderBlob = 0;    
     ID3D10Blob* pErrorBlob = 0;
-    HRESULT hr = D3DX11CompileFromFileA("./Shader/ParticleSystemCS.hlsl", 0, 0, "SimulateCS", "cs_5_0", 0, 0, 0, &pShaderBlob, &pErrorBlob, 0);
-    if(FAILED(hr))
-    {
-        if(pErrorBlob)
-        {
-            std::string str((char*)pErrorBlob->GetBufferPointer(), (char*)pErrorBlob->GetBufferPointer() + pErrorBlob->GetBufferSize());
-            LI_ERROR(str);
-            SAFE_RELEASE(pErrorBlob);
-        }
-        else
-        {
-            RETURN_IF_FAILED(hr);
-        }
-        return false;
-    }
-    else
-    {
-        LI_LOG_WITH_TAG("Compute shader was successfully compiled to run on hardware.");
-    }
-    hr = LostIsland::g_pGraphics->GetDevice()->CreateComputeShader(pShaderBlob->GetBufferPointer(), pShaderBlob->GetBufferSize(), 0, &m_pComputeShader);
-    SAFE_RELEASE(pErrorBlob);
-    SAFE_RELEASE(pShaderBlob);
-    RETURN_IF_FAILED(hr);
+    std::ostringstream groupSize;
+    groupSize << GROUP_SIZE;
+    std::string groupSizeStr = groupSize.str();
+    D3D10_SHADER_MACRO pDefines[2] = {
+        { "GROUP_SIZE", groupSizeStr.c_str() },
+        { 0, 0 },
+    };
+//     m_pComputeShader = LostIsland::g_pGraphics->CompileComputeShader("./Shader/ParticleSystemCS.hlsl", "SimulateCS", pDefines);
+//     if(!m_pComputeShader)
+//     {
+//         return false;
+//     }
 
     if(!m_timeBuffer.BuildFromSharedData(&m_time, sizeof(XMFLOAT4)))
     {
@@ -76,7 +66,6 @@ bool ParticleSystem::Init(void)
 }
 
 
-#define GROUP_SIZE 256 // WARNING: also in shader ParticleSystemCS.hlsl!!!
 void ParticleSystem::Simulate(unsigned long p_deltaMillis)
 {
     static unsigned long dTime = 0;

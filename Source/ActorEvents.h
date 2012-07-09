@@ -14,9 +14,9 @@ public:
     ActorCreatedEvent(ActorID p_id) : m_id(p_id) {}
     virtual ~ActorCreatedEvent(void) {}
 
-    virtual const char* VGetName(void) const { return "ActorCreatedEvent"; }
-    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
-    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorCreatedEvent(m_id)); }
+    const char* VGetName(void) const { return "ActorCreatedEvent"; }
+    const EventType& VGetEventType(void) const { return sm_eventType; }
+    IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorCreatedEvent(m_id)); }
     ActorID GetActorID(void) { return m_id; }
 
 };
@@ -32,11 +32,11 @@ public:
     static const EventType sm_eventType;
 
     ActorDestroyedEvent(ActorID p_id) : m_id(p_id) {}
-    virtual ~ActorDestroyedEvent(void) {}
+    ~ActorDestroyedEvent(void) {}
 
-    virtual const char* VGetName(void) const { return "ActorDestroyedEvent"; }
-    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
-    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorDestroyedEvent(m_id)); }
+    const char* VGetName(void) const { return "ActorDestroyedEvent"; }
+    const EventType& VGetEventType(void) const { return sm_eventType; }
+    IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorDestroyedEvent(m_id)); }
 
 };
 
@@ -53,9 +53,9 @@ public:
     ActorMovedEvent(ActorID p_id) : m_id(p_id) {}
     virtual ~ActorMovedEvent(void) {}
 
-    virtual const char* VGetName(void) const { return "ActorMovedEvent"; }
-    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
-    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorDestroyedEvent(m_id)); }
+    const char* VGetName(void) const { return "ActorMovedEvent"; }
+    const EventType& VGetEventType(void) const { return sm_eventType; }
+    IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorDestroyedEvent(m_id)); }
     const ActorID& GetActorID(void) const { return m_id; }
 
 };
@@ -77,14 +77,60 @@ public:
     m_id(p_id), m_dTranslation(p_dTranslation), m_dRotation(p_dRotation), m_dScaling(p_dScaling)
     {  }
 
-    virtual ~ActorMoveEvent(void) {}
+    ~ActorMoveEvent(void) {}
 
-    virtual const char* VGetName(void) const { return "ActorMoveEvent"; }
-    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
-    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorMoveEvent(m_id, m_dTranslation, m_dRotation, m_dScaling)); }
+    const char* VGetName(void) const { return "ActorMoveEvent"; }
+    const EventType& VGetEventType(void) const { return sm_eventType; }
+    IEventDataPtr VCopy(void) const { return IEventDataPtr(new ActorMoveEvent(m_id, m_dTranslation, m_dRotation, m_dScaling)); }
     const ActorID& GetActorID(void) const { return m_id; }
     const XMFLOAT3 GetDeltaTranslation(void) const { return m_dTranslation; }
     const XMFLOAT3 GetDeltaRotation(void) const { return m_dRotation; }
     float GetDeltaScaling(void) const { return m_dScaling; }
+
+};
+
+
+class RenderComponentCreatedEvent :
+    public BaseEventData
+{
+private:
+    const ActorID m_id;
+
+public:
+    static const EventType sm_eventType;
+
+    RenderComponentCreatedEvent(ActorID p_id) :
+    m_id(p_id)
+    {  }
+
+    ~RenderComponentCreatedEvent(void) {}
+
+    virtual const char* VGetName(void) const { return "RenderComponentCreatedEvent"; }
+    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
+    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new RenderComponentCreatedEvent(m_id)); }
+    const ActorID& GetActorID(void) const { return m_id; }
+
+};
+
+
+class ParticleComponentCreatedEvent :
+    public BaseEventData
+{
+private:
+    const ActorID m_id;
+
+public:
+    static const EventType sm_eventType;
+
+    ParticleComponentCreatedEvent(ActorID p_id) :
+    m_id(p_id)
+    {  }
+
+    ~ParticleComponentCreatedEvent(void) {}
+
+    virtual const char* VGetName(void) const { return "ParticleComponentCreatedEvent"; }
+    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
+    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ParticleComponentCreatedEvent(m_id)); }
+    const ActorID& GetActorID(void) const { return m_id; }
 
 };

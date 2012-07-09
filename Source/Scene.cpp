@@ -1,5 +1,8 @@
 #include "StdAfx.h"
 #include "Scene.h"
+#include "ActorEvents.h"
+#include "RenderComponent.h"
+#include "ParticleComponent.h"
 
 
 Scene::Scene(void) :
@@ -22,8 +25,8 @@ HRESULT Scene::OnUpdate(unsigned long m_deltaMillis)
 
 HRESULT Scene::OnRestore(void)
 {
-    LocalPose::ModelMatrixData modelData;
-    if(!m_modelBuffer.CopyDataAndBuild(&modelData, sizeof(LocalPose::ModelMatrixData)))
+    Pose::ModelMatrixData modelData;
+    if(!m_modelBuffer.CopyDataAndBuild(&modelData, sizeof(Pose::ModelMatrixData)))
     {
         LI_ERROR("model matrix buffer build error");
         return S_FALSE;
@@ -36,6 +39,42 @@ HRESULT Scene::OnRestore(void)
 HRESULT Scene::OnLostDevice(void)
 {
     return m_pRoot ? m_pRoot->VOnLostDevice() : S_OK;
+}
+
+
+void Scene::RenderComponentCreatedDelegate(IEventDataPtr p_pEvent)
+{
+    std::shared_ptr<RenderComponentCreatedEvent> pEvent = std::static_pointer_cast<RenderComponentCreatedEvent>(p_pEvent);
+    if(pEvent)
+    {
+        StrongActorPtr pActor = LostIsland::g_pApp->GetGameLogic()->VGetActor(pEvent->GetActorID()).lock();
+        if(pActor)
+        {
+            std::shared_ptr<RenderComponent> pComp = pActor->GetComponent<RenderComponent>(RenderComponent::sm_componentID).lock();
+            if(pComp)
+            {
+                this->AddChild(pActor->GetID(), pComp->GetSceneNode());
+            }
+        }
+    }
+}
+
+
+void Scene::ParticleComponentCreatedDelegate(IEventDataPtr p_pEvent)
+{
+    std::shared_ptr<ParticleComponentCreatedEvent> pEvent = std::static_pointer_cast<ParticleComponentCreatedEvent>(p_pEvent);
+    if(pEvent)
+    {
+        StrongActorPtr pActor = LostIsland::g_pApp->GetGameLogic()->VGetActor(pEvent->GetActorID()).lock();
+        if(pActor)
+        {
+            std::shared_ptr<ParticleComponent> pComp = pActor->GetComponent<ParticleComponent>(ParticleComponent::sm_componentID).lock();
+            if(pComp)
+            {
+                this->AddChild(pActor->GetID(), pComp->GetSceneNode());
+            }
+        }
+    }
 }
 
 
@@ -77,12 +116,12 @@ void Scene::AddCamera(const std::string& p_name, std::shared_ptr<Camera> p_pCame
 }
 
 
-void Scene::PushModelMatrices(const LocalPose::ModelMatrixData& p_modelMatrixData, bool p_updateBuffer /* = true */)
+void Scene::PushModelMatrices(const Pose::ModelMatrixData& p_modelMatrixData, bool p_updateBuffer /* = true */)
 {
     m_modelStack.PushMatrix(p_modelMatrixData.model);
     m_modelInvStack.PushMatrix(p_modelMatrixData.modelInv);
-    ((LocalPose::ModelMatrixData*)m_modelBuffer.GetData())->model = m_modelStack.Top();
-    ((LocalPose::ModelMatrixData*)m_modelBuffer.GetData())->modelInv = m_modelInvStack.Top();
+    ((Pose::ModelMatrixData*)m_modelBuffer.GetData())->model = m_modelStack.Top();
+    ((Pose::ModelMatrixData*)m_modelBuffer.GetData())->modelInv = m_modelInvStack.Top();
     if(p_updateBuffer)
     {
         this->UpdateModelMatrixBuffer();

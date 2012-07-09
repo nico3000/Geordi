@@ -20,6 +20,8 @@ private:
         XMFLOAT4X4 projectionView;
         XMFLOAT3 positionWC;
         float viewDistance;
+        float aspect;
+        XMFLOAT3 unused;
     };
 
     WeakActorPtr m_pActor;

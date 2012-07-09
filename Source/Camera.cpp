@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "Camera.h"
+#include "TransformComponent.h"
 
 
 #define CBUFFER_CAMERA_SLOT 0
@@ -56,18 +57,20 @@ void Camera::BuildMatrices(Matrix p_matrix)
         std::shared_ptr<CameraComponent> pComp = m_pCameraComponent.lock();
         if(pComp)
         {
-            float aspect = pComp->GetAspectRatio() == 0.0f ? (float)LostIsland::g_pGraphics->GetWidth() / (float)LostIsland::g_pGraphics->GetHeight() : pComp->GetAspectRatio();
-            XMStoreFloat4x4(&m_struct.projection, XMMatrixPerspectiveFovLH(pComp->GetFoV(), aspect, pComp->GetMinZ(), pComp->GetMaxZ()));
+            m_struct.aspect = pComp->GetAspectRatio() == 0.0f ? (float)LostIsland::g_pGraphics->GetWidth() / (float)LostIsland::g_pGraphics->GetHeight() : pComp->GetAspectRatio();
+            XMStoreFloat4x4(&m_struct.projection, XMMatrixPerspectiveFovLH(pComp->GetFoV(), m_struct.aspect, pComp->GetMinZ(), pComp->GetMaxZ()));
             m_struct.viewDistance = pComp->GetMaxZ();
         }
     }
     if(p_matrix & MATRIX_VIEW)
     {
         StrongActorPtr pActor = m_pActor.lock();
-        if(pActor)
+        std::shared_ptr<TransformComponent> pTransform = pActor ? pActor->GetComponent<TransformComponent>(TransformComponent::sm_componentID).lock() : 0;
+        if(pTransform)
         {
-            XMStoreFloat4x4(&m_struct.view, pActor->GetPose().GetModelMatrixBuffer(true).modelInv);
-            m_struct.positionWC = pActor->GetPose().GetPosition();
+            
+            XMStoreFloat4x4(&m_struct.view, pTransform->GetPose().GetModelMatrixBuffer(true).modelInv);
+            m_struct.positionWC = pTransform->GetPose().GetPosition();
         }
     }
     if(p_matrix & (MATRIX_BOTH))

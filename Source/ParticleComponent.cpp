@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "ParticleComponent.h"
 #include "ParticleNode.h"
+#include "ActorEvents.h"
 
 
 const ComponentID ParticleComponent::sm_componentID = 0x19b4f1d3;
@@ -104,6 +105,13 @@ bool ParticleComponent::VInit(tinyxml2::XMLElement* p_pData)
     }
     m_pCloud.reset(new ParticleCloud(m_particleCount, emitterDesc, particleDesc));
     return true;
+}
+
+
+void ParticleComponent::VPostInit(void)
+{
+    IEventDataPtr pEvent(new ParticleComponentCreatedEvent(m_pOwner->GetID()));
+    EventManager::Get()->VQueueEvent(pEvent);
 }
 
 

@@ -45,15 +45,21 @@ bool GameApp::Init(void)
 
 void GameApp::OnNextFrame(void)
 {
+    static unsigned long gameMillis = 0;
+
     LostIsland::g_pTimer->Next();
     unsigned long deltaMillis = LostIsland::g_pTimer->GetGameDeltaMillis();
+    gameMillis += deltaMillis;
 
     LostIsland::g_pInput->OnUpdate();
-    m_pLogic->VUpdate(deltaMillis);
+    LostIsland::g_pPhysics->Update(deltaMillis, gameMillis);
+    m_pLogic->VUpdate(deltaMillis, gameMillis);
 
     LostIsland::g_pGraphics->Clear();
     m_pLogic->VRender(deltaMillis);
-    LostIsland::g_pGraphics->Present();
+    LostIsland::g_pGraphics->Present();    
+
+    LostIsland::g_pPhysics->FetchResults();
 }
 
 
