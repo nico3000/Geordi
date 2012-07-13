@@ -4,8 +4,8 @@ class Pose
 public:
     struct ModelMatrixData
     {
-        XMMATRIX model;
-        XMMATRIX modelInv;
+        XMFLOAT4X4 model;
+        XMFLOAT4X4 modelInv;
     };
 
 private:
@@ -16,7 +16,7 @@ private:
     float m_scaling;
     XMFLOAT3 m_rotation;
     // temp vectors for local delta translation
-    XMMATRIX m_rotMatrix;
+    XMFLOAT4X4 m_rotMatrix;
     XMFLOAT3 m_sideDir;
     XMFLOAT3 m_upDir;
     XMFLOAT3 m_viewDir;

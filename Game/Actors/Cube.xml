@@ -10,6 +10,7 @@
         <Shape type="box">
             <Center x="0.0" y="0.0" z="0.0" />
             <Halfextents x="0.5" y="0.5" z="0.5" />
+            <Radius value="0.5" />
         </Shape>
     </RigidbodyComponent>
 </Actor>

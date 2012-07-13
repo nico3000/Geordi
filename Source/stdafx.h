@@ -6,29 +6,10 @@
 #pragma once
 
 //////////////////////////////////////////////////////////////////////////
-// PhysX vs. crtdbg
+// PhysX vs. windows.h
 //////////////////////////////////////////////////////////////////////////
 #include <PxPhysicsAPI.h>
-#include <extensions\PxSimpleFactory.h>
-#include <pvd/PxVisualDebugger.h>
-#ifdef _DEBUG
-#define DEBUG
-#define NDEBUG
-#pragma comment (lib, "PhysX3CHECKED_x64.lib")
-#pragma comment (lib, "PhysX3ExtensionsCHECKED.lib")
-#pragma comment (lib, "PhysX3CommonCHECKED_x64.lib")
-#pragma comment (lib, "PhysXVisualDebuggerSDKCHECKED.lib")
-#elif defined PROFILE
-#pragma comment (lib, "PhysX3PROFILE_x64.lib")
-#pragma comment (lib, "PhysX3ExtensionsPROFILE.lib")
-#pragma comment (lib, "PhysX3CommonPROFILE_x64.lib")
-#pragma comment (lib, "PhysXVisualDebuggerSDKPROFILE.lib")
-#else
-#pragma comment (lib, "PhysX3_x64.lib")
-#pragma comment (lib, "PhysX3Extensions.lib")
-#pragma comment (lib, "PhysX3Common_x64.lib")
-#pragma comment (lib, "PhysXVisualDebuggerSDK.lib")
-#endif
+
 
 #include "targetver.h"
 
@@ -40,9 +21,9 @@
 
 // C RunTime Header Files
 #include <stdlib.h>
-#include <crtdbg.h>
-#include <malloc.h>
-#include <memory.h>
+//#include <crtdbg.h>
+//#include <malloc.h>
+//#include <memory.h>
 #include <tchar.h>
 
 // TODO: reference additional headers your program requires here
@@ -51,7 +32,7 @@
 #pragma comment(lib, "tinyxml2.lib")
 
 #include <intsafe.h>
-#include <memory>
+//#include <memory>
 #include <vector>
 #include <list>
 #include <hash_map>
@@ -63,20 +44,7 @@
 #include <fstream>
 #include <sstream>
 #include <FastDelegate.h>
-
-#include <d3d11.h>
-#include <D3DX11.h>
-#include <DxErr.h>
-#include <dxgi.h>
 #include <xnamath.h>
-#pragma comment(lib, "d3d11.lib")
-#pragma comment(lib, "d3dx11.lib")
-#pragma comment(lib, "DxErr.lib")
-#pragma comment(lib, "dxgi.lib")
-
-//#define DXUT_AUTOLIB
-//#include <DXUT.h>
-//#pragma comment(lib, "DXUT.lib")
 
 #ifndef DEBUG_NEW
 #define DEBUG_NEW new(_NORMAL_BLOCK, __FILE__, __LINE__)

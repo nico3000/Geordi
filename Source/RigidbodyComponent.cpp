@@ -53,11 +53,34 @@ bool RigidbodyComponent::VInit(tinyxml2::XMLElement* p_pData)
                 {
                     LI_WARNING("illegal Center attributes for cubetype Shape");
                 }
-                physx::PxShape* pShape = m_pBody->createShape(physx::PxBoxGeometry(halfextents), *LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.5f), physx::PxTransform(center));
+                physx::PxShape* pShape = m_pBody->createShape(physx::PxBoxGeometry(halfextents), *LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.7f), physx::PxTransform(center));
             }
             else
             {
                 LI_WARNING("no Size or Center element for cubetype Shape");
+            }
+        }
+        else if(type.compare("sphere") == 0)
+        {
+            tinyxml2::XMLElement* pRadiusData = pShapeData->FirstChildElement("Radius");
+            tinyxml2::XMLElement* pCenterData = pShapeData->FirstChildElement("Center");
+            if(pRadiusData)
+            {
+                float radius = 0;
+                physx::PxVec3 center(0.0f, 0.0f, 0.0f);
+                if(pRadiusData->QueryFloatAttribute("value", &radius))
+                {
+                    LI_WARNING("illegal Radius element for spheretype Shape");
+                }
+                if(pCenterData->QueryFloatAttribute("x", &center.x) || pCenterData->QueryFloatAttribute("y", &center.y) || pCenterData->QueryFloatAttribute("z", &center.z))
+                {
+                    LI_WARNING("illegal Center attributes for cubetype Shape");
+                }
+                physx::PxShape* pShape = m_pBody->createShape(physx::PxSphereGeometry(radius), *LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.5f), physx::PxTransform(center));
+            }
+            else
+            {
+                LI_WARNING("no Radius element for spheretype Shape");
             }
         }
         else
@@ -79,9 +102,7 @@ void RigidbodyComponent::VPostInit(void)
         LI_ERROR("RigidbodyComponent without TransformComponent");
         return;
     }
-    XMFLOAT4X4 pose;
-    XMStoreFloat4x4(&pose, pTransform->GetPose().GetModelMatrixBuffer(true).model);
-    physx::PxTransform transform(physx::PxMat44((float*)&pose));
+    physx::PxTransform transform(physx::PxMat44((float*)&pTransform->GetPose().GetModelMatrixBuffer(true).model));
     m_pBody->setGlobalPose(transform);
     LostIsland::g_pPhysics->GetScene()->addActor(*m_pBody);
 }

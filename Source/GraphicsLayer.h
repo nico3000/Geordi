@@ -1,4 +1,12 @@
 #pragma once
+#include <d3d11.h>
+#include <D3DX11.h>
+#include <DxErr.h>
+#include <dxgi.h>
+#pragma comment(lib, "d3d11.lib")
+#pragma comment(lib, "d3dx11.lib")
+#pragma comment(lib, "DxErr.lib")
+#pragma comment(lib, "dxgi.lib")
 
 #define SAFE_RELEASE(_resource) do  \
 {                                   \

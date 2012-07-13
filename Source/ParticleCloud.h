@@ -1,4 +1,6 @@
 #pragma once
+#include "GraphicsLayer.h"
+
 class ParticleCloud
 {
     friend class ParticleSystem;

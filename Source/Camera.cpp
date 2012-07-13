@@ -68,8 +68,7 @@ void Camera::BuildMatrices(Matrix p_matrix)
         std::shared_ptr<TransformComponent> pTransform = pActor ? pActor->GetComponent<TransformComponent>(TransformComponent::sm_componentID).lock() : 0;
         if(pTransform)
         {
-            
-            XMStoreFloat4x4(&m_struct.view, pTransform->GetPose().GetModelMatrixBuffer(true).modelInv);
+            m_struct.view = pTransform->GetPose().GetModelMatrixBuffer(true).modelInv;
             m_struct.positionWC = pTransform->GetPose().GetPosition();
         }
     }

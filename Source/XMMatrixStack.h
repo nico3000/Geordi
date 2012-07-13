@@ -2,17 +2,17 @@
 class XMMatrixStack
 {
 private:
-    typedef std::vector<XMMATRIX> MatrixVector;
+    typedef std::vector<XMFLOAT4X4> MatrixVector;
 
     MatrixVector m_matrices;
 
 public:
-    XMMatrixStack(void) { m_matrices.push_back(XMMatrixIdentity()); }
+    XMMatrixStack(void);
     ~XMMatrixStack(void) {  }
 
-    void PushMatrix(const XMMATRIX& p_matrix) { m_matrices.push_back(p_matrix * this->Top()); }
+    void PushMatrix(const XMFLOAT4X4& p_matrix);
     void PopMatrix(void) { if(m_matrices.size() > 1) m_matrices.pop_back(); else LI_ERROR("cannot pop matrix"); }
-    const XMMATRIX& Top(void) const { return m_matrices.back(); }
+    const XMFLOAT4X4& Top(void) const { return m_matrices.back(); }
 
 };
 

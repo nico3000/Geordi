@@ -3,7 +3,6 @@
 
 #define LI_LOGGER_TAG "PhysicsLayer"
 
-
 PhysicsLayer::ErrorCallBack PhysicsLayer::sm_errorCallback;
 static physx::PxDefaultAllocator g_defaultAllocatorCallback;
 

@@ -429,6 +429,9 @@
     <ClCompile Include="TransformComponent.cpp">
       <Filter>Source Files\GameLogic\ActorSystem</Filter>
     </ClCompile>
+    <ClCompile Include="XMMatrixStack.cpp">
+      <Filter>Source Files\GameView\HumanView\Scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Geordi.rc">

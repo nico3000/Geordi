@@ -30,11 +30,10 @@ void Pose::Copy(const Pose& p_toCopy)
 
 void Pose::RotationChanged(void)
 {
-    static XMFLOAT4X4 temp;
-    XMStoreFloat4x4(&temp, m_rotMatrix = XMMatrixRotationZ(m_rotation.z) * XMMatrixRotationX(m_rotation.x) * XMMatrixRotationY(m_rotation.y));
-    m_sideDir.x = temp._11; m_sideDir.y = temp._12; m_sideDir.z = temp._13;
-    m_upDir  .x = temp._21; m_upDir  .y = temp._22; m_upDir  .z = temp._23;
-    m_viewDir.x = temp._31; m_viewDir.y = temp._32; m_viewDir.z = temp._33;
+    XMStoreFloat4x4(&m_rotMatrix, XMMatrixRotationZ(m_rotation.z) * XMMatrixRotationX(m_rotation.x) * XMMatrixRotationY(m_rotation.y));
+    m_sideDir.x = m_rotMatrix._11; m_sideDir.y = m_rotMatrix._12; m_sideDir.z = m_rotMatrix._13;
+    m_upDir  .x = m_rotMatrix._21; m_upDir  .y = m_rotMatrix._22; m_upDir  .z = m_rotMatrix._23;
+    m_viewDir.x = m_rotMatrix._31; m_viewDir.y = m_rotMatrix._32; m_viewDir.z = m_rotMatrix._33;
 }
 
 
@@ -111,27 +110,29 @@ void Pose::UpdateMatrices(void)
 {
     if(!m_fixed)
     {
-        m_buffer.model = XMMatrixScaling(m_scaling, m_scaling, m_scaling) *
-            m_rotMatrix *
-            XMMatrixTranslation(m_position.x, m_position.y, m_position.z);
-        m_buffer.modelInv = XMMatrixTranslation(-m_position.x, -m_position.y, -m_position.z) *
-            XMMatrixTranspose(m_rotMatrix) *
-            XMMatrixScaling(1.0f / m_scaling, 1.0f / m_scaling, 1.0f / m_scaling);
+        XMStoreFloat4x4(&m_buffer.model,
+            XMMatrixScaling(m_scaling, m_scaling, m_scaling) *
+            XMLoadFloat4x4(&m_rotMatrix) *
+            XMMatrixTranslation(m_position.x, m_position.y, m_position.z));
+        XMStoreFloat4x4(&m_buffer.modelInv,
+            XMMatrixTranslation(-m_position.x, -m_position.y, -m_position.z) *
+            XMMatrixTranspose(XMLoadFloat4x4(&m_rotMatrix)) *
+            XMMatrixScaling(1.0f / m_scaling, 1.0f / m_scaling, 1.0f / m_scaling));
     }
 }
 
 
 void Pose::SetMatrices(const XMFLOAT4X4& p_model, const XMFLOAT4X4* p_pModelInv /* = 0 */)
 {
-    m_buffer.model = XMLoadFloat4x4(&p_model);
+    m_buffer.model = p_model;
     if(!p_pModelInv)
     {
         XMVECTOR det;
-        m_buffer.modelInv = XMMatrixInverse(&det, m_buffer.model);
+        XMStoreFloat4x4(&m_buffer.modelInv, XMMatrixInverse(&det, XMLoadFloat4x4(&m_buffer.model)));
     }
     else
     {
-        m_buffer.modelInv = XMLoadFloat4x4(p_pModelInv);
+        m_buffer.modelInv = *p_pModelInv;
     }
     this->Fix();
 }
