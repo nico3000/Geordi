@@ -5,6 +5,7 @@
 #include "ParticleComponent.h"
 #include "RigidbodyComponent.h"
 #include "TransformComponent.h"
+#include "TerrainComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 //////// Component Creator Functions /////////////////////////////////////
@@ -37,6 +38,12 @@ ActorComponent* CreateParticleComponent(void)
 ActorComponent* CreateRigidbodyComponent(void)
 {
     return new RigidbodyComponent;
+}
+
+
+ActorComponent* CreateTerrainComponent(void)
+{
+    return new TerrainComponent;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -124,6 +131,8 @@ ActorFactory::ActorFactory(void)
     m_actorComponentIDs["RigidbodyComponent"] = RigidbodyComponent::sm_componentID;
     m_actorComponentCreators["TransformComponent"] = CreateTransformComponent;
     m_actorComponentIDs["TransformComponent"] = TransformComponent::sm_componentID;
+    m_actorComponentCreators["TerrainComponent"] = CreateTerrainComponent;
+    m_actorComponentIDs["TerrainComponent"] = TerrainComponent::sm_componentID;
 }
 
 

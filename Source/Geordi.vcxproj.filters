@@ -289,6 +289,9 @@
     <ClInclude Include="TransformComponent.h">
       <Filter>Header Files\GameLogic\ActorSystem</Filter>
     </ClInclude>
+    <ClInclude Include="TerrainComponent.h">
+      <Filter>Header Files\GameLogic\ActorSystem</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -431,6 +434,9 @@
     </ClCompile>
     <ClCompile Include="XMMatrixStack.cpp">
       <Filter>Source Files\GameView\HumanView\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainComponent.cpp">
+      <Filter>Source Files\GameLogic\ActorSystem</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -134,3 +134,26 @@ public:
     const ActorID& GetActorID(void) const { return m_id; }
 
 };
+
+
+class TerrainComponentCreatedEvent :
+    public BaseEventData
+{
+private:
+    const ActorID m_id;
+
+public:
+    static const EventType sm_eventType;
+
+    TerrainComponentCreatedEvent(ActorID p_id) :
+    m_id(p_id)
+    {  }
+
+    ~TerrainComponentCreatedEvent(void) {}
+
+    virtual const char* VGetName(void) const { return "TerrainComponentCreatedEvent"; }
+    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
+    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new TerrainComponentCreatedEvent(m_id)); }
+    const ActorID& GetActorID(void) const { return m_id; }
+
+};
