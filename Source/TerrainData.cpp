@@ -4,18 +4,18 @@
 #include <fstream>
 
 #define OCTREE_LOADED 1
-#define TEST_DIR "octree"
 #define TILE(_x, _y, _z) m_pData[(_z) * m_pGridSize[0] * m_pGridSize[1] + (_y) * m_pGridSize[0] + (_x)]
 #define LAST_USED(_x, _y, _z) m_pLastUsed[(_z) * m_pGridSize[0] * m_pGridSize[1] + (_y) * m_pGridSize[0] + (_x)]
 
-TerrainData::TerrainData(void):
-    m_pData(NULL), m_pLastUsed(NULL), m_activeOctrees(0)
+TerrainData::TerrainData(std::string p_octreeFolder):
+    m_pData(NULL), m_pLastUsed(NULL), m_activeOctrees(0), m_octreeFolder(p_octreeFolder)
 {
 }
 
 
 TerrainData::~TerrainData(void)
 {
+    this->SaveAllTiles();
     SAFE_DELETE_ARRAY(m_pData);
     SAFE_DELETE_ARRAY(m_pLastUsed);
 }
@@ -188,7 +188,7 @@ void TerrainData::SaveTileToDisk(INT tileX, INT tileY, INT tileZ) const
     if(this->IsTileActive(tileX, tileY, tileZ))
     {
         std::stringstream strStream;
-        strStream << TEST_DIR << "/terrain." << tileX << "." << tileY << "." << tileZ << ".oct";
+        strStream << "./" << m_octreeFolder << "/terrain." << tileX << "." << tileY << "." << tileZ << ".oct";
         std::fstream fileStream;
         fileStream.open(strStream.str().c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
         if(fileStream.is_open())
@@ -200,7 +200,7 @@ void TerrainData::SaveTileToDisk(INT tileX, INT tileY, INT tileZ) const
         }
         else
         {
-            std::cout << "could not open file " << strStream.str() << " for saving" << std::endl;
+            LI_ERROR("could not open file " + strStream.str() + " for saving");
         }
     }
 }
@@ -209,7 +209,7 @@ void TerrainData::SaveTileToDisk(INT tileX, INT tileY, INT tileZ) const
 void TerrainData::LoadTileFromDisk(INT tileX, INT tileY, INT tileZ)
 {
     std::stringstream strStream;
-    strStream << TEST_DIR << "/r" << tileX << "." << tileY << ".oct";
+    strStream << "./" << m_octreeFolder << "/terrain." << tileX << "." << tileY << "." << tileZ << ".oct";
     std::fstream fileStream;
     fileStream.open(strStream.str().c_str(), std::ios::in | std::ios::binary);
     if(fileStream.is_open())
@@ -234,9 +234,6 @@ void TerrainData::SetDimension(float p_minX, float p_minY, float p_minZ, float p
     m_maxX = p_maxX;
     m_maxY = p_maxY;
     m_maxZ = p_maxZ;
-    std::cout << "x: " << m_minX << " - " << m_maxX << std::endl
-              << "y: " << m_minY << " - " << m_maxY << std::endl
-              << "z: " << m_minZ << " - " << m_maxZ << std::endl;
 }
 
 
@@ -269,6 +266,27 @@ void TerrainData::SetDensity(INT x, INT y, INT z, float p_density)
 }
 
 
+float TerrainData::GetDensity(INT x, INT y, INT z)
+{
+    INT tileX = x / m_octreeSize;
+    INT tileY = y / m_octreeSize;
+    INT tileZ = z / m_octreeSize;
+    INT octreeX = x % m_octreeSize;
+    INT octreeY = y % m_octreeSize;
+    INT octreeZ = z % m_octreeSize;
+    if(tileX < m_pGridSize[0] && tileY < m_pGridSize[1] && tileZ < m_pGridSize[2])
+    {
+        this->UseTile(tileX, tileY, tileZ);
+        char val = TILE(tileX, tileY, tileZ).GetValue(octreeX, octreeY, octreeZ);
+        return this->Value2Density(val);
+    }
+    else
+    {
+        return 0.0f;
+    }
+}
+
+
 void TerrainData::Grid2World(INT p_gridX, INT p_gridY, INT p_gridZ, float& p_worldX, float& p_worldY, float& p_worldZ) const
 {
     p_worldX = m_minX + (m_maxX - m_minX) * LERP((float)p_gridX, 0.0f, (float)(m_pGridSize[0] * m_octreeSize));
@@ -293,14 +311,6 @@ void TerrainData::GenerateTestData(void)
     //m_pData->SetValue(3,3,3,4);
     //return;
 
-    std::cout << "generating " << (m_pGridSize[0] * m_octreeSize) << "x" << (m_pGridSize[1] * m_octreeSize) << "x" << (m_pGridSize[2] * m_octreeSize) << " octree..." << std::endl;
-    INT id = LostIsland::g_pTimer->Tick(IMMEDIATE);
-
-    double nextPercentageOutput = 0;
-    LONG lastStop = 0;
-    ULONGLONG current = 0;
-    ULONGLONG target = (ULONGLONG)(m_pGridSize[0] * m_octreeSize) * (m_pGridSize[1] * m_octreeSize) * (m_pGridSize[2] * m_octreeSize);
-
     for(INT x=0; x < (m_pGridSize[0] * m_octreeSize); ++x) 
     {
         for(INT y=0; y < (m_pGridSize[1] * m_octreeSize); ++y) 
@@ -310,42 +320,11 @@ void TerrainData::GenerateTestData(void)
                 float worldX, worldY, worldZ;
                 this->Grid2World(x, y, z, worldX, worldY, worldZ);
                 
-                float density = 10.0f * sin(6.282f * LERP(worldX, m_minX, m_maxX)) * cos(6.282f * LERP(worldZ, m_minZ, m_maxZ));
+                float density = worldY - sin(worldX) * sin(worldZ);
                 this->SetDensity(x, y, z, density);
-
-                double percentage = (double)++current / (double)target;
-                LONG elapsed = LostIsland::g_pTimer->Tock(id, KEEPRUNNING);
-                if(percentage >= nextPercentageOutput || lastStop + 250 < elapsed)
-                {
-                    lastStop = elapsed;
-                    double progressPerTime = percentage / (double)elapsed;
-                    INT estimated = (INT)((1.0 - percentage) / progressPerTime);
-                    if(percentage >= nextPercentageOutput)
-                    {
-                        nextPercentageOutput = min(nextPercentageOutput + 0.01f, 1.0f);
-                    }
-
-                    std::wostringstream str;
-                    str << L"Terrain generation: ";
-                    for(INT i=0; i < 20; ++i)
-                    {
-                        if((double)i / 20.0 < percentage)
-                        {
-                            str << "*";
-                        }
-                        else
-                        {
-                            str << "-";
-                        }
-                    }
-                    str << " " << (1e-4 * (double)(INT)(1e+6 * percentage)) << L"% (time elapsed / remaining: " << (elapsed / 1000) << L"s / " << (estimated / 1000) << L"s)";
-                    //Logger::ShowStatus(str.str());
-                }
             }
         }
     }
-
-    std::cout << std::endl << "generation took " << (1e-3 * (double)LostIsland::g_pTimer->Tock(id, ERASE)) << " secs" << std::endl << std::endl;
 }
 
 

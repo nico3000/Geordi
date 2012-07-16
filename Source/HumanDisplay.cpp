@@ -33,6 +33,9 @@ void HumanDisplay::VOnAttach(GameViewID p_viewID, ActorID p_actorID)
 
     EventListenerDelegate onParticleComponentCreated = fastdelegate::MakeDelegate(&m_scene, &Scene::ParticleComponentCreatedDelegate);
     EventManager::Get()->VAddListener(onParticleComponentCreated, ParticleComponentCreatedEvent::sm_eventType);
+
+    EventListenerDelegate onTerrainComponentCreated = fastdelegate::MakeDelegate(&m_scene, &Scene::TerrainComponentCreatedDelegate);
+    EventManager::Get()->VAddListener(onTerrainComponentCreated, TerrainComponentCreatedEvent::sm_eventType);
 }
 
 

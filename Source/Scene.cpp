@@ -3,6 +3,7 @@
 #include "ActorEvents.h"
 #include "RenderComponent.h"
 #include "ParticleComponent.h"
+#include "TerrainComponent.h"
 
 
 Scene::Scene(void) :
@@ -69,6 +70,24 @@ void Scene::ParticleComponentCreatedDelegate(IEventDataPtr p_pEvent)
         if(pActor)
         {
             std::shared_ptr<ParticleComponent> pComp = pActor->GetComponent<ParticleComponent>(ParticleComponent::sm_componentID).lock();
+            if(pComp)
+            {
+                this->AddChild(pActor->GetID(), pComp->GetSceneNode());
+            }
+        }
+    }
+}
+
+
+void Scene::TerrainComponentCreatedDelegate(IEventDataPtr p_pEvent)
+{
+    std::shared_ptr<TerrainComponentCreatedEvent> pEvent = std::static_pointer_cast<TerrainComponentCreatedEvent>(p_pEvent);
+    if(pEvent)
+    {
+        StrongActorPtr pActor = LostIsland::g_pApp->GetGameLogic()->VGetActor(pEvent->GetActorID()).lock();
+        if(pActor)
+        {
+            std::shared_ptr<TerrainComponent> pComp = pActor->GetComponent<TerrainComponent>(TerrainComponent::sm_componentID).lock();
             if(pComp)
             {
                 this->AddChild(pActor->GetID(), pComp->GetSceneNode());

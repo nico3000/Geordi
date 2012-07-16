@@ -45,11 +45,11 @@ bool ParticleSystem::Init(void)
         { "GROUP_SIZE", groupSizeStr.c_str() },
         { 0, 0 },
     };
-    m_pComputeShader = LostIsland::g_pGraphics->CompileComputeShader("./Shader/ParticleSystemCS.hlsl", "SimulateCS", pDefines);
-    if(!m_pComputeShader)
-    {
-        return false;
-    }
+//     m_pComputeShader = LostIsland::g_pGraphics->CompileComputeShader("./Shader/ParticleSystemCS.hlsl", "SimulateCS", pDefines);
+//     if(!m_pComputeShader)
+//     {
+//         return false;
+//     }
 
     if(!m_timeBuffer.BuildFromSharedData(&m_time, sizeof(XMFLOAT4)))
     {

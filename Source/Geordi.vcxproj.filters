@@ -89,6 +89,12 @@
     <Filter Include="Header Files\GameView\HumanView\Effects">
       <UniqueIdentifier>{4cfe53d0-0b06-44a0-8300-9c16f7c762aa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GameLogic\Terrain">
+      <UniqueIdentifier>{37c16022-f0dc-4639-8452-1312ff35890b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameLogic\Terrain">
+      <UniqueIdentifier>{fe0961e1-ddc9-4683-9eb7-49134f07372b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.txt" />
@@ -142,17 +148,11 @@
     <ClInclude Include="MemoryPool.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
-    <ClInclude Include="TerrainData.h">
-      <Filter>Header Files\GameLogic</Filter>
-    </ClInclude>
     <ClInclude Include="GameInitializer.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
     </ClInclude>
     <ClInclude Include="Logger.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
-    </ClInclude>
-    <ClInclude Include="Octree.h">
-      <Filter>Header Files\GameLogic</Filter>
     </ClInclude>
     <ClInclude Include="GameApp.h">
       <Filter>Header Files\GameApplicationLayer</Filter>
@@ -292,6 +292,15 @@
     <ClInclude Include="TerrainComponent.h">
       <Filter>Header Files\GameLogic\ActorSystem</Filter>
     </ClInclude>
+    <ClInclude Include="Octree.h">
+      <Filter>Header Files\GameLogic\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="TerrainData.h">
+      <Filter>Header Files\GameLogic\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="TerrainNode.h">
+      <Filter>Header Files\GameView\HumanView\Scene</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -306,17 +315,11 @@
     <ClCompile Include="MemoryPool.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
-    <ClCompile Include="TerrainData.cpp">
-      <Filter>Source Files\GameLogic</Filter>
-    </ClCompile>
     <ClCompile Include="GameInitializer.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
     </ClCompile>
     <ClCompile Include="Logger.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
-    </ClCompile>
-    <ClCompile Include="Octree.cpp">
-      <Filter>Source Files\GameLogic</Filter>
     </ClCompile>
     <ClCompile Include="GameApp.cpp">
       <Filter>Source Files\GameApplicationLayer</Filter>
@@ -437,6 +440,15 @@
     </ClCompile>
     <ClCompile Include="TerrainComponent.cpp">
       <Filter>Source Files\GameLogic\ActorSystem</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainData.cpp">
+      <Filter>Source Files\GameLogic\Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="Octree.cpp">
+      <Filter>Source Files\GameLogic\Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="TerrainNode.cpp">
+      <Filter>Source Files\GameView\HumanView\Scene</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

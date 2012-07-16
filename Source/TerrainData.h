@@ -5,6 +5,7 @@
 class TerrainData
 {
 private:
+    std::string m_octreeFolder;
     Octree* m_pData;
     LONGLONG* m_pLastUsed;
     USHORT m_pGridSize[3];
@@ -27,12 +28,13 @@ private:
     bool IsTileActive(INT tileX, INT tileY, INT tileZ) const;
 
 public:
-    TerrainData(void);
+    TerrainData(std::string p_octreeFolder);
     ~TerrainData(void);
 
     bool Init(USHORT p_octreeSize, USHORT p_gridSizeX, USHORT p_gridSizeY, USHORT p_gridSizeZ, USHORT p_maxActiveOctrees);
     void SetDimension(float p_minX, float p_minY, float p_minZ, float p_maxX, float p_maxY, float p_maxZ);
     void SetDensity(INT x, INT y, INT z, float p_density);
+    float GetDensity(INT x, INT y, INT z);
     void SaveAllTiles(void) const;
     void SaveTileToDisk(INT tileX, INT tileY, INT tileZ) const;
     void LoadTileFromDisk(INT tileX, INT tileY, INT tileZ);

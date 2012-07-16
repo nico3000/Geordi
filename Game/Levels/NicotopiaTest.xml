@@ -19,5 +19,10 @@
             </TransformComponent>
         </Actor>
         <!--Actor type="HeightField" id="height1" /-->
+        <Actor type="Empty" id="terrain">
+            <TerrainComponent>
+                <Folder value="octree_test" />
+            </TerrainComponent>
+        </Actor>
     </ActorList>
 </Level>

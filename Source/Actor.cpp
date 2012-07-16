@@ -186,7 +186,7 @@ StrongActorPtr ActorFactory::CreateActor(const char* p_actorResource, tinyxml2::
         if(findit != m_actorComponentIDs.end())
         {
             ComponentID id = findit->second;
-            StrongActorComponentPtr pComponent(pActor->GetComponent<ActorComponent>(id));
+            StrongActorComponentPtr pComponent = pActor->GetComponent<ActorComponent>(id).lock();
             if(pComponent)
             {
                 pComponent->VInit(pComponentData);

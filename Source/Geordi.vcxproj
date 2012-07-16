@@ -302,6 +302,7 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="TerrainComponent.h" />
     <ClInclude Include="TerrainData.h" />
+    <ClInclude Include="TerrainNode.h" />
     <ClInclude Include="TestEventData.h" />
     <ClInclude Include="TransformComponent.h" />
     <ClInclude Include="VertexBuffer.h" />
@@ -359,6 +360,7 @@
     </ClCompile>
     <ClCompile Include="TerrainComponent.cpp" />
     <ClCompile Include="TerrainData.cpp" />
+    <ClCompile Include="TerrainNode.cpp" />
     <ClCompile Include="TestEventData.cpp" />
     <ClCompile Include="TransformComponent.cpp" />
     <ClCompile Include="VertexBuffer.cpp" />
