@@ -18,7 +18,7 @@ ShaderProgram::~ShaderProgram(void)
 }
 
 
-bool ShaderProgram::Load(LPCSTR p_file, LPCSTR p_functionVS, LPCSTR p_functionGS, LPCSTR p_functionPS, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, GraphicsLayer::ShaderVersion p_version /* = GraphicsLayer::SHADER_VERSION_MAX */)
+bool ShaderProgram::Load(LPCWSTR p_file, LPCSTR p_functionVS, LPCSTR p_functionGS, LPCSTR p_functionPS, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, GraphicsLayer::ShaderVersion p_version /* = GraphicsLayer::SHADER_VERSION_MAX */)
 {
     SAFE_RELEASE(m_pLayout);
     SAFE_RELEASE(m_pVSBlob);
@@ -53,7 +53,7 @@ bool ShaderProgram::Load(LPCSTR p_file, LPCSTR p_functionVS, LPCSTR p_functionGS
 }
 
 
-bool ShaderProgram::CreateInputLayout(const D3D11_INPUT_ELEMENT_DESC* p_pInputElementDescs, UINT p_numElements)
+bool ShaderProgram::CreateInputLayout(const D3D11_INPUT_ELEMENT_DESC* p_pInputElementDescs, unsigned int p_numElements)
 {
     SAFE_RELEASE(m_pLayout);
     HRESULT hr = S_OK;

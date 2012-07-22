@@ -14,13 +14,11 @@ m_ppRawMemArray(NULL), m_memArraySize(0), m_pHead(NULL), m_allocated(0)
 
 MemoryPool::~MemoryPool(void)
 {
-#if defined(_DEBUG) || defined(PROFILE)
     if(m_allocated != 0)
     {
         LI_LOG_WITH_TAG("remaining allocated space!");
     }
-#endif
-    for(UINT i=0; i < m_memArraySize; ++i) {
+    for(unsigned int i=0; i < m_memArraySize; ++i) {
         delete[] m_ppRawMemArray[i];
     }
     delete[] m_ppRawMemArray;
@@ -39,7 +37,7 @@ bool MemoryPool::Init(INT p_chunkSize, INT p_numChunks, bool p_resizable)
 bool MemoryPool::GrowMemory(void)
 {
     unsigned char** ppMemArray = new unsigned char*[m_memArraySize+1];
-    for(UINT i=0; i < m_memArraySize; ++i)
+    for(unsigned int i=0; i < m_memArraySize; ++i)
     {
         ppMemArray[i] = m_ppRawMemArray[i];
     }
@@ -106,6 +104,7 @@ void* MemoryPool::Alloc(void)
     {
         if(m_resizable)
         {
+            LI_LOG_WITH_TAG("growing memory pool");
             this->GrowMemory();
         }
         else
@@ -140,7 +139,7 @@ void MemoryPool::PrintInfo(void) const
         << "system memory used: " << FormatBytes(this->GetSystemAllocatedBytes()) << std::endl
         << "pool memory used: " << FormatBytes(this->GetPoolAllocatedBytes()) << std::endl
         << "pool memory free: " << FormatBytes(this->GetPoolFreeBytes()) << std::endl
-        << "usage of allocated system memory: " << (UINT)(100.0 * this->GetPoolUsage()) << "%" << std::endl << std::endl;
+        << "usage of allocated system memory: " << (unsigned int)(100.0 * this->GetPoolUsage()) << "%" << std::endl << std::endl;
     LI_LOG_WITH_TAG(str.str().c_str());
 }
 

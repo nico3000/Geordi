@@ -39,5 +39,6 @@ public:
     bool Init(WeakActorPtr p_pActor);
     bool Update(Matrix p_toRebuild = MATRIX_BOTH);
     void Bind(void);
+    const XMFLOAT3& GetPosition(void) { return m_struct.positionWC; }
 };
 

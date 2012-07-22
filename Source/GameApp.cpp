@@ -64,7 +64,7 @@ void GameApp::OnNextFrame(void)
 }
 
 
-LRESULT CALLBACK LostIsland::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK LostIsland::WndProc(HWND hWnd, unsigned int message, WPARAM wParam, LPARAM lParam)
 {
     static bool lostFocusInFullscreen = false;
     static bool fullscreen = g_pGraphics->IsFullscreen();

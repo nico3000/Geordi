@@ -29,7 +29,8 @@ public:
     bool AddChild(ActorID p_actorID, std::shared_ptr<ISceneNode> p_pChild);
     bool RemoveChild(ActorID p_actorID);
     void AddCamera(const std::string& p_name, std::shared_ptr<Camera> p_pCamera, bool p_activate = false);
-
+    
+    std::shared_ptr<Camera> GetCurrentCamera(void) const { return m_pCurrentCamera; }
     void PushModelMatrices(const Pose::ModelMatrixData& p_modelMatrixData, bool p_updateBuffer = true);
     void PopModelMatrices(bool p_updateBuffer = false);
     bool UpdateModelMatrixBuffer(void) { return m_modelBuffer.Update(); }

@@ -2,11 +2,12 @@
 #include "VertexBuffer.h"
 
 
-D3D11_INPUT_ELEMENT_DESC VertexBuffer::sm_pSimpleVertexElementDesc[2] = {
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+D3D11_INPUT_ELEMENT_DESC VertexBuffer::sm_pSimpleVertexElementDesc[3] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 };
-unsigned int VertexBuffer::sm_simpleVertexNumElements = 2;
+unsigned int VertexBuffer::sm_simpleVertexNumElements = 3;
 
 D3D11_INPUT_ELEMENT_DESC VertexBuffer::sm_pScreenQuadVertexElementDesc[1] = {
     { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0,  0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
@@ -50,6 +51,6 @@ bool VertexBuffer::Build(void* p_data, unsigned int p_numVertices, unsigned int 
 
 void VertexBuffer::Bind(void)
 {
-    static UINT offset = 0;
+    static unsigned int offset = 0;
     LostIsland::g_pGraphics->GetContext()->IASetVertexBuffers(0, 1, &m_pBuffer, &m_byteStride, &offset);
 }

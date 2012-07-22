@@ -22,6 +22,8 @@
         <Actor type="Empty" id="terrain">
             <TerrainComponent>
                 <Folder value="octree_test" />
+                <Data gridsize_x="2" gridsize_y="1" gridsize_z="2" chunksize="64" />
+                <Visual smallradius="3" chunksize="16" />
             </TerrainComponent>
         </Actor>
     </ActorList>

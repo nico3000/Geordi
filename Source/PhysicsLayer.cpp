@@ -115,5 +115,5 @@ void PhysicsLayer::Update(unsigned long p_deltaMillis, unsigned long p_gameMilli
 
 bool PhysicsLayer::FetchResults(void)
 {
-    return m_pScene->fetchResults(false);
+    return m_pScene->fetchResults(true);
 }

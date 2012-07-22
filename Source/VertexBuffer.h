@@ -16,9 +16,10 @@ public:
     struct SimpleVertex
     {
         XMFLOAT3 positionMC;
+        XMFLOAT3 normalMC;
         XMFLOAT4 vertexColor;
     };
-    static D3D11_INPUT_ELEMENT_DESC sm_pSimpleVertexElementDesc[2];
+    static D3D11_INPUT_ELEMENT_DESC sm_pSimpleVertexElementDesc[3];
     static unsigned int sm_simpleVertexNumElements;
 
     struct ScreenQuadVertex

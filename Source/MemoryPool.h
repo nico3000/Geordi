@@ -6,12 +6,12 @@ private:
     const static SIZE_T CHUNK_HEADER_SIZE;
 
     unsigned char** m_ppRawMemArray;
-    UINT    m_memArraySize;
-    UINT    m_chunkSize;
-    UINT    m_numChunks;
+    unsigned int    m_memArraySize;
+    unsigned int    m_chunkSize;
+    unsigned int    m_numChunks;
     bool    m_resizable;
     unsigned char*  m_pHead;
-    UINT    m_allocated;
+    unsigned int    m_allocated;
 
     bool GrowMemory(void);
     unsigned char* CreateNewMemoryBlock(void);
@@ -34,5 +34,5 @@ public:
     SIZE_T GetPoolAllocatedBytes(void) const { return m_allocated * (m_chunkSize + CHUNK_HEADER_SIZE); }
     SIZE_T GetPoolFreeBytes(void) const { return (m_memArraySize * m_numChunks - m_allocated) * (m_chunkSize + CHUNK_HEADER_SIZE); }
     double GetPoolUsage(void) const { return (double)this->GetPoolAllocatedBytes() / (double)(this->GetPoolAllocatedBytes() + this->GetPoolFreeBytes()); }
-    UINT GetChunkSize(void) const { return m_chunkSize; }
+    unsigned int GetChunkSize(void) const { return m_chunkSize; }
 };

@@ -3,17 +3,49 @@
 #include "TerrainData.h"
 #include "Geometry.h"
 #include "ShaderProgram.h"
+#include "Grid3D.h"
+
+
+#define NUM_BLOCKS 1024
+
+
+class TerrainBlock 
+{
+private:
+    int m_x, m_y, m_z;
+    Geometry m_geometry;
+
+public:
+    TerrainBlock(void) {}
+    ~TerrainBlock(void) {}
+
+    void Build(int p_x, int p_y, int p_z, Grid3D& p_grid, float p_scale);
+    
+    void Draw(void) { if(m_geometry.IsReady()) m_geometry.Draw(); }
+    int GetX(void) const { return m_x; }
+    int GetY(void) const { return m_y; }
+    int GetZ(void) const { return m_z; }
+    Geometry& GetGeometry(void) { return m_geometry; }
+    bool HasGeometry(void) const { return m_geometry.IsReady(); }
+
+};
+
 
 class TerrainNode :
     public ISceneNode
 {
 private:
-    const std::shared_ptr<Geometry> m_pGeometry;
-    const std::shared_ptr<TerrainData> m_pTerrain;
+    std::shared_ptr<TerrainData> m_pTerrain;
+    TerrainBlock m_blocks[NUM_BLOCKS];
+    Octree m_blockData;
+    int m_smallradius;
+    int m_chunksize;
     ShaderProgram m_program;
+    std::list<std::shared_ptr<Geometry>> m_empty;
+    Grid3D m_tempGrid;
 
 public:
-    TerrainNode(std::string p_terrainFolder) : m_pTerrain(new TerrainData(p_terrainFolder)), m_pGeometry(new Geometry) {}
+    TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksize, int p_smallradius);
     ~TerrainNode(void);
 
     HRESULT VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis);
@@ -30,4 +62,3 @@ public:
     bool VIsVisible(Scene* p_pScene) const { return true; }
     NodeType VGetNodeType(void) const { return ISceneNode::STATIC_NODE; }
 };
-

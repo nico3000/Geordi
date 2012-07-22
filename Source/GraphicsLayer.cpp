@@ -1,6 +1,8 @@
 #include "StdAfx.h"
 #include "GraphicsLayer.h"
 #include "RenderTarget.h"
+#include <FW1FontWrapper.h>
+#pragma comment(lib, "FW1FontWrapper.lib")
 
 #define LI_LOGGER_TAG "Direct3D"
 
@@ -8,6 +10,10 @@
 GraphicsLayer::GraphicsLayer(void):
 m_pContext(0), m_pDevice(0), m_pSwapChain(0), m_pDebug(0), m_pOutput(0), m_hWnd(0), m_initialized(false), m_onShutdown(false), m_vsync(false), m_pBackbuffer(new RenderTarget)
 {
+    m_pDefaultBlendState = 0;
+    m_pDefaultDepthStencilState = 0;
+    m_pDefaultRasterizerState = 0;
+    m_pFontWrapper = 0;
 }
 
 
@@ -39,12 +45,25 @@ GraphicsLayer::~GraphicsLayer(void)
     {
         SAFE_RELEASE(shaderPair.second);
     }
+
+    if(m_ppDefaultSamplers)
+    {
+        for(unsigned int i=0; i < m_samplerCount; ++i)
+        {
+            SAFE_RELEASE(m_ppDefaultSamplers[i]);
+        }
+        SAFE_DELETE(m_ppDefaultSamplers);
+    }
+    SAFE_RELEASE(m_pDefaultBlendState);
+    SAFE_RELEASE(m_pDefaultRasterizerState);
+    SAFE_RELEASE(m_pDefaultDepthStencilState);
     
     if(m_pSwapChain)
     {
         m_pSwapChain->SetFullscreenState(FALSE, 0);
         SAFE_RELEASE(m_pSwapChain);
     }
+    SAFE_RELEASE(m_pFontWrapper);
     SAFE_RELEASE(m_pOutput);
     SAFE_RELEASE(m_pDebug);
     SAFE_RELEASE(m_pContext);
@@ -87,6 +106,11 @@ bool GraphicsLayer::Init(HINSTANCE hInstance)
     {
         return false;
     }
+    if(!this->InitDefaultStates())
+    {
+        return false;
+    }
+    this->SetDefaultStates();
 
     return InitTest();
 
@@ -106,6 +130,7 @@ void GraphicsLayer::Present(void)
     static bool occluded = false;
     HRESULT hr = m_pSwapChain->Present(m_vsync, occluded ? DXGI_PRESENT_TEST : 0);
     occluded = hr == DXGI_STATUS_OCCLUDED;
+    this->SetDefaultStates();
 }
 
 
@@ -165,7 +190,7 @@ bool GraphicsLayer::CreateAppGraphics(void)
     m_computeShaderProfiles[SHADER_VERSION_4_0] = "vs_4_0";
     m_computeShaderProfiles[SHADER_VERSION_5_0] = "cs_5_0";
 
-    UINT flags = 0;
+    unsigned int flags = 0;
 #if defined(_DEBUG)
     flags |= D3D11_CREATE_DEVICE_DEBUG;
 #endif
@@ -256,26 +281,9 @@ bool GraphicsLayer::CreateAppGraphics(void)
 
     //m_pDebug->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
 
-    this->SetDefaultSamplers();
-
-    D3D11_RASTERIZER_DESC rasterizerDesc;
-    ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
-    rasterizerDesc.CullMode = D3D11_CULL_BACK;
-    rasterizerDesc.DepthClipEnable = true;
-    rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-    rasterizerDesc.FrontCounterClockwise = true;
-    
-    ID3D11RasterizerState* pRasterizerState;
-    HRESULT hr = m_pDevice->CreateRasterizerState(&rasterizerDesc, &pRasterizerState);
-    if(FAILED(hr))
-    {
-        HRESULT_TO_WARNING(hr);
-    }
-    else
-    {
-        m_pContext->RSSetState(pRasterizerState);
-        SAFE_RELEASE(pRasterizerState);   
-    }
+    IFW1Factory* pFontFactory;
+    RETURN_IF_FAILED(FW1CreateFactory(FW1_VERSION, &pFontFactory));
+    RETURN_IF_FAILED(pFontFactory->CreateFontWrapper(m_pDevice, L"Arial", &m_pFontWrapper));
 
     m_initialized = true;
 
@@ -490,18 +498,6 @@ bool GraphicsLayer::LoadBackbuffer(void)
 
     m_pBackbuffer->BindAllRenderTargets();
 
-    D3D11_DEPTH_STENCIL_DESC dsDesc;
-    ZeroMemory(&dsDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
-    dsDesc.DepthEnable = true;
-    dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    ID3D11DepthStencilState* pDSState;
-    hr = m_pDevice->CreateDepthStencilState(&dsDesc, &pDSState);
-    RETURN_IF_FAILED(hr);
-
-    m_pContext->OMSetDepthStencilState(pDSState, 0xffffffff);
-    SAFE_RELEASE(pDSState);
-
     return true;
 }
 
@@ -518,9 +514,9 @@ bool GraphicsLayer::IsFullscreen(void) const
 }
 
 
-ID3D11VertexShader* GraphicsLayer::CompileVertexShader(LPCSTR p_file, LPCSTR p_function, ID3D10Blob*& p_pShaderData, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
+ID3D11VertexShader* GraphicsLayer::CompileVertexShader(LPCWSTR p_file, LPCSTR p_function, ID3D10Blob*& p_pShaderData, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
 {
-    std::string id = p_file + std::string("|") + p_function;
+    std::wstring id = p_file + std::wstring(L"|") + std::wstring((LPCTSTR)p_function);
     if(m_vertexShaders.find(id) == m_vertexShaders.end())
     {
         if(!this->CompileShader(p_file, p_function, m_vertexShaderProfiles[p_version], p_pShaderData, p_pDefines))
@@ -537,9 +533,9 @@ ID3D11VertexShader* GraphicsLayer::CompileVertexShader(LPCSTR p_file, LPCSTR p_f
 }
 
 
-ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
+ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCWSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
 {
-    std::string id = p_file + std::string("|") + p_function;
+    std::wstring id = p_file + std::wstring(L"|") + std::wstring((LPCTSTR)p_function);
     if(m_geometryShaders.find(id) == m_geometryShaders.end())
     {
         ID3D10Blob* pShaderData = 0;
@@ -556,9 +552,9 @@ ID3D11GeometryShader* GraphicsLayer::CompileGeometryShader(LPCSTR p_file, LPCSTR
 }
 
 
-ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
+ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCWSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
 {
-    std::string id = p_file + std::string("|") + p_function;
+    std::wstring id = p_file + std::wstring(L"|") + std::wstring((LPCTSTR)p_function);
     if(m_pixelShaders.find(id) == m_pixelShaders.end())
     {
         ID3D10Blob* pShaderData = 0;
@@ -575,9 +571,9 @@ ID3D11PixelShader* GraphicsLayer::CompilePixelShader(LPCSTR p_file, LPCSTR p_fun
 }
 
 
-ID3D11ComputeShader* GraphicsLayer::CompileComputeShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
+ID3D11ComputeShader* GraphicsLayer::CompileComputeShader(LPCWSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines /* = 0 */, ShaderVersion p_version /* = SHADER_VERSION_MAX */)
 {
-    std::string id = p_file + std::string("|") + p_function;
+    std::wstring id = p_file + std::wstring(L"|") + std::wstring((LPCTSTR)p_function);
     if(m_computeShaders.find(id) == m_computeShaders.end())
     {
         ID3D10Blob* pShaderData = 0;
@@ -594,10 +590,10 @@ ID3D11ComputeShader* GraphicsLayer::CompileComputeShader(LPCSTR p_file, LPCSTR p
 }
 
 
-bool GraphicsLayer::CompileShader(const char* p_file, const char* p_function, const char* p_pProfile, ID3D10Blob*& p_pShaderBlob, const D3D10_SHADER_MACRO* p_pDefines) const
+bool GraphicsLayer::CompileShader(LPCWSTR p_file, LPCSTR p_function, LPCSTR p_pProfile, ID3D10Blob*& p_pShaderBlob, const D3D10_SHADER_MACRO* p_pDefines) const
 {
     ID3D10Blob* pErrorBlob = 0;
-    HRESULT hr = D3DX11CompileFromFileA(p_file, p_pDefines, 0, p_function, p_pProfile, 0, 0, 0, &p_pShaderBlob, &pErrorBlob, 0);
+    HRESULT hr = D3DX11CompileFromFileW(p_file, p_pDefines, 0, p_function, p_pProfile, 0, 0, 0, &p_pShaderBlob, &pErrorBlob, 0);
     if(pErrorBlob)
     {
         std::string errorMsg((char*)pErrorBlob->GetBufferPointer(), (char*)pErrorBlob->GetBufferPointer() + pErrorBlob->GetBufferSize());
@@ -620,11 +616,10 @@ bool GraphicsLayer::CompileShader(const char* p_file, const char* p_function, co
 }
 
 
-bool GraphicsLayer::SetDefaultSamplers(void)
+bool GraphicsLayer::InitDefaultStates(void)
 {
-    static const unsigned int SAMPLER_STATE_COUNT = 3;
-
-    D3D11_SAMPLER_DESC pDesc[SAMPLER_STATE_COUNT];
+    m_samplerCount = 3;
+    D3D11_SAMPLER_DESC pDesc[3];
     ZeroMemory(pDesc, 3 * sizeof(D3D11_SAMPLER_DESC));
     pDesc[0].AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
     pDesc[0].AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
@@ -642,25 +637,70 @@ bool GraphicsLayer::SetDefaultSamplers(void)
     pDesc[2].Filter = D3D11_FILTER_ANISOTROPIC;
     pDesc[2].MaxAnisotropy = 16;
 
-    ID3D11SamplerState* ppStates[SAMPLER_STATE_COUNT];
-    for(unsigned int i=0; i < SAMPLER_STATE_COUNT; ++i)
+    m_ppDefaultSamplers = new ID3D11SamplerState*[3];
+    for(unsigned int i=0; i < 3; ++i)
     {
-        RETURN_IF_FAILED(m_pDevice->CreateSamplerState(&pDesc[i], &ppStates[i]));
+        RETURN_IF_FAILED(m_pDevice->CreateSamplerState(&pDesc[i], &m_ppDefaultSamplers[i]));
     }
-    m_pContext->VSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
-    m_pContext->PSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+
+
+    D3D11_RASTERIZER_DESC rasterizerDesc;
+    ZeroMemory(&rasterizerDesc, sizeof(D3D11_RASTERIZER_DESC));
+    rasterizerDesc.CullMode = D3D11_CULL_BACK;
+    rasterizerDesc.DepthClipEnable = true;
+    rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+    rasterizerDesc.FrontCounterClockwise = true;
+    RETURN_IF_FAILED(m_pDevice->CreateRasterizerState(&rasterizerDesc, &m_pDefaultRasterizerState));
+
+
+    D3D11_DEPTH_STENCIL_DESC dsDesc;
+    ZeroMemory(&dsDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
+    dsDesc.DepthEnable = true;
+    dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
+    dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    RETURN_IF_FAILED(m_pDevice->CreateDepthStencilState(&dsDesc, &m_pDefaultDepthStencilState));
+
+
+    D3D11_BLEND_DESC blendDesc;
+    ZeroMemory(&blendDesc, sizeof(D3D11_BLEND_DESC));
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[1].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[2].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[3].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[4].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[5].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[6].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    blendDesc.RenderTarget[7].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    RETURN_IF_FAILED(m_pDevice->CreateBlendState(&blendDesc, &m_pDefaultBlendState));
+
+
+    return true;
+}
+
+
+void GraphicsLayer::SetDefaultStates(void)
+{
+    static float pBlendFactor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    m_pContext->OMSetDepthStencilState(m_pDefaultDepthStencilState, 0xffffffff);
+    m_pContext->RSSetState(m_pDefaultRasterizerState);
+    m_pContext->OMSetBlendState(m_pDefaultBlendState, pBlendFactor, 0xffffffff);
+    
+    m_pContext->VSSetSamplers(0, m_samplerCount, m_ppDefaultSamplers);
+    m_pContext->PSSetSamplers(0, m_samplerCount, m_ppDefaultSamplers);
     if(m_featureLevel >= D3D_FEATURE_LEVEL_10_0)
     {
-        m_pContext->GSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+        m_pContext->GSSetSamplers(0, m_samplerCount, m_ppDefaultSamplers);
     }
     if(m_featureLevel >= D3D_FEATURE_LEVEL_11_0)
     {
-        m_pContext->DSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
-        m_pContext->HSSetSamplers(0, SAMPLER_STATE_COUNT, ppStates);
+        m_pContext->DSSetSamplers(0, m_samplerCount, m_ppDefaultSamplers);
+        m_pContext->HSSetSamplers(0, m_samplerCount, m_ppDefaultSamplers);
     }
-    for(unsigned int i=0; i < SAMPLER_STATE_COUNT; ++i)
-    {
-        SAFE_RELEASE(ppStates[i]);
-    }
-    return true;
+}
+
+
+
+void GraphicsLayer::DrawText1(std::wstring p_text) const
+{    
+    m_pFontWrapper->DrawString(m_pContext, p_text.c_str(), 128.0f, 50.0f, 100.0f, 0xff0099ff, 0);
 }

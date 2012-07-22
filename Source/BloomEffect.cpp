@@ -31,8 +31,8 @@ HRESULT BloomEffectCS::VOnRestore(void)
     {
         return S_FALSE;
     }
-    m_pBlurHor = LostIsland::g_pGraphics->CompileComputeShader("./Shader/BloomCS.hlsl", "BlurHorCS");
-    m_pBlurVer = LostIsland::g_pGraphics->CompileComputeShader("./Shader/BloomCS.hlsl", "BlurVerCS");
+    m_pBlurHor = LostIsland::g_pGraphics->CompileComputeShader(L"./Shader/BloomCS.hlsl", "BlurHorCS");
+    m_pBlurVer = LostIsland::g_pGraphics->CompileComputeShader(L"./Shader/BloomCS.hlsl", "BlurVerCS");
     if(!m_pBlurHor || !m_pBlurVer)
     {
         return S_FALSE;
@@ -99,7 +99,7 @@ BloomEffectPS::~BloomEffectPS(void)
 
 HRESULT BloomEffectPS::VOnRestore(void)
 {
-    if(!m_blurHor.Load("./Shader/BloomPS.hlsl", "ScreenQuadVS", 0, "BlurHorPS"))
+    if(!m_blurHor.Load(L"./Shader/BloomPS.hlsl", "ScreenQuadVS", 0, "BlurHorPS"))
     {
         return S_FALSE;
     }
@@ -107,7 +107,7 @@ HRESULT BloomEffectPS::VOnRestore(void)
     {
         return S_FALSE;
     }
-    if(!m_blurVer.Load("./Shader/BloomPS.hlsl", "ScreenQuadVS", 0, "BlurVerPS"))
+    if(!m_blurVer.Load(L"./Shader/BloomPS.hlsl", "ScreenQuadVS", 0, "BlurVerPS"))
     {
         return S_FALSE;
     }

@@ -9,7 +9,7 @@ BaseSceneNode(p_actorID), m_pCloud(p_pCloud)
     StrongActorPtr pActor = m_pActor.lock();
     if(pActor)
     {
-        m_program.Load("./Shader/NicotopiaTest.fx", "ParticleVS", "ParticleGS", "SimplePS");
+        m_program.Load(L"./Shader/NicotopiaTest.fx", "ParticleVS", "ParticleGS", "SimplePS");
         //m_program.CreateInputLayout(VertexBuffer::sm_pSimpleVertexElementDesc, VertexBuffer::sm_simpleVertexNumElements);
         m_pTexture = 0;
         m_pBlendState = 0;

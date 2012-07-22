@@ -6,6 +6,7 @@ Texture2D g_Tex : register(t1);
 struct SimpleVertex
 {
 	float3 positionMC : POSITION0;
+    float3 normalMC : NORMAL0;
 	float4 vertexColor : COLOR0;
 };
 
@@ -13,6 +14,7 @@ struct SimpleVertexProjected
 {
     float4 view : POSITION1;
 	float4 projected : SV_POSITION;
+    float3 normalWC : NORMAL0;
 	float4 vertexColor : COLOR0;
     float2 tex : TEXCOORD0;
 };
@@ -33,6 +35,7 @@ SimpleVertexProjected SimpleVS(SimpleVertex input)
 	SimpleVertexProjected output = (SimpleVertexProjected)0;
     output.view = mul(g_view, mul(g_model, float4(input.positionMC, 1.0)));
 	output.projected = mul(g_projection, output.view);
+    output.normalWC = mul(transpose(g_modelInv), float4(input.normalMC, 0)).xyz;
 	output.vertexColor = input.vertexColor;
 	return output;
 }
@@ -90,6 +93,7 @@ DeferredShadingOutput SimplePS(SimpleVertexProjected input)
 {
     DeferredShadingOutput output = (DeferredShadingOutput)0;
     output.view = input.view;
+    output.normal = float4(normalize(input.normalWC), 0.0);
     output.diffuse.rgb = input.vertexColor.rgb;
     output.diffuse.a = g_Tex.Sample(PointSampler, input.tex).r;
     return output;

@@ -9,7 +9,7 @@ MeshNode::MeshNode(ActorID p_actorID, std::shared_ptr<Geometry> p_pGeometry) : B
     StrongActorPtr pActor = m_pActor.lock();
     if(pActor)
     {
-        m_program.Load("./Shader/NicotopiaTest.fx", "SimpleVS", 0, "SimplePS");
+        m_program.Load(L"./Shader/NicotopiaTest.fx", "SimpleVS", 0, "SimplePS");
         m_program.CreateInputLayout(VertexBuffer::sm_pSimpleVertexElementDesc, VertexBuffer::sm_simpleVertexNumElements);
     }
 }

@@ -3,6 +3,7 @@
 #include <D3DX11.h>
 #include <DxErr.h>
 #include <dxgi.h>
+
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "d3dx11.lib")
 #pragma comment(lib, "DxErr.lib")
@@ -19,12 +20,12 @@
 
 #define HRESULT_TO_ERROR(_hr) do            \
 {                                           \
-    LI_ERROR(DXGetErrorDescriptionA(_hr));  \
+    LI_ERROR(DXGetErrorDescriptionA(_hr));   \
 } while(0)
 
 #define HRESULT_TO_WARNING(_hr) do          \
 {                                           \
-    LI_WARNING(DXGetErrorDescriptionA(_hr));\
+    LI_WARNING(DXGetErrorDescriptionA(_hr)); \
 } while(0)
 
 #define RETURN_IF_FAILED(_hr) do    \
@@ -49,6 +50,7 @@ enum ShaderTarget
 };
 
 class RenderTarget;
+class IFW1FontWrapper;
 
 class GraphicsLayer
 {
@@ -62,11 +64,11 @@ public:
     };
 
 private:
-    typedef std::map<std::string, ID3D10Blob*> VertexShaderBlobs;
-    typedef std::map<std::string, ID3D11VertexShader*> VertexShaders;
-    typedef std::map<std::string, ID3D11GeometryShader*> GeometryShaders;
-    typedef std::map<std::string, ID3D11PixelShader*> PixelShaders;
-    typedef std::map<std::string, ID3D11ComputeShader*> ComputeShaders;
+    typedef std::map<std::wstring, ID3D10Blob*> VertexShaderBlobs;
+    typedef std::map<std::wstring, ID3D11VertexShader*> VertexShaders;
+    typedef std::map<std::wstring, ID3D11GeometryShader*> GeometryShaders;
+    typedef std::map<std::wstring, ID3D11PixelShader*> PixelShaders;
+    typedef std::map<std::wstring, ID3D11ComputeShader*> ComputeShaders;
     typedef std::map<ShaderVersion, LPCSTR> ShaderProfiles;
 
     bool m_initialized;
@@ -78,6 +80,11 @@ private:
     ID3D11Device* m_pDevice;
     ID3D11DeviceContext* m_pContext;
     ID3D11Debug* m_pDebug;
+    ID3D11RasterizerState* m_pDefaultRasterizerState;
+    ID3D11DepthStencilState* m_pDefaultDepthStencilState;
+    ID3D11BlendState* m_pDefaultBlendState;
+    ID3D11SamplerState** m_ppDefaultSamplers;
+    unsigned int m_samplerCount;
     std::shared_ptr<RenderTarget> m_pBackbuffer;
     D3D_FEATURE_LEVEL m_featureLevel;
     int m_width;
@@ -91,6 +98,7 @@ private:
     ShaderProfiles m_geometryShaderProfiles;
     ShaderProfiles m_pixelShaderProfiles;
     ShaderProfiles m_computeShaderProfiles;
+    IFW1FontWrapper* m_pFontWrapper;
 
     bool CreateAppWindow(HINSTANCE p_hInstance);
     bool CreateAppGraphics(VOID);
@@ -99,8 +107,9 @@ private:
     void PrepareFeatureLevel(void);
     bool PrintAdapterString(IDXGIAdapter1* p_pAdapter) const;
     std::string GetAdapterOutputString(IDXGIOutput* p_pOutput) const;
-    bool SetDefaultSamplers(void);
-    bool CompileShader(const char* p_file, const char* p_function, const char* p_pProfile, ID3D10Blob*& p_pShaderBlob, const D3D10_SHADER_MACRO* p_pDefines) const;
+    bool InitDefaultStates(void);
+    void SetDefaultStates(void);
+    bool CompileShader(LPCWSTR p_file, LPCSTR p_function, LPCSTR p_pProfile, ID3D10Blob*& p_pShaderBlob, const D3D10_SHADER_MACRO* p_pDefines) const;
 
     bool InitTest(void);
 
@@ -112,16 +121,18 @@ public:
     void Clear(void);
     void Present(void);
     bool OnWindowResized(int p_width, int p_height);
-    ID3D11VertexShader* CompileVertexShader(LPCSTR p_file, LPCSTR p_function, ID3D10Blob*& p_pShaderData, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
-    ID3D11GeometryShader* CompileGeometryShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
-    ID3D11PixelShader* CompilePixelShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
-    ID3D11ComputeShader* CompileComputeShader(LPCSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
+    ID3D11VertexShader* CompileVertexShader(LPCWSTR p_file, LPCSTR p_function, ID3D10Blob*& p_pShaderData, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
+    ID3D11GeometryShader* CompileGeometryShader(LPCWSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
+    ID3D11PixelShader* CompilePixelShader(LPCWSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
+    ID3D11ComputeShader* CompileComputeShader(LPCWSTR p_file, LPCSTR p_function, const D3D10_SHADER_MACRO* p_pDefines = 0, ShaderVersion p_version = SHADER_VERSION_MAX);
     bool ToggleFullscreen(void);
     bool SetFullscreen(bool p_fullscreen);
     bool IsFullscreen(void) const;
     void ReleaseRenderTarget(void) const;
     void ReleaseUnorderedAccess(unsigned int p_startSlot, unsigned int p_count) const;
     void ReleaseShaderResources(unsigned int p_startSlot, unsigned int p_count, ShaderTarget p_target = TARGET_ALL) const;
+
+    void DrawText1(std::wstring p_text) const;
     
     std::weak_ptr<RenderTarget> GetBackbuffer(void) const { return m_pBackbuffer; }
     bool IsOnShutdown(void) const { return m_onShutdown; }

@@ -301,6 +301,9 @@
     <ClInclude Include="TerrainNode.h">
       <Filter>Header Files\GameView\HumanView\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Grid3D.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -449,6 +452,9 @@
     </ClCompile>
     <ClCompile Include="TerrainNode.cpp">
       <Filter>Source Files\GameView\HumanView\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid3D.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

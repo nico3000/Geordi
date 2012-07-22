@@ -278,6 +278,7 @@
     <ClInclude Include="IPointerHandler.h" />
     <ClInclude Include="IPostEffect.h" />
     <ClInclude Include="ISceneNode.h" />
+    <ClInclude Include="Grid3D.h" />
     <ClInclude Include="RigidbodyComponent.h" />
     <ClInclude Include="PhysicsLayer.h" />
     <ClInclude Include="Pose.h" />
@@ -331,6 +332,7 @@
     <ClCompile Include="HumanDisplay.cpp" />
     <ClCompile Include="IndexBuffer.cpp" />
     <ClCompile Include="InputController.cpp" />
+    <ClCompile Include="Grid3D.cpp" />
     <ClCompile Include="RigidbodyComponent.cpp" />
     <ClCompile Include="PhysicsLayer.cpp" />
     <ClCompile Include="Pose.cpp" />

@@ -67,7 +67,7 @@ HRESULT RootNode::VOnRestore(void)
         { "SAMPLE_COUNT", val.c_str() },
         { 0, 0 },
     };
-    if(!m_dsTest.Load("./Shader/MergeLightingMS.hlsl", "ScreenQuadVS", 0, sampleDesc.Count == 1 ? "TexOutPS" : "TexOutMSPS", pDefines))
+    if(!m_dsTest.Load(L"./Shader/MergeLightingMS.hlsl", "ScreenQuadVS", 0, sampleDesc.Count == 1 ? "TexOutPS" : "TexOutMSPS", pDefines))
     {
         return S_FALSE;
     }
@@ -178,6 +178,9 @@ HRESULT RootNode::VPostRender(Scene* p_pScene)
     {
         (*iter)->VExecute();
     }
+
+    //LostIsland::g_pGraphics->GetBackbuffer().lock()->BindAllRenderTargets();
+    //LostIsland::g_pGraphics->DrawText1(L"Nicotopia");
 
     return S_OK;
 }

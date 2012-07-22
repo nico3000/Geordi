@@ -17,7 +17,7 @@ namespace Logger
         g_pLogMgr->AddErrorMessenger(this);
     }
 
-    void ErrorMessenger::Show(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
+    void ErrorMessenger::Show(const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line)
     {
         if(m_enabled)
         {
@@ -32,7 +32,7 @@ namespace Logger
     }
 
 
-    bool Init(const char* p_configFile)
+    bool Init(LPCSTR p_configFile)
     {
         
         g_pLogMgr = new LogMgr;
@@ -50,9 +50,9 @@ namespace Logger
     }
 
 
-    void Log(const std::string& p_tag, const std::string& p_msg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
+    void Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line)
     {
-        g_pLogMgr->Log(p_tag, p_msg, p_isFatal, p_function, p_file, p_line);
+        g_pLogMgr->Log(p_tag, p_errorMsg, p_isFatal, p_function, p_file, p_line);
     }
 
 
@@ -82,7 +82,7 @@ namespace Logger
     }
 
 
-    bool LogMgr::Init(const char* p_configFile)
+    bool LogMgr::Init(LPCSTR p_configFile)
     {
         tinyxml2::XMLDocument doc;
         INT result = doc.LoadFile(p_configFile);
@@ -126,10 +126,10 @@ namespace Logger
     }
 
 
-    void LogMgr::Log(const std::string& p_tag, const std::string& p_msg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
+    void LogMgr::Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line)
     {
         std::string out;
-        this->GetOutputBuffer(out, p_tag, p_msg, p_function, p_file, p_line);
+        this->GetOutputBuffer(out, p_tag, p_errorMsg, p_function, p_file, p_line);
 
         unsigned char flags = m_tags.find(p_tag) == m_tags.end() ? (LOGFLAG_WRITE_TO_DEBUGGER | LOGFLAG_WRITE_TO_LOG_FILE) : m_tags[p_tag];
         if(flags & LOGFLAG_WRITE_TO_DEBUGGER)
@@ -155,7 +155,7 @@ namespace Logger
     }
 
 
-    LogMgr::ErrorDialogResult LogMgr::Error(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line)
+    LogMgr::ErrorDialogResult LogMgr::Error(const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line)
     {
         if(LostIsland::g_pGraphics)
         {
@@ -174,7 +174,7 @@ namespace Logger
     }
 
 
-    void LogMgr::GetOutputBuffer(std::string& p_output, const std::string& p_tag, const std::string& p_msg, const char* p_function, const char* p_file, UINT p_line)
+    void LogMgr::GetOutputBuffer(std::string& p_output, const std::string& p_tag, const std::string& p_msg, LPCSTR p_function, LPCSTR p_file, unsigned int p_line)
     {
         std::ostringstream str(p_output);
         str << "[" << p_tag << "] " << p_msg;

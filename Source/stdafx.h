@@ -79,3 +79,4 @@
 #define CLAMP(_val, _min, _max) max(_min, min(_val, _max))
 #define LERP(_val, _min, _max) (((_val) - (_min)) / ((_max) - (_min)))
 #define MIX(_val1, _val2, _t) ((1.0f - _t) * (_val1) + (_t) * (_val2))
+#define MOD(_val, _mod) ((((_val) % (_mod)) + (_mod)) % (_mod))

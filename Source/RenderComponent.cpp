@@ -66,14 +66,35 @@ StrongGeometryPtr RenderComponent::GetGeometry(GeometryType p_type)
                 Geometry::VertexBufferPtr pVertices(new VertexBuffer);
 
                 VertexBuffer::SimpleVertex vertices[] = {
-                    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
-                    { XMFLOAT3(+0.5f, -0.5f, -0.5f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
-                    { XMFLOAT3(+0.5f, +0.5f, -0.5f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
-                    { XMFLOAT3(-0.5f, +0.5f, -0.5f), XMFLOAT4(1.0f, 1.0f, 1.0f, 1.0f) },
-                    { XMFLOAT3(-0.5f, -0.5f, +0.5f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
-                    { XMFLOAT3(+0.5f, -0.5f, +0.5f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
-                    { XMFLOAT3(+0.5f, +0.5f, +0.5f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
-                    { XMFLOAT3(-0.5f, +0.5f, +0.5f), XMFLOAT4(0.0f, 0.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, +0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, +0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, -1.0f), XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f) },
+
+                    { XMFLOAT3(+0.5f, -0.5f, -0.5f), XMFLOAT3(+1.0f, 0.0f, 0.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, -0.5f, +0.5f), XMFLOAT3(+1.0f, 0.0f, 0.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, +0.5f, -0.5f), XMFLOAT3(+1.0f, 0.0f, 0.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, +0.5f, +0.5f), XMFLOAT3(+1.0f, 0.0f, 0.0f), XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f) },
+
+                    { XMFLOAT3(+0.5f, -0.5f, +0.5f), XMFLOAT3(0.0f, 0.0f, +1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, -0.5f, +0.5f), XMFLOAT3(0.0f, 0.0f, +1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, +0.5f, +0.5f), XMFLOAT3(0.0f, 0.0f, +1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, +0.5f, +0.5f), XMFLOAT3(0.0f, 0.0f, +1.0f), XMFLOAT4(0.0f, 0.0f, 1.0f, 1.0f) },
+
+                    { XMFLOAT3(-0.5f, -0.5f, +0.5f), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, +0.5f, +0.5f), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, +0.5f, -0.5f), XMFLOAT3(-1.0f, 0.0f, 0.0f), XMFLOAT4(0.0f, 1.0f, 1.0f, 1.0f) },
+
+                    { XMFLOAT3(-0.5f, +0.5f, -0.5f), XMFLOAT3(0.0f, +1.0f, 0.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, +0.5f, -0.5f), XMFLOAT3(0.0f, +1.0f, 0.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, +0.5f, +0.5f), XMFLOAT3(0.0f, +1.0f, 0.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, +0.5f, +0.5f), XMFLOAT3(0.0f, +1.0f, 0.0f), XMFLOAT4(1.0f, 0.0f, 1.0f, 1.0f) },
+
+                    { XMFLOAT3(-0.5f, -0.5f, +0.5f), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, -0.5f, +0.5f), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
+                    { XMFLOAT3(+0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, -1.0f, 0.0f), XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f) },
                 };
                 if(!pVertices->Build(vertices, ARRAYSIZE(vertices), sizeof(VertexBuffer::SimpleVertex)))
                 {
@@ -86,9 +107,12 @@ StrongGeometryPtr RenderComponent::GetGeometry(GeometryType p_type)
                 }
 
                 unsigned int indices[] = {
-                    0, 1, 3, 2, 7, 6, 4, 5, 0, 1, 0xFFFFFFFF,
-                    1, 5, 2, 6, 0xFFFFFFFF,
-                    3, 7, 0, 4,
+                    0, 1, 2, 3, 0xFFFFFFFF,
+                    4, 5, 6, 7, 0xFFFFFFFF,
+                    8, 9, 10, 11, 0xFFFFFFFF,
+                    12, 13, 14, 15, 0xFFFFFFFF,
+                    16, 17, 18, 19, 0xFFFFFFFF,
+                    20, 21, 22, 23, 0xFFFFFFFF,
                 };
                 if(!pIndices->Build(indices, ARRAYSIZE(indices), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP))
                 {

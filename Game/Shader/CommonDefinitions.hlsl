@@ -13,7 +13,7 @@ cbuffer Camera : register(b0)
 cbuffer ModelProperties : register(b1)
 {
     float4x4 g_model;
-    float4x4 g_modelIT;
+    float4x4 g_modelInv;
 };
 
 

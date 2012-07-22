@@ -46,7 +46,7 @@ bool InputController::Init(void)
 
 void InputController::RawInput(LPARAM lParam, WPARAM wParam)
 {
-    UINT dwSize = 1024;
+    unsigned int dwSize = 1024;
 
     GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER));
     LPBYTE lpb = new BYTE[dwSize];

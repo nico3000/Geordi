@@ -43,13 +43,13 @@ namespace Logger
     public:
         ErrorMessenger(void);
 
-        void Show(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line);
+        void Show(const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line);
 
     };
 
-    bool Init(const char* p_configFile);
+    bool Init(LPCSTR p_configFile);
     void Destroy(void);
-    void Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line);
+    void Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line);
     void SetDisplayFlags(const std::string& p_tag, unsigned char p_flags);
 
     class LogMgr
@@ -65,7 +65,7 @@ namespace Logger
         CRITICAL_SECTION m_messengerCriticalSection;
 
         void WriteToLogFile(const std::string& p_text);
-        void GetOutputBuffer(std::string& p_output, const std::string& p_tag, const std::string& p_msg, const char* p_function, const char* p_file, UINT p_line);
+        void GetOutputBuffer(std::string& p_output, const std::string& p_tag, const std::string& p_msg, LPCSTR p_function, LPCSTR p_file, unsigned int p_line);
 
     public:
         enum ErrorDialogResult
@@ -78,11 +78,11 @@ namespace Logger
         LogMgr(void);
         ~LogMgr(void);
 
-        bool Init(const char* p_configFile);
-        void Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT p_line);
+        bool Init(LPCSTR p_configFile);
+        void Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line);
         void SetDisplayFlags(const std::string& p_tag, unsigned char p_flags);
         void AddErrorMessenger(ErrorMessenger* p_pMessenger);
-        LogMgr::ErrorDialogResult Error(const std::string& p_errorMsg, bool p_isFatal, const char* p_function, const char* p_file, UINT line);
+        LogMgr::ErrorDialogResult Error(const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line);
 
     };
 }
