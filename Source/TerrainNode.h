@@ -20,6 +20,7 @@ public:
     ~TerrainBlock(void) {}
 
     void Build(int p_x, int p_y, int p_z, Grid3D& p_grid, float p_scale);
+    void BuildMC(int p_x, int p_y, int p_z, Grid3D& p_grid, float p_scale);
     
     void Draw(void) { if(m_geometry.IsReady()) m_geometry.Draw(); }
     int GetX(void) const { return m_x; }

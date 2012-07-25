@@ -319,12 +319,12 @@ void TerrainData::GenerateTestData(void)
                             float worldY = 2.0f * (float)(gridY * m_octreeSize + y) / (float)(m_pGridSize[1] * m_octreeSize) - 1.0f;
                             float worldZ = 2.0f * (float)(gridZ * m_octreeSize + z) / (float)(m_pGridSize[2] * m_octreeSize) - 1.0f;
 
-                            //float radius = sqrt(worldX * worldX + worldY * worldY + worldZ * worldZ);
-                            //float density = 0.75f - radius;
-                            //float density = worldY - 0.25f * sin(10.0f * worldX) * sin(10.0f * worldZ);
-                            float density = 16.0f * worldY;
-                            density += 1.0f * noise.SampleLinear(noise.GetSize() * worldX, noise.GetSize() * worldY, noise.GetSize() * worldZ);
-                            //density += 4.0f * noise.SampleLinear(0.25f *  noise.GetSize() * worldX, 0.25f *  noise.GetSize() * worldY, 0.25f *  noise.GetSize() * worldZ);
+                            float radius = sqrt(worldX * worldX + worldY * worldY + worldZ * worldZ);
+                            float density = 0.75f - radius;
+                            //float density = worldY - 0.25f * sin(100.0f * worldX) * cos(10.0f * worldZ + 5.0f * worldY) + 0.4f * sin(10.0f * worldY + worldX);
+                            //float density = 16.0f * worldY;
+                            density += 0.05f * noise.SampleLinear(noise.GetSize() * worldX, noise.GetSize() * worldY, noise.GetSize() * worldZ);
+                            density += 0.1f * noise.SampleLinear(0.25f *  noise.GetSize() * worldX, 0.25f *  noise.GetSize() * worldY, 0.25f *  noise.GetSize() * worldZ);
                             //density += 8.0f * noise.SampleLinear(0.125f * noise.GetSize() * worldX, 0.125f * noise.GetSize() * worldY, 0.125f * noise.GetSize() * worldZ);
                             //density += 0.5f * noise.SampleLinear(2.0f *   noise.GetSize() * worldX, 2.0f *   noise.GetSize() * worldY, 2.0f *   noise.GetSize() * worldZ);
                             //density *= 16.0f;

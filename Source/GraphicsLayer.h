@@ -50,7 +50,7 @@ enum ShaderTarget
 };
 
 class RenderTarget;
-class IFW1FontWrapper;
+struct IFW1FontWrapper;
 
 class GraphicsLayer
 {

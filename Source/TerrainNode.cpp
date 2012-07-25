@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "TerrainNode.h"
 #include "Scene.h"
+#include "MarchingCubeGrid.h"
 
 
 TerrainNode::TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksize, int p_smallradius) :
@@ -8,6 +9,7 @@ TerrainNode::TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksiz
 {
     m_tempGrid.Init(p_chunksize + 1);
     m_blockData.Init(max(m_pTerrain->GetSizeX(), max(m_pTerrain->GetSizeY(), m_pTerrain->GetSizeZ())));
+    MarchingCubeGrid::Init();
 }
 
 
@@ -40,13 +42,13 @@ HRESULT TerrainNode::VOnLostDevice(void)
 
 HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
 {
-    static unsigned long elapsed = 0;
-    elapsed += p_deltaMillis;
-    if(elapsed < 1000)
-    {
-        return S_OK;
-    }
-    elapsed = 0;
+//     static unsigned long elapsed = 0;
+//     elapsed += p_deltaMillis;
+//     if(elapsed < 1000)
+//     {
+//         return S_OK;
+//     }
+//     elapsed = 0;
 
     const XMFLOAT3& pos = p_pScene->GetCurrentCamera()->GetPosition();
     int posX = (int)(10.0f * pos.x / (float)m_chunksize);
@@ -62,6 +64,10 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
         {
             distance = currentDistance;
             freeBlock = i;
+            if(!m_blocks[i].HasGeometry())
+            {
+                break;
+            }
         }
     }
     if(freeBlock == -1)
@@ -107,12 +113,31 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
                 m_blockData.SetValue(m_blocks[freeBlock].GetX(), m_blocks[freeBlock].GetY(), m_blocks[freeBlock].GetZ(), 3); // not empty and unused
             }
             m_blockData.SetValue(toFillX, toFillY, toFillZ, 1); // not empty and used
-            m_blocks[freeBlock].Build(toFillX, toFillY, toFillZ, m_tempGrid, 0.1f);
+            //m_blocks[freeBlock].Build(toFillX, toFillY, toFillZ, m_tempGrid, 0.1f);
+            static MarchingCubeGrid grid;
+            bool check = grid.ConstructData(m_tempGrid, XMFLOAT3(toFillX * m_chunksize, toFillY * m_chunksize, toFillZ * m_chunksize), 1.0f);
+            if(!check)
+            {
+                LI_INFO("should not happen: no mc geometry created");
+            }
+            else
+            {
+                std::shared_ptr<Geometry> pGeo = grid.CreateGeometry();
+                if(pGeo)
+                {
+                    m_empty.push_back(pGeo);
+                }
+                else
+                {
+                    return S_OK;
+                }
+            }
+            
         }
         else
         {
             m_blockData.SetValue(toFillX, toFillY, toFillZ, 2); // empty (and unused)
-            return S_OK;
+            return S_OK;            
         }
 
         // visualize chunks
@@ -356,6 +381,64 @@ void TerrainBlock::Build(int p_x, int p_y, int p_z, Grid3D& p_grid, float p_scal
     str << "generated " << vertices.size() << " vertices";
     LI_INFO(str.str());
     
+    Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
+    pIndexBuffer->Build(&indices[0], (unsigned int)indices.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);
+    pVertexBuffer->Build(&vertices[0], (unsigned int)vertices.size(), sizeof(VertexBuffer::SimpleVertex));
+
+    m_geometry.Destroy();    
+    m_geometry.SetIndices(pIndexBuffer);
+    m_geometry.SetVertices(pVertexBuffer);
+    m_x = p_x;
+    m_y = p_y;
+    m_z = p_z;
+}
+
+void TerrainBlock::BuildMC(int p_x, int p_y, int p_z, Grid3D& p_grid, float p_scale)
+{
+    static std::vector<VertexBuffer::SimpleVertex> vertices;
+    static std::vector<unsigned int> indices;
+    vertices.clear();
+    indices.clear();
+    for(int x=0; x < p_grid.GetSize() - 1; ++x)
+    {
+        for(int y=0; y < p_grid.GetSize() - 1; ++y)
+        {
+            for(int z=0; z < p_grid.GetSize() - 1; ++z)
+            {
+                int i0 = p_grid.GetSingleIndex(x,     y,     z);
+                int i1 = p_grid.GetSingleIndex(x + 1, y,     z);
+                int i2 = p_grid.GetSingleIndex(x + 1, y + 1, z);
+                int i3 = p_grid.GetSingleIndex(x,     y + 1, z);
+                int i4 = p_grid.GetSingleIndex(x,     y,     z + 1);
+                int i5 = p_grid.GetSingleIndex(x + 1, y,     z + 1);
+                int i6 = p_grid.GetSingleIndex(x + 1, y + 1, z + 1);
+                int i7 = p_grid.GetSingleIndex(x,     y + 1, z + 1);
+
+                AppendTetrahedron(i2, i4, i6, i7, vertices, indices, p_grid, p_scale);
+                AppendTetrahedron(i2, i3, i4, i7, vertices, indices, p_grid, p_scale);
+                AppendTetrahedron(i0, i1, i2, i4, vertices, indices, p_grid, p_scale);
+                AppendTetrahedron(i1, i5, i2, i4, vertices, indices, p_grid, p_scale);
+                AppendTetrahedron(i0, i2, i3, i4, vertices, indices, p_grid, p_scale);
+                AppendTetrahedron(i5, i6, i2, i4, vertices, indices, p_grid, p_scale);
+            }
+        }
+    }
+
+    if(vertices.empty())
+    {
+        LI_INFO("should not happen: no geometry created");
+        return;
+    }
+
+    if(!Geometry::GenerateNormals(&vertices[0], &indices[0], (unsigned int)indices.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST))
+    {
+        LI_ERROR("generating normals failed");
+    }
+    std::ostringstream str;
+    str << "generated " << vertices.size() << " vertices";
+    LI_INFO(str.str());
+
     Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
     pIndexBuffer->Build(&indices[0], (unsigned int)indices.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);
