@@ -12,6 +12,10 @@ m_isVisible(true), m_valid(true)
     if(p_actorID != INVALID_ACTOR_ID)
     {
         m_pActor = LostIsland::g_pApp->GetGameLogic()->VGetActor(p_actorID);
+        if(!m_pActor.lock())
+        {
+            LI_ERROR("invalid actor id");
+        }
     }
 }
 

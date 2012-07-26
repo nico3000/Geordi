@@ -3,29 +3,7 @@
 
 Texture2D g_Tex : register(t1);
 
-struct SimpleVertex
-{
-	float3 positionMC : POSITION0;
-    float3 normalMC : NORMAL0;
-	float4 vertexColor : COLOR0;
-};
 
-struct SimpleVertexProjected
-{
-    float4 view : POSITION1;
-	float4 projected : SV_POSITION;
-    float3 normalWC : NORMAL0;
-	float4 vertexColor : COLOR0;
-    float2 tex : TEXCOORD0;
-};
-
-
-struct DeferredShadingOutput
-{
-    float4 diffuse : SV_Target0;
-    float4 view : SV_Target1;
-    float4 normal : SV_Target2;
-};
 
 
 // vertex shaders

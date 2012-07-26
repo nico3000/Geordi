@@ -36,6 +36,9 @@ void HumanDisplay::VOnAttach(GameViewID p_viewID, ActorID p_actorID)
 
     EventListenerDelegate onTerrainComponentCreated = fastdelegate::MakeDelegate(&m_scene, &Scene::TerrainComponentCreatedDelegate);
     EventManager::Get()->VAddListener(onTerrainComponentCreated, TerrainComponentCreatedEvent::sm_eventType);
+
+    EventListenerDelegate onClipmapTerrainComponentCreated = fastdelegate::MakeDelegate(&m_scene, &Scene::ClipmapTerrainComponentCreatedDelegate);
+    EventManager::Get()->VAddListener(onClipmapTerrainComponentCreated, ClipmapTerrainComponentCreatedEvent::sm_eventType);
 }
 
 

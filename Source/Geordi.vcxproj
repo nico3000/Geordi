@@ -239,6 +239,7 @@
   <ItemGroup>
     <None Include="..\Game\Shader\BloomCS.hlsl" />
     <None Include="..\Game\Shader\BloomPS.hlsl" />
+    <None Include="..\Game\Shader\Clipmap.hlsl" />
     <None Include="..\Game\Shader\CommonDefinitions.hlsl" />
     <None Include="..\Game\Shader\MergeLightingMS.hlsl" />
     <None Include="..\Game\Shader\DeferredShadingDefinitions.hlsl" />
@@ -256,6 +257,9 @@
     <ClInclude Include="BloomEffect.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="CameraComponent.h" />
+    <ClInclude Include="ClipmapTerrain.h" />
+    <ClInclude Include="ClipmapTerrainComponent.h" />
+    <ClInclude Include="ClipmapTerrainNode.h" />
     <ClInclude Include="Config.h" />
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DebugOutProcess.h" />
@@ -317,6 +321,9 @@
     <ClCompile Include="BloomEffect.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CameraComponent.cpp" />
+    <ClCompile Include="ClipmapTerrain.cpp" />
+    <ClCompile Include="ClipmapTerrainComponent.cpp" />
+    <ClCompile Include="ClipmapTerrainNode.cpp" />
     <ClCompile Include="Config.cpp" />
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DebugOutProcess.cpp" />

@@ -157,3 +157,26 @@ public:
     const ActorID& GetActorID(void) const { return m_id; }
 
 };
+
+
+class ClipmapTerrainComponentCreatedEvent :
+    public BaseEventData
+{
+private:
+    const ActorID m_id;
+
+public:
+    static const EventType sm_eventType;
+
+    ClipmapTerrainComponentCreatedEvent(ActorID p_id) :
+    m_id(p_id)
+    {  }
+
+    ~ClipmapTerrainComponentCreatedEvent(void) {}
+
+    virtual const char* VGetName(void) const { return "ClipmapTerrainComponentCreatedEvent"; }
+    virtual const EventType& VGetEventType(void) const { return sm_eventType; }
+    virtual IEventDataPtr VCopy(void) const { return IEventDataPtr(new ClipmapTerrainComponentCreatedEvent(m_id)); }
+    const ActorID& GetActorID(void) const { return m_id; }
+
+};

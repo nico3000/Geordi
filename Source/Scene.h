@@ -38,6 +38,7 @@ public:
     void RenderComponentCreatedDelegate(IEventDataPtr p_pEvent);
     void ParticleComponentCreatedDelegate(IEventDataPtr p_pEvent);
     void TerrainComponentCreatedDelegate(IEventDataPtr p_pEvent);
+    void ClipmapTerrainComponentCreatedDelegate(IEventDataPtr p_pEvent);
 
 };
 

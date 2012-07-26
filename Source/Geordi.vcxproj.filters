@@ -128,6 +128,9 @@
     <None Include="..\Game\Shader\MergeLightingMS.hlsl">
       <Filter>Shader</Filter>
     </None>
+    <None Include="..\Game\Shader\Clipmap.hlsl">
+      <Filter>Shader</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -307,6 +310,15 @@
     <ClInclude Include="Grid3D.h">
       <Filter>Header Files\GameLogic\Terrain</Filter>
     </ClInclude>
+    <ClInclude Include="ClipmapTerrain.h">
+      <Filter>Header Files\GameLogic\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="ClipmapTerrainNode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ClipmapTerrainComponent.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -461,6 +473,15 @@
     </ClCompile>
     <ClCompile Include="Grid3D.cpp">
       <Filter>Source Files\GameLogic\Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="ClipmapTerrain.cpp">
+      <Filter>Source Files\GameLogic\Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="ClipmapTerrainNode.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ClipmapTerrainComponent.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

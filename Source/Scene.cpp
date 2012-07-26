@@ -4,6 +4,7 @@
 #include "RenderComponent.h"
 #include "ParticleComponent.h"
 #include "TerrainComponent.h"
+#include "ClipmapTerrainComponent.h"
 
 
 Scene::Scene(void) :
@@ -96,6 +97,23 @@ void Scene::TerrainComponentCreatedDelegate(IEventDataPtr p_pEvent)
     }
 }
 
+
+void Scene::ClipmapTerrainComponentCreatedDelegate(IEventDataPtr p_pEvent)
+{
+    std::shared_ptr<ClipmapTerrainComponentCreatedEvent> pEvent = std::static_pointer_cast<ClipmapTerrainComponentCreatedEvent>(p_pEvent);
+    if(pEvent)
+    {
+        StrongActorPtr pActor = LostIsland::g_pApp->GetGameLogic()->VGetActor(pEvent->GetActorID()).lock();
+        if(pActor)
+        {
+            std::shared_ptr<ClipmapTerrainComponent> pComp = pActor->GetComponent<ClipmapTerrainComponent>(ClipmapTerrainComponent::sm_componentID).lock();
+            if(pComp)
+            {
+                this->AddChild(pActor->GetID(), pComp->GetSceneNode());
+            }
+        }
+    }
+}
 
 void Scene::Render(void)
 {

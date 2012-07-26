@@ -8,4 +8,6 @@ const EventType ActorMoveEvent::sm_eventType = 0x2743967;
 const EventType RenderComponentCreatedEvent::sm_eventType = 0x2fed3134;
 const EventType ParticleComponentCreatedEvent::sm_eventType = 0xeffe55ad;
 const EventType TerrainComponentCreatedEvent::sm_eventType = 0x881b9f57;
+const EventType ClipmapTerrainComponentCreatedEvent::sm_eventType = 0x95b8bee5;
+
 

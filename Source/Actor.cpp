@@ -6,6 +6,7 @@
 #include "RigidbodyComponent.h"
 #include "TransformComponent.h"
 #include "TerrainComponent.h"
+#include "ClipmapTerrainComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 //////// Component Creator Functions /////////////////////////////////////
@@ -44,6 +45,12 @@ ActorComponent* CreateRigidbodyComponent(void)
 ActorComponent* CreateTerrainComponent(void)
 {
     return new TerrainComponent;
+}
+
+
+ActorComponent* CreateClipmapTerrainComponent(void)
+{
+    return new ClipmapTerrainComponent;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -119,7 +126,8 @@ void Actor::AddComponent(StrongActorComponentPtr p_pComponent)
 }
 
 
-ActorFactory::ActorFactory(void)
+ActorFactory::ActorFactory(void):
+m_lastActorID(0)
 {
     m_actorComponentCreators["RenderComponent"] = CreateRenderComponent;
     m_actorComponentIDs["RenderComponent"] = RenderComponent::sm_componentID;
@@ -133,6 +141,8 @@ ActorFactory::ActorFactory(void)
     m_actorComponentIDs["TransformComponent"] = TransformComponent::sm_componentID;
     m_actorComponentCreators["TerrainComponent"] = CreateTerrainComponent;
     m_actorComponentIDs["TerrainComponent"] = TerrainComponent::sm_componentID;
+    m_actorComponentCreators["ClipmapTerrainComponent"] = CreateClipmapTerrainComponent;
+    m_actorComponentIDs["ClipmapTerrainComponent"] = ClipmapTerrainComponent::sm_componentID;
 }
 
 
