@@ -40,7 +40,7 @@ public:
     ~MarchingCubeGrid(void) { SAFE_DELETE(m_pCubes); }
       
     std::shared_ptr<Geometry> CreateGeometry(void);
-    bool ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position, float p_scale);
+    bool ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position, float p_scale, bool p_genNormals);
     
     static void Init(void);
 

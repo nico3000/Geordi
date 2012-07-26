@@ -319,13 +319,14 @@ void TerrainData::GenerateTestData(void)
                             float worldY = 2.0f * (float)(gridY * m_octreeSize + y) / (float)(m_pGridSize[1] * m_octreeSize) - 1.0f;
                             float worldZ = 2.0f * (float)(gridZ * m_octreeSize + z) / (float)(m_pGridSize[2] * m_octreeSize) - 1.0f;
 
-                            float radius = sqrt(worldX * worldX + worldY * worldY + worldZ * worldZ);
-                            float density = 0.75f - radius;
+                            //float radius = sqrt(worldX * worldX + worldY * worldY + worldZ * worldZ);
+                            //float density = 0.75f - radius;
                             //float density = worldY - 0.25f * sin(100.0f * worldX) * cos(10.0f * worldZ + 5.0f * worldY) + 0.4f * sin(10.0f * worldY + worldX);
-                            //float density = 16.0f * worldY;
-                            density += 0.05f * noise.SampleLinear(noise.GetSize() * worldX, noise.GetSize() * worldY, noise.GetSize() * worldZ);
-                            density += 0.1f * noise.SampleLinear(0.25f *  noise.GetSize() * worldX, 0.25f *  noise.GetSize() * worldY, 0.25f *  noise.GetSize() * worldZ);
-                            //density += 8.0f * noise.SampleLinear(0.125f * noise.GetSize() * worldX, 0.125f * noise.GetSize() * worldY, 0.125f * noise.GetSize() * worldZ);
+                            float density = 16.0f * worldY;
+                            //density += 1.0f * noise.SampleLinear(noise.GetSize() * worldX, noise.GetSize() * worldY, noise.GetSize() * worldZ);
+                            density += 4.1f * noise.SampleLinear(0.24f * noise.GetSize() * worldX, 0.26f * noise.GetSize() * worldY, 0.23f * noise.GetSize() * worldZ);
+                            density += 7.9f * noise.SampleLinear(0.127f * noise.GetSize() * worldX, 0.123f * noise.GetSize() * worldY, 0.135f * noise.GetSize() * worldZ);
+                            density += 16.1f * noise.SampleLinear(0.0635f * noise.GetSize() * worldX, 0.0725f * noise.GetSize() * worldY, 0.0615f * noise.GetSize() * worldZ);
                             //density += 0.5f * noise.SampleLinear(2.0f *   noise.GetSize() * worldX, 2.0f *   noise.GetSize() * worldY, 2.0f *   noise.GetSize() * worldZ);
                             //density *= 16.0f;
 
@@ -338,9 +339,66 @@ void TerrainData::GenerateTestData(void)
                 LI_INFO(str.str());
                 this->UseTile(gridX, gridY, gridZ);
                 TILE(gridX, gridY, gridZ).OptimizeStructure();
+
+                OutputDebugStringA(str.str().c_str());
             }
         }
     }
+
+//     const static unsigned char size = 248;
+//     const static unsigned char images = 22;
+//     for(int z=0; z < size / 2; ++z)
+//     {
+//         int image1 = images * z / (size / 2);
+//         int image2 = image1 + 1;
+//         float t = (float)images * (float)z / (0.5f * (float)size) - (float)image1;
+//         std::ostringstream filename1, filename2;
+//         filename1 << "D:\\Visual Studio 2010\\Geordi\\Assets\\kopf\\" << (image1 < 10 ? "0" : "") << image1 << ".BMP.n";
+//         filename2 << "D:\\Visual Studio 2010\\Geordi\\Assets\\kopf\\" << (image2 < 10 ? "0" : "") << image2 << ".BMP.n";
+//         std::ifstream file1(filename1.str(), std::ios::binary | std::ios::in);
+//         std::ifstream file2(filename2.str(), std::ios::binary | std::ios::in);
+//         if(!file1.is_open() || !file1.good())
+//         {
+//             LI_ERROR("error: " + filename1.str());
+//         }
+//         if(!file2.is_open() || !file2.good())
+//         {
+//             LI_ERROR("error: " + filename2.str());
+//         }
+// 
+//         if((unsigned char)file1.get() != size || (unsigned char)file1.get() != size)
+//         {
+//             std::ostringstream error;
+//             error << filename1.str() << " wrong size!"; 
+//             LI_ERROR(error.str());
+//         }
+//         if((unsigned char)file2.get() != size || (unsigned char)file2.get() != size)
+//         {
+//             std::ostringstream error;
+//             error << filename2.str() << " wrong size!"; 
+//             LI_ERROR(error.str());
+//         }
+//         
+//         for(int y=0; y < size; ++y)
+//         {
+//             for(int x=0; x < size; ++x)
+//             {
+//                 float red1 = (float)(unsigned char)file1.get() / 255.0f - 0.15f;
+//                 float red2 = (float)(unsigned char)file2.get() / 255.0f - 0.15f;
+//                 file1.get(); file1.get(); file1.get();
+//                 file2.get(); file2.get(); file2.get();
+//                 this->SetDensity(x, size - 1 - y, z, -MIX(red1, red2, t));
+//                 std::ostringstream info;
+//                 info << red1 << " " << red2 << " " << t;
+//                 //LI_INFO(info.str());
+//             }
+//         }
+// 
+//         std::stringstream info;
+//         info << z << "/" << (int)size << " (" << 0.1f * (float)(int)(1e+3f * (float)z / (float)size) << "%)";
+//         LI_INFO(info.str());
+//     }
+
 }
 
 
@@ -393,7 +451,7 @@ bool TerrainData::FillGrid(Grid3D& p_grid, unsigned short p_startX, unsigned sho
         {
             for(int z=0; z < p_grid.GetSize(); ++z)
             {
-                float density = this->GetDensity(p_startX + x, p_startY + y, p_startZ + z);
+                float density = this->GetDensity(p_startX + p_offset * x, p_startY + p_offset * y, p_startZ + p_offset * z);
                 if(density > 0)
                 {
                     switch(geo)

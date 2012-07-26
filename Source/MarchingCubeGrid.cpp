@@ -71,9 +71,9 @@ void MarchingCubeGrid::AddEdge(char p_edge, unsigned short p_index, short p_x, s
 }
 
 
-bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position, float p_scale)
+bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position, float p_scale, bool p_genNormals)
 {
-    this->ResetCubeCodes(p_grid.GetSize() - 1);
+    this->ResetCubeCodes(p_grid.GetSize() - (p_genNormals ? 2 : 1));
     m_vertices.clear();
     m_indices.clear();
     for(short x=0; x < m_cubes + 1; ++x)
@@ -95,10 +95,11 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         float t = base / (base - w);
                         VertexBuffer::SimpleVertex v =
                         {
-                            XMFLOAT3(m_position.x + p_scale * (float)(x + t), m_position.y + p_scale * (float)y, m_position.z + p_scale * (float)z),
+                            XMFLOAT3(p_scale * (m_position.x + (float)(x + t)), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4(0.5f, 1.0f, 0.5f, 1.0f),
+                            XMFLOAT4(0.5f, 0.5f, 1.0f, 1.0f),
                         };
+                        p_grid.GenerateGradient((float)x + t, (float)y, (float)z, v.normalMC);
                         this->AddEdge(0, m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
@@ -111,10 +112,11 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         float t = base / (base - w);
                         VertexBuffer::SimpleVertex v =
                         {
-                            XMFLOAT3(m_position.x + p_scale * (float)x, m_position.y + p_scale * (float)(y + t), m_position.z + p_scale * (float)z),
+                            XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)(y + t)), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
                             XMFLOAT4(0.5f, 1.0f, 0.5f, 1.0f),
                         };
+                        p_grid.GenerateGradient((float)x, (float)y + t, (float)z, v.normalMC);
                         this->AddEdge(4, m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
@@ -127,10 +129,11 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         float t = base / (base - w);
                         VertexBuffer::SimpleVertex v =
                         {
-                            XMFLOAT3(m_position.x + p_scale * (float)x, m_position.y + p_scale * (float)y, m_position.z + p_scale * (float)(z + t)),
+                            XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)(z + t))),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4(0.5f, 1.0f, 0.5f, 1.0f),
+                            XMFLOAT4(1.0f, 0.5f, 0.5f, 1.0f),
                         };
+                        p_grid.GenerateGradient((float)x, (float)y, (float)z + t, v.normalMC);
                         this->AddEdge(8, m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
@@ -164,7 +167,7 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(void)
             return 0;
         }
 
-        Geometry::GenerateNormals(&m_vertices[0], &m_indices[0], m_indices.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        //Geometry::GenerateNormals(&m_vertices[0], &m_indices[0], m_indices.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
         pIndexBuffer->Build(&m_indices[0], (unsigned int)m_indices.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);

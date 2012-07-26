@@ -3,7 +3,7 @@
         <Position x="0.0" y="0.0" z="-4.0" />
     </TransformComponent>
     <CameraComponent>
-        <Settings fov="90.0" aspect="auto" minZ="0.01" maxZ="100.0" />
+        <Settings fov="90.0" aspect="auto" minZ="0.1" maxZ="100.0" />
         <Cameratype type="freelook">
             <Position x="0.0" y="0.0" z="-2.0" />
             <Orientation phi="0.0" theta="0.0" />

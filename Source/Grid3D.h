@@ -14,6 +14,7 @@ public:
     void LoadNoise(void);
     float SampleLinear(float p_x, float p_y, float p_z) const;
     float SampleNearest(float p_x, float p_y, float p_z) const;
+    void GenerateGradient(float p_x, float p_y, float p_z, XMFLOAT3& p_target) const;
     
     int GetSize(void) const { return m_size; }
     float GetValue(int p_x, int p_y, int p_z) const { return this->GetValue(this->GetSingleIndex(p_x, p_y, p_z)); }

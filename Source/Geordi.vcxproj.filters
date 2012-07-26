@@ -301,11 +301,11 @@
     <ClInclude Include="TerrainNode.h">
       <Filter>Header Files\GameView\HumanView\Scene</Filter>
     </ClInclude>
-    <ClInclude Include="Grid3D.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="MarchingCubeGrid.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\GameLogic\Terrain</Filter>
+    </ClInclude>
+    <ClInclude Include="Grid3D.h">
+      <Filter>Header Files\GameLogic\Terrain</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -456,11 +456,11 @@
     <ClCompile Include="TerrainNode.cpp">
       <Filter>Source Files\GameView\HumanView\Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Grid3D.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MarchingCubeGrid.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\GameLogic\Terrain</Filter>
+    </ClCompile>
+    <ClCompile Include="Grid3D.cpp">
+      <Filter>Source Files\GameLogic\Terrain</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

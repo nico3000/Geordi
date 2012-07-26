@@ -29,10 +29,10 @@ float Grid3D::SampleLinear(float p_x, float p_y, float p_z) const
     float s = p_y - floor(p_y);
     float t = p_z - floor(p_z);
 
-    float y0 = MIX(this->GetValue((int)p_x,     (int)p_y, (int)p_z),     this->GetValue((int)p_x,     (int)p_y + 1, (int)p_z), s);
-    float y1 = MIX(this->GetValue((int)p_x + 1, (int)p_y, (int)p_z),     this->GetValue((int)p_x + 1, (int)p_y + 1, (int)p_z), s);
-    float y2 = MIX(this->GetValue((int)p_x + 1, (int)p_y, (int)p_z + 1), this->GetValue((int)p_x + 1, (int)p_y + 1, (int)p_z + 1), s);
-    float y3 = MIX(this->GetValue((int)p_x,     (int)p_y, (int)p_z + 1), this->GetValue((int)p_x,     (int)p_y + 1, (int)p_z + 1), s);
+    float y0 = MIX(this->GetValue((int)floor(p_x),     (int)floor(p_y), (int)floor(p_z)),     this->GetValue((int)floor(p_x),     (int)floor(p_y) + 1, (int)floor(p_z)), s);
+    float y1 = MIX(this->GetValue((int)floor(p_x) + 1, (int)floor(p_y), (int)floor(p_z)),     this->GetValue((int)floor(p_x) + 1, (int)floor(p_y) + 1, (int)floor(p_z)), s);
+    float y2 = MIX(this->GetValue((int)floor(p_x) + 1, (int)floor(p_y), (int)floor(p_z) + 1), this->GetValue((int)floor(p_x) + 1, (int)floor(p_y) + 1, (int)floor(p_z) + 1), s);
+    float y3 = MIX(this->GetValue((int)floor(p_x),     (int)floor(p_y), (int)floor(p_z) + 1), this->GetValue((int)floor(p_x),     (int)floor(p_y) + 1, (int)floor(p_z) + 1), s);
 
     float x0 = MIX(y0, y1, r);
     float x1 = MIX(y3, y2, r);
@@ -47,6 +47,20 @@ float Grid3D::SampleNearest(float p_x, float p_y, float p_z) const
     float sampleY = (float)m_size * p_y;
     float sampleZ = (float)m_size * p_z;
     return this->GetValue((int)(sampleX + 0.5f), (int)(sampleY + 0.5f), (int)(sampleZ + 0.5f));
+}
+
+
+void Grid3D::GenerateGradient(float p_x, float p_y, float p_z, XMFLOAT3& p_target) const
+{
+    const static float epsilon = 1e-0f;
+    float v0 = this->SampleLinear(p_x, p_y, p_z);
+    p_target.x = (this->SampleLinear(p_x + epsilon, p_y, p_z) - v0) / epsilon;
+    p_target.y = (this->SampleLinear(p_x, p_y + epsilon, p_z) - v0) / epsilon;
+    p_target.z = (this->SampleLinear(p_x, p_y, p_z + epsilon) - v0) / epsilon;
+    float len = sqrt(p_target.x * p_target.x + p_target.y * p_target.y + p_target.z * p_target.z);
+    p_target.x /= len;
+    p_target.y /= len;
+    p_target.z /= len;
 }
 
 

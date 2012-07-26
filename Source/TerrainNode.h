@@ -9,33 +9,16 @@
 #define NUM_BLOCKS 1024
 
 
-class TerrainBlock 
-{
-private:
-    int m_x, m_y, m_z;
-    Geometry m_geometry;
-
-public:
-    TerrainBlock(void) {}
-    ~TerrainBlock(void) {}
-
-    void Build(int p_x, int p_y, int p_z, Grid3D& p_grid, float p_scale);
-    void BuildMC(int p_x, int p_y, int p_z, Grid3D& p_grid, float p_scale);
-    
-    void Draw(void) { if(m_geometry.IsReady()) m_geometry.Draw(); }
-    int GetX(void) const { return m_x; }
-    int GetY(void) const { return m_y; }
-    int GetZ(void) const { return m_z; }
-    Geometry& GetGeometry(void) { return m_geometry; }
-    bool HasGeometry(void) const { return m_geometry.IsReady(); }
-
-};
-
-
 class TerrainNode :
     public ISceneNode
 {
 private:
+    struct TerrainBlock 
+    {
+        int x, y, z;
+        std::shared_ptr<Geometry> pGeometry;
+    };
+
     std::shared_ptr<TerrainData> m_pTerrain;
     TerrainBlock m_blocks[NUM_BLOCKS];
     Octree m_blockData;
