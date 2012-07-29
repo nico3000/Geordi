@@ -158,7 +158,7 @@ HRESULT BaseSceneNode::VPostRender(Scene* p_pScene)
 {
     if(m_valid)
     {
-        p_pScene->PopModelMatrices();
+        p_pScene->PopModelMatrices(true);
     }
     return S_OK;
 }

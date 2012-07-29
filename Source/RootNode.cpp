@@ -112,7 +112,7 @@ HRESULT RootNode::VOnLostDevice(void)
 
 HRESULT RootNode::VPreRender(Scene* p_pScene)
 {
-    static float pColor[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+    static float pColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     m_pBase->BindAllRenderTargets();
     m_pBase->ClearDepthStencil(1.0f, 0);
     m_pBase->ClearColor(pColor);

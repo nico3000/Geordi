@@ -18,6 +18,7 @@ public:
     bool BuildFromSharedData(void* p_pData, unsigned int p_byteWidth);
     void Bind(unsigned int p_slot, ShaderTarget p_target);
     bool Update(void);
+    bool UpdateAndBind(unsigned int p_slot, ShaderTarget p_target) { if(!this->Update()) return false; this->Bind(p_slot, p_target); return true; }
 
     void* GetData(void) { return m_pData; }
     bool IsBuilt(void) const { return m_pData != 0; }

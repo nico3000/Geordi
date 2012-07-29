@@ -264,6 +264,7 @@
     <ClInclude Include="ConstantBuffer.h" />
     <ClInclude Include="DebugOutProcess.h" />
     <ClInclude Include="DelayProcess.h" />
+    <ClInclude Include="DisplacementData.h" />
     <ClInclude Include="EventManager.h" />
     <ClInclude Include="FPSActorInputHandler.h" />
     <ClInclude Include="GameApp.h" />
@@ -328,6 +329,7 @@
     <ClCompile Include="ConstantBuffer.cpp" />
     <ClCompile Include="DebugOutProcess.cpp" />
     <ClCompile Include="DelayProcess.cpp" />
+    <ClCompile Include="DisplacementData.cpp" />
     <ClCompile Include="EventManager.cpp" />
     <ClCompile Include="FPSActorInputHandler.cpp" />
     <ClCompile Include="GameApp.cpp" />

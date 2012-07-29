@@ -12,7 +12,7 @@ float4 TexOutMSPS(ScreenQuadFragment input) : SV_Target0
     g_DiffuseTexMS.GetDimensions(tex.x, tex.y, samples);
 	tex *= input.tex;
     float4 color = float4(0,0,0,0);
-    for(int i=0; i < samples; ++i)
+    for(int i=0; i < SAMPLE_COUNT; ++i)
     {	
 		float2 samplePosition = g_NormalTexMS.GetSamplePosition(i);
         float cosa = 0.5 + 0.5 * dot(g_NormalTexMS.Load(tex, i).xyz, float3(0,1,0));
@@ -28,5 +28,8 @@ Texture2D<float4> g_NormalTex : register(t2);
 
 float4 TexOutPS(ScreenQuadFragment input) : SV_Target0
 {
-    return g_NormalTex.Sample(PointSampler, input.tex);
+    float4 diffuse = g_DiffuseTex.Sample(PointSampler, input.tex);
+    float3 normal = g_NormalTex.Sample(PointSampler, input.tex).xyz;
+    float cosa = 0.5 + 0.5 * dot(normal, float3(0,1,0));
+    return cosa * diffuse;
 }

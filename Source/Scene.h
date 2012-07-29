@@ -33,7 +33,7 @@ public:
     std::shared_ptr<Camera> GetCurrentCamera(void) const { return m_pCurrentCamera; }
     void PushModelMatrices(const Pose::ModelMatrixData& p_modelMatrixData, bool p_updateBuffer = true);
     void PopModelMatrices(bool p_updateBuffer = false);
-    bool UpdateModelMatrixBuffer(void) { return m_modelBuffer.Update(); }
+    bool UpdateModelMatrixBuffer(void);
 
     void RenderComponentCreatedDelegate(IEventDataPtr p_pEvent);
     void ParticleComponentCreatedDelegate(IEventDataPtr p_pEvent);

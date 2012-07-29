@@ -157,12 +157,18 @@ void Scene::PushModelMatrices(const Pose::ModelMatrixData& p_modelMatrixData, bo
 {
     m_modelStack.PushMatrix(p_modelMatrixData.model);
     m_modelInvStack.PushMatrix(p_modelMatrixData.modelInv);
-    ((Pose::ModelMatrixData*)m_modelBuffer.GetData())->model = m_modelStack.Top();
-    ((Pose::ModelMatrixData*)m_modelBuffer.GetData())->modelInv = m_modelInvStack.Top();
     if(p_updateBuffer)
     {
         this->UpdateModelMatrixBuffer();
     }
+}
+
+
+bool Scene::UpdateModelMatrixBuffer(void)
+{
+    ((Pose::ModelMatrixData*)m_modelBuffer.GetData())->model = m_modelStack.Top();
+    ((Pose::ModelMatrixData*)m_modelBuffer.GetData())->modelInv = m_modelInvStack.Top();
+    return m_modelBuffer.Update();
 }
 
 

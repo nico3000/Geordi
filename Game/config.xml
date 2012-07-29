@@ -1,3 +1,3 @@
 <graphics>
-	<display width="1360" height="765" refresh="120" vsync="false" windowed="true" msaa="8" />
+	<display width="1360" height="765" refresh="120" vsync="false" windowed="true" msaa="1" />
 </graphics>

@@ -14,5 +14,6 @@ public:
 
     HRESULT VOnRestore(void);
     HRESULT VRender(Scene* p_pScene);
+    HRESULT VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis);
 };
 

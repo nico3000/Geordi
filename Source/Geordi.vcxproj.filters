@@ -319,6 +319,9 @@
     <ClInclude Include="ClipmapTerrainComponent.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="DisplacementData.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -481,6 +484,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ClipmapTerrainComponent.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DisplacementData.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
