@@ -98,7 +98,7 @@ DisplacementData::GridPoint* DisplacementData::GetData(int p_x, int p_y)
 }
 
 
-short DisplacementData::GetHeight(int p_x, int p_y)
+float DisplacementData::GetHeight(int p_x, int p_y)
 {
     GridPoint* point = this->GetData(p_x, p_y);
     return !point ? 0 : point->height;
@@ -112,7 +112,7 @@ unsigned short DisplacementData::GetFlags(int p_x, int p_y)
 }
 
 
-void DisplacementData::SetHeight(int p_x, int p_y, short p_height)
+void DisplacementData::SetHeight(int p_x, int p_y, float p_height)
 {
     GridPoint* point = this->GetData(p_x, p_y);
     if(point)
@@ -213,6 +213,19 @@ void DisplacementData::SaveDirectory(void)
 }
 
 
+void DisplacementData::GenerateNormals(void)
+{
+    for(int y=1; y < FILE_TILE_DIMENSION * m_directory.tileSize - 1; ++y)
+    {
+        for(int x=1; x < FILE_TILE_DIMENSION * m_directory.tileSize - 1; ++x)
+        {
+            
+        }
+    }
+}
+
+
+#include "Grid3D.h"
 void DisplacementData::GenerateTestData(void)
 {
 //     std::ifstream file("./Displacements/test.ndm", std::ios::binary | std::ios::in);
@@ -227,19 +240,34 @@ void DisplacementData::GenerateTestData(void)
 //     
 //     LI_INFO(str.str());
 
+    Grid3D noise;
+    noise.Init(8);
+    noise.LoadNoise();
 
     if(!this->Init("./Displacements/test.ndm", 16))
     {
         return;
     }
     std::ostringstream info;
+    float alpha = noise.SampleLinear(0.0f, 0.0f, 0.0f);
     for(int y=0; y < 16 * 64; ++y)
     {
         for(int x=0; x < 16 * 64; ++x)
         {
             float vx = (float)x / 1024.0f;
             float vy = (float)y / 1024.0f;
-            this->SetHeight(x, y, (short)((float)SHORT_MAX * sin(200.0f * vx) * sin(200.0f * vy)));
+            
+            float nx = cos(alpha) * vx - sin(alpha) * vy;
+            float ny = sin(alpha) * vx + cos(alpha) * vy;
+
+            float height = 0.0f;
+            height += 1.0f * noise.SampleLinear(1.0f * nx, 1.0f * ny, 0);
+            height += 0.52f * noise.SampleLinear(2.01f * vx, 2.01f * vy, 0);
+            height += 0.261f * noise.SampleLinear(4.07f * nx, 4.07f * ny, 0);
+            height += 0.124f * noise.SampleLinear(7.89f * vx, 7.98f * vy, 0);
+            height += 0.0637f * noise.SampleLinear(16.17f * nx, 16.17f * ny, 0);        
+
+            this->SetHeight(x, y, 16.0f * height);
         }
     }
 }

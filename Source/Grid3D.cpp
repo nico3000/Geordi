@@ -25,6 +25,10 @@ void Grid3D::LoadNoise(void)
 
 float Grid3D::SampleLinear(float p_x, float p_y, float p_z) const
 {
+    p_x *= m_size;
+    p_y *= m_size;
+    p_z *= m_size;
+
     float r = p_x - floor(p_x);
     float s = p_y - floor(p_y);
     float t = p_z - floor(p_z);

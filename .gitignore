@@ -24,3 +24,4 @@ Source/VS2010/Geordi.suo
 *.oct
 Docs/~*
 Game/LostIsland.log
+*.ndm

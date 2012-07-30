@@ -88,6 +88,9 @@ bool ClipmapTerrain::Init(unsigned int p_gridSizePerLevel, unsigned int p_levelC
     m_pLShape[NORTH_WEST] = CreateLShapedGrid(2 * m_paramM + 1, NORTH_WEST, 1.0f);
     m_pLShape[SOUTH_WEST] = CreateLShapedGrid(2 * m_paramM + 1, SOUTH_WEST, 1.0f);
     m_pLShape[SOUTH_EAST] = CreateLShapedGrid(2 * m_paramM + 1, SOUTH_EAST, 1.0f);
+    for(unsigned int i=0; i < p_levelCount; ++i) {
+        m_pLShapeToDraw[i] = m_pLShape[NORTH_EAST];
+    }
     float trans0 = 0.5f * (float)(m_paramN - 1) - 0.5f * (float)(m_paramM - 1);
     float trans1 = 0.5f * (float)(m_paramN - 1) - 1.5f * (float)(m_paramM - 1);
     m_mxmTranslations[0] = XMFLOAT3(-trans0, 0.0f, +trans0);
@@ -143,17 +146,16 @@ void ClipmapTerrain::DrawLevel(unsigned int p_level) const
     props.level = (float)p_level;
     props.gridSize = (float)(m_paramN);
 
+    m_pBuffer->UpdateAndBind(3, TARGET_VS_PS);
+    m_degenerateTriangles->Draw();
+
     if(p_level == 0)
     {
-        m_pBuffer->UpdateAndBind(3, TARGET_VS_PS);
         m_fullBlock->Draw();
     }
     else
     {
-        m_pBuffer->UpdateAndBind(3, TARGET_VS_PS);
         m_pLShapeToDraw[p_level]->Draw();
-        m_degenerateTriangles->Draw();
-
         for(int i=0; i < 12; ++i)
         {
             props.tileTranslation = m_mxmTranslations[i];
@@ -201,12 +203,12 @@ void ClipmapTerrain::Draw(void) const
 }
 
 
-void ClipmapTerrain::Update(const XMFLOAT3& p_viewPoint1)
+void ClipmapTerrain::Update(const XMFLOAT3& p_viewPoint)
 {
-    XMFLOAT3 p_viewPoint(0,0,0);
+    //XMFLOAT3 p_viewPoint(0,0,0);
     int lastX = (int)(2.0f * ROUND((p_viewPoint.x - 1.0f) / (2.0f * m_scale)) + 1.0f);
     int lastZ = (int)(2.0f * ROUND((p_viewPoint.z - 1.0f) / (2.0f * m_scale)) + 1.0f);
-    if(abs(m_currentX - lastX) > (int)m_paramN / 4 || abs(m_currentZ - lastZ) > (int)m_paramN / 4)
+    if(abs(m_currentX - lastX) > (int)m_paramN / 8 || abs(m_currentZ - lastZ) > (int)m_paramN / 8)
     {
         m_pLevels[0].Update(m_currentX = lastX, m_currentZ = lastZ, m_pData);
         for(unsigned int level=1; level < m_levelCount; ++level)
@@ -282,59 +284,65 @@ std::shared_ptr<Geometry> ClipmapTerrain::CreateRectGrid(unsigned char p_sizeX, 
 
 std::shared_ptr<Geometry> ClipmapTerrain::CreateDegenerateTriangles(unsigned char p_sizeX, unsigned char p_sizeY, float p_scale)
 {
-    unsigned int vertexCount = 2 * (p_sizeX - 1 + p_sizeY - 1);
-    VertexBuffer::SimpleVertex* pVertices = new VertexBuffer::SimpleVertex[vertexCount];
-    unsigned int indexCount = 3 * (2 * (p_sizeX / 2) + 2 * (p_sizeY / 2));
-    unsigned int* pIndices = new unsigned int[indexCount];
+    std::vector<VertexBuffer::SimpleVertex> vertices;
+    std::vector<unsigned int> indices;
+    VertexBuffer::SimpleVertex v;
 
     for(unsigned char x=0; x < p_sizeX; ++x)
     {
-        VertexBuffer::SimpleVertex& v = pVertices[x];
         v.positionMC = XMFLOAT3(p_scale * (float)x - p_scale * 0.5f * (float)(p_sizeX - 1), 0.0f, p_scale * 0.5f * (float)(p_sizeY - 1));
         v.normalMC = XMFLOAT3(0.0f, 1.0f, 0.0f);
         v.vertexColor = XMFLOAT4(0.961f, 0.510f, 0.125f, 1.0f);
+        vertices.push_back(v);
 
-        v = pVertices[p_sizeX - 1 + p_sizeY - 1 + x];
         v.positionMC = XMFLOAT3(p_scale * (float)x - p_scale * 0.5f * (float)(p_sizeX - 1), 0.0f, -p_scale * 0.5f * (float)(p_sizeY - 1));
         v.normalMC = XMFLOAT3(0.0f, 1.0f, 0.0f);
         v.vertexColor = XMFLOAT4(0.961f, 0.510f, 0.125f, 1.0f);
+        vertices.push_back(v);
 
         if(x % 2 == 1)
         {
-            pIndices[3 * x / 2 + 0] = x - 1;
-            pIndices[3 * x / 2 + 1] = x + 1;
-            pIndices[3 * x / 2 + 2] = x;
-
-            pIndices[3 * (p_sizeX / 2 + p_sizeY / 2) + 3 * x / 2 + 0] = p_sizeX - 1 + p_sizeY - 1 + x + 1;
-            pIndices[3 * (p_sizeX / 2 + p_sizeY / 2) + 3 * x / 2 + 1] = p_sizeX - 1 + p_sizeY - 1 + x - 1;
-            pIndices[3 * (p_sizeX / 2 + p_sizeY / 2) + 3 * x / 2 + 2] = p_sizeX - 1 + p_sizeY - 1 + x;
+            indices.push_back((unsigned int)vertices.size());
+            indices.push_back((unsigned int)vertices.size() - 4);
+            indices.push_back((unsigned int)vertices.size() - 2);
+            indices.push_back((unsigned int)vertices.size() + 1);
+            indices.push_back((unsigned int)vertices.size() - 1);
+            indices.push_back((unsigned int)vertices.size() - 3);
         }
     }
-    for(unsigned char y=0; y < p_sizeY; ++y)
+    for(unsigned char y=0; y < p_sizeX; ++y)
     {
-        VertexBuffer::SimpleVertex& v = pVertices[p_sizeX - 1 + y];
-        v.positionMC = XMFLOAT3(p_scale * 0.5f * (float)(p_sizeX - 1), 0.0f, p_scale * (float)y - p_scale * 0.5f * (float)(p_sizeY - 1));
-        v.normalMC = XMFLOAT3(0.0f, 1.0f, 0.0f);
-        v.vertexColor = XMFLOAT4(0.961f, 0.510f, 0.125f, 1.0f);
-
-        v = pVertices[2 * (p_sizeX - 1) + p_sizeY - 1 + y];
         v.positionMC = XMFLOAT3(-p_scale * 0.5f * (float)(p_sizeX - 1), 0.0f, p_scale * (float)y - p_scale * 0.5f * (float)(p_sizeY - 1));
         v.normalMC = XMFLOAT3(0.0f, 1.0f, 0.0f);
         v.vertexColor = XMFLOAT4(0.961f, 0.510f, 0.125f, 1.0f);
+        vertices.push_back(v);
+
+        v.positionMC = XMFLOAT3(+p_scale * 0.5f * (float)(p_sizeX - 1), 0.0f, p_scale * (float)y - p_scale * 0.5f * (float)(p_sizeY - 1));
+        v.normalMC = XMFLOAT3(0.0f, 1.0f, 0.0f);
+        v.vertexColor = XMFLOAT4(0.961f, 0.510f, 0.125f, 1.0f);
+        vertices.push_back(v);
+
+        if(y % 2 == 1)
+        {
+            indices.push_back((unsigned int)vertices.size());
+            indices.push_back((unsigned int)vertices.size() - 4);
+            indices.push_back((unsigned int)vertices.size() - 2);
+            indices.push_back((unsigned int)vertices.size() + 1);
+            indices.push_back((unsigned int)vertices.size() - 1);
+            indices.push_back((unsigned int)vertices.size() - 3);
+        }
     }
 
     Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
-    if(!pIndexBuffer->Build(pIndices, indexCount, D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST))
+    if(!pIndexBuffer->Build(&indices[0], (unsigned int)indices.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST))
     {
         return 0;
     }
-    SAFE_DELETE(pIndices);
     Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);
-    if(!pVertexBuffer->Build(pVertices, vertexCount, sizeof(VertexBuffer::SimpleVertex)))
+    if(!pVertexBuffer->Build(&vertices[0], (unsigned int)vertices.size(), sizeof(VertexBuffer::SimpleVertex)))
     {
         return 0;
     }
-    SAFE_DELETE(pVertices);
 
     std::shared_ptr<Geometry> pGeo(new Geometry);
     pGeo->SetIndices(pIndexBuffer);
@@ -453,10 +461,6 @@ void ClipmapTerrain::ClipmapLevel::Update(int p_bottomLeftX, int p_bottomLeftY, 
     m_globalTranslation.y = 0.0f;
     m_globalTranslation.z = (float)p_bottomLeftY;
 
-    std::ostringstream str;
-    str << m_level << ": " << p_bottomLeftX << " " << p_bottomLeftY;
-    LI_INFO(str.str());
-
     for(int y=0; y < m_paramN + 1; ++y)
     {
         for(int x=0; x < m_paramN + 1; ++x)
@@ -471,7 +475,7 @@ void ClipmapTerrain::ClipmapLevel::Update(int p_bottomLeftX, int p_bottomLeftY, 
             {
                 int a = 0;
             }
-            m_pData[y * (m_paramN + 1) + x] = 1.0f * ((float)p_pData->GetHeight(clipmapX, clipmapY) / (float)SHORT_MAX);
+            m_pData[y * (m_paramN + 1) + x] = p_pData->GetHeight(clipmapX, clipmapY);
         }
     }
     D3D11_BOX box;

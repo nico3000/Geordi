@@ -15,7 +15,8 @@ private:
     struct GridPoint
     {
         unsigned short flags;
-        short height;
+        float height;
+        XMFLOAT2 normalXZ;
     };
 
     std::fstream m_gridFile;
@@ -37,8 +38,10 @@ public:
 
     bool Init(std::string p_filename, unsigned int p_fileTileSize);
     unsigned short GetFlags(int p_x, int p_y);
-    short GetHeight(int p_x, int p_y);
-    void SetHeight(int p_x, int p_y, short p_height);
+    float GetHeight(int p_x, int p_y);
+    void SetHeight(int p_x, int p_y, float p_height);
+    void GetNormalXZ(void);
+    void GenerateNormals(void);
 
     void GenerateTestData(void);
 

@@ -16,7 +16,7 @@ ClipmapTerrainNode::~ClipmapTerrainNode(void)
 
 HRESULT ClipmapTerrainNode::VOnRestore(void)
 {
-    if(!m_terrain.Init(63, 4))
+    if(!m_terrain.Init(255, 7))
     {
         return S_FALSE;
     }
