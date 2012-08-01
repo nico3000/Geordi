@@ -18,14 +18,14 @@
                 <Position x="0.1" y="4.0" z="0.1" />
             </TransformComponent>
         </Actor>
-        <Actor type="ClipmapTerrain" id="terrain" />
+        <!--Actor type="ClipmapTerrain" id="terrain" /-->
         <!--Actor type="HeightField" id="height1" /-->
-        <!--Actor type="Empty" id="terrain">
+        <Actor type="Empty" id="terrain">
             <TerrainComponent>
                 <Folder value="octree_test" />
-                <Data gridsize_x="8" gridsize_y="2" gridsize_z="8" chunksize="512" />
-                <Visual smallradius="8" chunksize="32" />
+                <Data gridsize_x="4" gridsize_y="2" gridsize_z="4" chunksize="64" />
+                <Visual smallradius="8" chunksize="16" />
             </TerrainComponent>
-        </Actor-->
+        </Actor>
     </ActorList>
 </Level>

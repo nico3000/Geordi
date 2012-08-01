@@ -181,7 +181,7 @@ HRESULT TerrainNode::VRender(Scene* p_pScene)
     m_program.Bind();
     Pose::ModelMatrixData data;
     XMVECTOR det;
-    XMStoreFloat4x4(&data.model, XMMatrixScaling(0.1f, 0.1f, 0.1f));
+    XMStoreFloat4x4(&data.model, XMMatrixScaling(1.0f / 32.0f, 1.0f / 32.0f, 1.0f / 32.0f));
     XMStoreFloat4x4(&data.modelInv, XMMatrixInverse(&det, XMLoadFloat4x4(&data.model)));
     p_pScene->PushModelMatrices(data, true);
 

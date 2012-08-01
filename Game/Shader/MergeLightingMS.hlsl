@@ -30,6 +30,7 @@ float4 TexOutPS(ScreenQuadFragment input) : SV_Target0
 {
     float4 diffuse = g_DiffuseTex.Sample(PointSampler, input.tex);
     float3 normal = g_NormalTex.Sample(PointSampler, input.tex).xyz;
+	if(dot(normal, normal) == 0) return float4(0,0,0,0);
     float cosa = 0.5 + 0.5 * dot(normal, float3(0,1,0));
-    return cosa * diffuse;
+    return diffuse * lerp(float4(0.5, 0.25, 0.0, 1.0), float4(0.5, 1.0, 0.5, 1.0), cosa);
 }
