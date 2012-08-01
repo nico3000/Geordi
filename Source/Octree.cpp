@@ -154,14 +154,14 @@ void Octree::PrintTree(void) const
         }
         str << std::endl;
     }
-    LI_LOG_WITH_TAG(str.str());
+    OutputDebugStringA(str.str().c_str());
 }
 
 
 void Octree::PrintStructure(void) const
 {
     std::ostringstream str;
-    str << "octree size: " << this->GetSize() << ", x dimension: " << this->GetMinX() << " - " << this->GetMaxX() << ", y dimension: " << this->GetMinY() << " - " << this->GetMaxY() << ", z dimension: " << this->GetMinZ() << " - " << this->GetMaxZ() << std::endl;
+    str << "octree size: " << this->GetSize() << ", x dimension: " << this->GetMinX() << " - " << this->GetMaxX() << ", y dimension: " << this->GetMinY() << " - " << this->GetMaxY() << ", z dimension: " << this->GetMinZ() << " - " << this->GetMaxZ();
     LI_LOG_WITH_TAG(str.str());
     if(!this->IsLeaf())
     {
@@ -228,12 +228,14 @@ unsigned long Octree::GetMaxNumNodes(void) const
 }
 
 
-void Octree::Init(short p_size)
+void Octree::Init(short p_minX, short p_minY, short p_minZ, short p_size)
 {
     this->Clear();
 
+    m_minX = p_minX;
+    m_minY = p_minY;
+    m_minZ = p_minZ;
     m_size = p_size;
-    m_minX = m_minY = m_minZ = -p_size / 2;
     m_value = DEFAULT_VALUE;
     m_pFather = 0;
     m_pSons = 0;
@@ -253,6 +255,11 @@ void Octree::InitIntern(Octree *p_pFather, char p_sonIndex)
 }
 
 
+#define NODE_SIZE_INNER (sizeof(int) + 8 * sizeof(unsigned int))
+#define NODE_SIZE_LEAF (sizeof(int) + sizeof(unsigned int))
+#define NODE_SIZE_HEAD (3 * sizeof(short) + sizeof(unsigned short))
+
+
 bool Octree::Init(std::fstream& p_stream)
 {
     this->Clear();
@@ -270,11 +277,17 @@ bool Octree::Init(std::fstream& p_stream)
     char* pData = new char[length];
     p_stream.read(pData, length);
 
-    this->Init(((unsigned short*)pData)[0]);
+
+    short minX = ((short*)pData)[0];
+    short minY = ((short*)pData)[1];
+    short minZ = ((short*)pData)[2];
+    unsigned short size = ((unsigned short*)(pData + 3 * sizeof(short)))[0];
+
+    this->Init(minX, m_minY, m_minZ, m_size);
 #if defined(_DEBUG) || defined(PROFILE)
     //std::cout << "loading octree..." << std::endl;
     //int id = g_pTimer->Tick(IMMEDIATE);
-    this->InitIntern(pData + sizeof(unsigned short), NULL, 0);
+    this->InitIntern(pData + NODE_SIZE_HEAD, 0, 0);
     //std::cout << "loading took " << (1e-3 * (double)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else
     this->InitIntern(pData + sizeof(unsigned short), NULL, 0);
@@ -304,23 +317,21 @@ void Octree::InitIntern(char* p_pData, Octree* p_pFather, char p_sonIndex)
 }
 
 
-#define NODE_SIZE_INNER (1 * sizeof(int) + 8 * sizeof(unsigned int))
-#define NODE_SIZE_LEAF (1 * sizeof(int) + 1 * sizeof(unsigned int))
-#define NODE_SIZE_HEAD (sizeof(unsigned short))
-
-
 bool Octree::Save(std::fstream& p_stream) const
 {
     unsigned long numNodes = this->GetNumNodes();
     unsigned long numLeafs = this->GetNumLeafs();
     unsigned int dataSize = (unsigned int)(NODE_SIZE_HEAD + (numNodes - numLeafs) * NODE_SIZE_INNER + numLeafs * NODE_SIZE_LEAF);
     char* pData = new char[dataSize];
-    ((unsigned short*)pData)[0] = m_size;
+    ((short*)pData)[0] = m_minX;
+    ((short*)pData)[1] = m_minY;
+    ((short*)pData)[2] = m_minZ;
+    ((unsigned short*)(pData + 3 * sizeof(short)))[0] = m_size;
     
 #if defined(_DEBUG) || defined(PROFILE)
     //std::cout << "saving octree..." << std::endl;
     //int id = g_pTimer->Tick(IMMEDIATE);
-    LONG usedSpace = (unsigned int)(this->SaveIntern(pData + sizeof(unsigned short)) - pData);
+    LONG usedSpace = (unsigned int)(this->SaveIntern(pData + NODE_SIZE_HEAD) - pData);
     if(usedSpace != dataSize)
     {
         std::ostringstream str;

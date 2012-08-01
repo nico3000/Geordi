@@ -25,13 +25,13 @@ private:
     void InitIntern(char* p_pData, Octree* p_pFather, char p_sonIndex);
     char* SaveIntern(char* p_pData) const;
     void ClearSons(void);
-	bool IsLeaf(void) const { return m_pSons == NULL; }
+	bool IsLeaf(void) const { return !m_pSons; }
 
 public:
     Octree(void);
     ~Octree(void);
 
-    void Init(short p_size);
+    void Init(short p_minX, short p_minY, short p_minZ, short p_size);
     bool Init(std::fstream& p_stream);
     bool Save(std::fstream& p_stream) const;
     void Clear(void);

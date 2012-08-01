@@ -14,9 +14,9 @@ private:
     unsigned short m_octreeSize;
     unsigned short m_maxActiveOctrees;
 
-    int GetTileForPosition(int p_x, int p_y, int p_z);
+    int GetTileForPosition(int p_x, int p_y, int p_z) const;
 	bool SaveOctree(int p_index) const;
-	bool LoadOctree(int p_index, int p_tileX, int p_tileY, int p_tileZ);
+	bool LoadOctree(int p_index, int p_tileX, int p_tileY, int p_tileZ) const;
 	void GetTile(int p_x, int p_y, int p_z, int& p_tileX, int& p_tileY, int& p_tileZ) const;
 
 public:
@@ -24,21 +24,17 @@ public:
     ~TerrainData(void);
 
     bool Init(unsigned short p_octreeSize, unsigned short p_maxActiveOctrees);
-    void SetDensity(int x, int y, int z, float p_density, bool p_autoOptimizeStructure = true);
-    float GetDensity(int x, int y, int z);
+    void SetDensity(int p_x, int p_y, int p_z, float p_density, bool p_autoOptimizeStructure = true) const;
+    float GetDensity(int p_x, int p_y, int p_z) const;
+    void SaveAllOctrees(void) const;
+    bool FillGrid(Grid3D& p_grid, int p_startX, int p_startY, int p_startZ, int p_offset = 1) const;
+    void OptimizeAllOctrees(void) const;
 
-
-    float GetDensityLinear(float p_x, float p_y, float p_z);
-    void SaveAllTiles(void) const;
-    void SaveTileToDisk(int ) const;
-    void LoadTileFromDisk(int tileX, int tileY, int tileZ);
-    bool FillGrid(Grid3D& p_grid, unsigned short p_startX, unsigned short p_startY, unsigned short p_startZ, unsigned short p_offset = 1);
+    //float GetDensityLinear(float p_x, float p_y, float p_z);
+    
 
     void Test(void);
     void GenerateTestData(void);
     void PrintOctFileContents(std::string p_filename) const;
-
-    static short Density2Value(float p_density);
-    static float Value2Density(short p_value);
 
 };

@@ -8,7 +8,7 @@ TerrainNode::TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksiz
     m_pTerrain(p_pTerrain), m_chunksize(p_chunksize), m_smallradius(p_smallradius)
 {
     m_tempGrid.Init(p_chunksize + 2);
-    m_blockData.Init(max(m_pTerrain->GetSizeX(), max(m_pTerrain->GetSizeY(), m_pTerrain->GetSizeZ())));
+    m_blockData.Init(-512, -512, -512, 1024);
     MarchingCubeGrid::Init();
 }
 
@@ -86,10 +86,7 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
                 int x = posX + dx;
                 int y = posY + dy;
                 int z = posZ + dz;
-                if(currentDistance < distance &&
-                    0 <= x && x < m_pTerrain->GetSizeX() &&
-                    0 <= y && y < m_pTerrain->GetSizeY() &&
-                    0 <= z && z < m_pTerrain->GetSizeZ())
+                if(currentDistance < distance)
                 {
                     short flags = m_blockData.GetValue(x, y, z);
                     if(flags == 0 || flags == 3) // undefined or (not empty and unused)
