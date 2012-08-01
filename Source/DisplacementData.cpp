@@ -267,7 +267,7 @@ void DisplacementData::GenerateTestData(void)
             height += 0.124f * noise.SampleLinear(7.89f * vx, 7.98f * vy, 0);
             height += 0.0637f * noise.SampleLinear(16.17f * nx, 16.17f * ny, 0);        
 
-            this->SetHeight(x, y, 16.0f * height);
+            this->SetHeight(x, y, 4.0f * height);
         }
     }
 }

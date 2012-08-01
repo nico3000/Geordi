@@ -71,7 +71,7 @@ DeferredShadingOutput SimplePS(SimpleVertexProjected input)
 {
     DeferredShadingOutput output = (DeferredShadingOutput)0;
     output.view = input.view;
-    output.normal = float4(normalize(input.normalWC), 0.0);
+    output.normal.xyz = normalize(input.normalWC);
     output.diffuse.rgb = input.vertexColor.rgb;
     output.diffuse.a = g_Tex.Sample(PointSampler, input.tex).r;
     return output;

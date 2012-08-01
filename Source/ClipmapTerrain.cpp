@@ -34,6 +34,7 @@ bool ClipmapTerrain::Init(unsigned int p_gridSizePerLevel, unsigned int p_levelC
     this->Cleanup();
 
     m_pData.reset(new DisplacementData);
+	//m_pData->Init("./Displacements/test.ndm", 16);
     m_pData->GenerateTestData();
 
     float *pFloatData = new float[p_levelCount * (p_gridSizePerLevel + 1) * (p_gridSizePerLevel + 1)];

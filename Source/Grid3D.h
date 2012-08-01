@@ -13,6 +13,7 @@ public:
     void Init(int p_size);
     void LoadNoise(void);
     float SampleLinear(float p_x, float p_y, float p_z) const;
+	float SampleLinear(float p_x, float p_y, float p_z, float p_frequency, float p_amplitude) const;
     float SampleNearest(float p_x, float p_y, float p_z) const;
     void GenerateGradient(float p_x, float p_y, float p_z, XMFLOAT3& p_target) const;
     

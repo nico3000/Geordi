@@ -6,7 +6,7 @@
 #define LAST_USED(_x, _y, _z) m_pLastUsed[(_z) * m_pGridSize[0] * m_pGridSize[1] + (_y) * m_pGridSize[0] + (_x)]
 
 TerrainData::TerrainData(std::string p_octreeFolder):
-    m_pData(NULL), m_pLastUsed(NULL), m_activeOctrees(0), m_octreeFolder(p_octreeFolder)
+m_pLoadedTiles(0), m_pLastUsed(0), m_octreeFolder(p_octreeFolder)
 {
 }
 
@@ -14,14 +14,14 @@ TerrainData::TerrainData(std::string p_octreeFolder):
 TerrainData::~TerrainData(void)
 {
     this->SaveAllTiles();
-    SAFE_DELETE_ARRAY(m_pData);
+    SAFE_DELETE_ARRAY(m_pLoadedTiles);
     SAFE_DELETE_ARRAY(m_pLastUsed);
 }
 
 
-bool TerrainData::Init(unsigned short p_octreeSize, unsigned short p_gridSizeX, unsigned short p_gridSizeY, unsigned short p_gridSizeZ, unsigned short p_maxActiveOctrees)
+bool TerrainData::Init(unsigned short p_octreeSize, unsigned short p_maxActiveOctrees)
 {
-    bool result = Octree::InitMemoryPool(p_octreeSize * p_octreeSize); // TODO: educated guess :P
+    bool result = Octree::InitMemoryPool(p_maxActiveOctrees * p_octreeSize * p_octreeSize); // TODO: educated guess :P
     if(!result)
     {
         return false;
@@ -29,52 +29,153 @@ bool TerrainData::Init(unsigned short p_octreeSize, unsigned short p_gridSizeX, 
     else
     {
         m_octreeSize = p_octreeSize;
-        m_pGridSize[0] = p_gridSizeX;
-        m_pGridSize[1] = p_gridSizeY;
-        m_pGridSize[2] = p_gridSizeZ;
         m_maxActiveOctrees = p_maxActiveOctrees;
-        m_pData = new Octree[p_gridSizeX * p_gridSizeY * p_gridSizeZ];
-        m_pLastUsed = new LONGLONG[p_gridSizeX * p_gridSizeY * p_gridSizeZ];
-        ZeroMemory(m_pData, p_gridSizeX * p_gridSizeY * p_gridSizeZ * sizeof(Octree));
-        ZeroMemory(m_pLastUsed, p_gridSizeX * p_gridSizeY * p_gridSizeZ * sizeof(LONGLONG));
+		m_pLoadedTiles = new Octree*[m_maxActiveOctrees];
+        m_pLastUsed = new LONGLONG[m_maxActiveOctrees];
+		m_fileTileInfo.Init(1024);
+        ZeroMemory(m_pLoadedTiles, m_maxActiveOctrees * sizeof(Octree));
+        ZeroMemory(m_pLastUsed, m_maxActiveOctrees * sizeof(LONGLONG));
         return true;
     }
 }
 
 
-void TerrainData::UseTile(int tileX, int tileY, int tileZ)
+int TerrainData::GetTileForPosition(int p_x, int p_y, int p_z)
 {
-    if(!this->IsTileActive(tileX, tileY, tileZ))
-    {
-        while(m_activeOctrees >= m_maxActiveOctrees)
-        {
-            int minX = -1, minY = -1, minZ = -1;
-            for(int x=0; x < m_pGridSize[0]; ++x)
-            {
-                for(int y=0; y < m_pGridSize[1]; ++y)
-                {
-                    for(int z=0; z < m_pGridSize[2]; ++z)
-                    {
-                        if(this->IsTileActive(x, y, z) && (minX == -1 || LAST_USED(x, y, z) < LAST_USED(minX, minY, minZ)))
-                        {
-                            minX = x;
-                            minY = y;
-                            minZ = z;
-                        }
-                    }
-                }
-            }
-            this->UnuseTile(minX, minY, minZ);
-        }
-        this->LoadTileFromDisk(tileX, tileY, tileZ);
-        TILE(tileX, tileY, tileZ).GetFlags() |= OCTREE_LOADED;
-        ++m_activeOctrees;
-        //std::cout << std::endl << "use" << std::endl;
-    }
+	int index = -1;
+	LONGLONG lastUsed = LONGLONG_MAX;
+	bool alienOctree = true;
+	for(int i=0; i < m_maxActiveOctrees; ++i)
+	{
+		if(m_pLoadedTiles[i])
+		{
+			if(m_pLoadedTiles[i]->IsIn(p_x, p_y, p_z))
+			{
+				index = i;
+				alienOctree = false; // already loaded
+				break;
+			}
+			else if(m_pLastUsed[i] < lastUsed)
+			{
+				lastUsed = m_pLastUsed[i];
+				index = i;
+			}
+		}
+		else
+		{
+			lastUsed = LONGLONG_MIN; // empty slot found
+			index = i;
+		}
+	}
+
+	if(index == -1)
+	{
+		LI_ERROR("This should not happen!");
+	}
+	if(alienOctree)
+	{
+		this->SaveOctree(index);
+		m_pLoadedTiles[index]->Clear();
+		SAFE_DELETE(m_pLoadedTiles[index]);
+	}
+	if(!m_pLoadedTiles[index])
+	{
+		int tileX, tileY, tileZ;
+		this->GetTile(p_x, p_y, p_z, tileX, tileY, tileZ);
+		this->LoadOctree(index, tileX, tileY, tileZ);
+	}
+
     static LARGE_INTEGER now;
     QueryPerformanceCounter(&now);
-    LAST_USED(tileX, tileY, tileZ) = now.QuadPart;
+    m_pLastUsed[index] = now.QuadPart;
+
+	return index;
 }
+
+
+bool TerrainData::SaveOctree(int p_index) const
+{
+	Octree* pToSave = m_pLoadedTiles[p_index];
+	bool success = false;
+	if(pToSave)
+	{
+		std::stringstream octreeStream;
+		octreeStream << "./" << m_octreeFolder << "/terrain." << pToSave->GetMinX() << "." << pToSave->GetMinY() << "." << pToSave->GetMinZ() << ".oct";
+		std::fstream fileStream;
+		fileStream.open(octreeStream.str().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+		if(fileStream.is_open())
+		{
+			if(!pToSave->Save(fileStream))
+			{
+				LI_ERROR("Failed to save octree to stream: " + octreeStream.str());
+			}
+			else
+			{
+				success = true;
+			}
+			fileStream.close();
+		}
+		else
+		{
+			LI_ERROR("Failed to open octree stream for writing: " + octreeStream.str());
+		}
+	}
+	else
+	{
+		LI_ERROR("Trying to save empty octree tile");
+	}
+	return success;
+}
+
+
+bool TerrainData::LoadOctree(int p_index, int p_tileX, int p_tileY, int p_tileZ)
+{
+	bool success = false;
+	std::stringstream octreeStream;
+	octreeStream << "./" << m_octreeFolder << "/terrain." << p_tileX << "." << p_tileY << "." << p_tileZ << ".oct";
+	std::fstream fileStream(octreeStream.str().c_str(), std::ios::in | std::ios::binary);
+	if(fileStream.is_open())
+	{
+		if(!m_pLoadedTiles[p_index])
+		{
+			m_pLoadedTiles[p_index] = new Octree;
+		}
+		if(!m_pLoadedTiles[p_index]->Init(fileStream))
+		{
+			LI_ERROR("Failed to load octree from stream: " + octreeStream.str());
+		}
+		else
+		{
+			success = true;
+		}
+		fileStream.close();
+	}
+	else
+	{
+		LI_ERROR("Failed to open octree stream for reading: " + octreeStream.str());
+	}
+	return success;
+}
+
+
+void TerrainData::GetTile(int p_x, int p_y, int p_z, int& p_tileX, int& p_tileY, int& p_tileZ) const
+{
+	p_tileX = p_x / m_octreeSize;
+	p_tileY = p_y / m_octreeSize;
+	p_tileZ = p_z / m_octreeSize;
+}
+
+
+void TerrainData::SetDensity(int x, int y, int z, float p_density, bool p_autoOptimizeStructure /* = true */)
+{
+	int index = this->GetTileForPosition(x, y, z);
+	m_pLoadedTiles[index]->SetValue(x, y, z, p_density * (float)SHORT_MAX, p_autoOptimizeStructure);
+}
+
+
+
+
+
 
 
 void TerrainData::UnuseTile(int tileX, int tileY, int tileZ)
@@ -91,7 +192,7 @@ void TerrainData::UnuseTile(int tileX, int tileY, int tileZ)
 
 bool TerrainData::IsTileActive(int tileX, int tileY, int tileZ) const
 {
-    return (TILE(tileX, tileY, tileZ).ReadFlag() & OCTREE_LOADED) == OCTREE_LOADED;
+    return (m_pData->GetValue(tileX, tileY, tileZ) & OCTREE_LOADED) == OCTREE_LOADED;
 }
 
 
@@ -200,12 +301,7 @@ void TerrainData::SaveTileToDisk(int tileX, int tileY, int tileZ) const
 
 void TerrainData::LoadTileFromDisk(int tileX, int tileY, int tileZ)
 {
-    std::stringstream strStream;
-    strStream << "./" << m_octreeFolder << "/terrain." << tileX << "." << tileY << "." << tileZ << ".oct";
-    std::fstream fileStream;
-    fileStream.open(strStream.str().c_str(), std::ios::in | std::ios::binary);
-    if(fileStream.is_open())
-    {
+
         TILE(tileX, tileY, tileZ).Init(fileStream);
         fileStream.close();
     }
@@ -300,7 +396,7 @@ void TerrainData::GenerateTestData(void)
 
     
     Grid3D noise;
-    noise.Init(32);
+    noise.Init(16);
     noise.LoadNoise();
 
     for(int gridX=0; gridX < m_pGridSize[0]; ++gridX)
@@ -315,22 +411,24 @@ void TerrainData::GenerateTestData(void)
                     {
                         for(int z=0; z < m_octreeSize; ++z) 
                         {
-                            float worldX = 2.0f * (float)(gridX * m_octreeSize + x) / (float)(m_pGridSize[0] * m_octreeSize) - 1.0f;
-                            float worldY = 2.0f * (float)(gridY * m_octreeSize + y) / (float)(m_pGridSize[1] * m_octreeSize) - 1.0f;
-                            float worldZ = 2.0f * (float)(gridZ * m_octreeSize + z) / (float)(m_pGridSize[2] * m_octreeSize) - 1.0f;
+                            float worldX = (float)(gridX * m_octreeSize + x) / 32.0f;
+                            float worldY = (float)(gridY * m_octreeSize + y) / 32.0f;
+                            float worldZ = (float)(gridZ * m_octreeSize + z) / 32.0f;
 
                             //float radius = sqrt(worldX * worldX + worldY * worldY + worldZ * worldZ);
                             //float density = 0.75f - radius;
                             //float density = worldY - 0.25f * sin(100.0f * worldX) * cos(10.0f * worldZ + 5.0f * worldY) + 0.4f * sin(10.0f * worldY + worldX);
-                            float density = 16.0f * worldY;
-                            //density += 1.0f * noise.SampleLinear(noise.GetSize() * worldX, noise.GetSize() * worldY, noise.GetSize() * worldZ);
-                            density += 4.1f * noise.SampleLinear(0.24f * noise.GetSize() * worldX, 0.26f * noise.GetSize() * worldY, 0.23f * noise.GetSize() * worldZ);
-                            density += 7.9f * noise.SampleLinear(0.127f * noise.GetSize() * worldX, 0.123f * noise.GetSize() * worldY, 0.135f * noise.GetSize() * worldZ);
-                            density += 16.1f * noise.SampleLinear(0.0635f * noise.GetSize() * worldX, 0.0725f * noise.GetSize() * worldY, 0.0615f * noise.GetSize() * worldZ);
+                            float density = worldY - 0.1f;
+                            //density -= 0.25f * noise.SampleLinear(4.0f * worldX, 4.0f * worldY, 4.0f * worldZ);
+							density += noise.SampleLinear(worldX, worldY, worldZ, 1.0f, 1.0f);
+							//density += noise.SampleLinear(worldX, worldY, worldZ, 0.26f, 4.06f);
+                            //density += 4.1f * noise.SampleLinear(0.24f * noise.GetSize() * worldX, 0.26f * noise.GetSize() * worldY, 0.23f * noise.GetSize() * worldZ);
+                            //density += 7.9f * noise.SampleLinear(0.127f * noise.GetSize() * worldX, 0.123f * noise.GetSize() * worldY, 0.135f * noise.GetSize() * worldZ);
+                            //density += 16.1f * noise.SampleLinear(0.0635f * noise.GetSize() * worldX, 0.0725f * noise.GetSize() * worldY, 0.0615f * noise.GetSize() * worldZ);
                             //density += 0.5f * noise.SampleLinear(2.0f *   noise.GetSize() * worldX, 2.0f *   noise.GetSize() * worldY, 2.0f *   noise.GetSize() * worldZ);
                             //density *= 16.0f;
 
-                            this->SetDensity(gridX * m_octreeSize + x, gridY * m_octreeSize + y, gridZ * m_octreeSize + z, density, false);
+                            this->SetDensity(gridX * m_octreeSize + x, gridY * m_octreeSize + y, gridZ * m_octreeSize + z, 0.1f * density, false);
                         }
                     }
                 }

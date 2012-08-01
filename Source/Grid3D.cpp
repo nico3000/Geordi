@@ -18,8 +18,14 @@ void Grid3D::LoadNoise(void)
 {
     for(int i=0; i < m_size * m_size * m_size; ++i)
     {
-        m_pGrid[i] = (float)rand() / (0.5f * (float)RAND_MAX) - 1.0f;
+        m_pGrid[i] = 2.0f * (float)rand() / (float)RAND_MAX - 1.0f;
     }
+}
+
+
+float Grid3D::SampleLinear(float p_x, float p_y, float p_z, float p_frequency, float p_amplitude) const
+{
+	return p_amplitude * this->SampleLinear(p_frequency * p_x, p_frequency * p_y, p_frequency * p_z);
 }
 
 
@@ -56,15 +62,23 @@ float Grid3D::SampleNearest(float p_x, float p_y, float p_z) const
 
 void Grid3D::GenerateGradient(float p_x, float p_y, float p_z, XMFLOAT3& p_target) const
 {
-    const static float epsilon = 1e-0f;
+	p_x /= (float)m_size;
+	p_y /= (float)m_size;
+	p_z /= (float)m_size;
+    const static float epsilon = 0.5f / (float)m_size;
     float v0 = this->SampleLinear(p_x, p_y, p_z);
     p_target.x = (this->SampleLinear(p_x + epsilon, p_y, p_z) - v0) / epsilon;
     p_target.y = (this->SampleLinear(p_x, p_y + epsilon, p_z) - v0) / epsilon;
     p_target.z = (this->SampleLinear(p_x, p_y, p_z + epsilon) - v0) / epsilon;
+	//p_target = XMFLOAT3(0,1,0);
     float len = sqrt(p_target.x * p_target.x + p_target.y * p_target.y + p_target.z * p_target.z);
     p_target.x /= len;
     p_target.y /= len;
     p_target.z /= len;
+	
+	//std::ostringstream str;
+	//str << p_target.x << " " << p_target.y << " " << p_target.z;
+	//LI_INFO(str.str());
 }
 
 
