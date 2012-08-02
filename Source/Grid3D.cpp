@@ -59,9 +59,10 @@ float Grid3D::SampleNearest(float p_x, float p_y, float p_z) const
 void Grid3D::GenerateGradient(float p_x, float p_y, float p_z, XMFLOAT3& p_target) const
 {
     const static float epsilon = 1.0f;
-    p_target.x = (this->SampleLinear(p_x + epsilon, p_y, p_z) - this->SampleLinear(p_x - 0*epsilon, p_y, p_z));
-    p_target.y = (this->SampleLinear(p_x, p_y + epsilon, p_z) - this->SampleLinear(p_x, p_y - 0*epsilon, p_z));
-    p_target.z = (this->SampleLinear(p_x, p_y, p_z + epsilon) - this->SampleLinear(p_x, p_y, p_z - 0*epsilon));
+    float val = this->SampleLinear(p_x, p_y, p_z);
+    p_target.x = (this->SampleLinear(p_x + epsilon, p_y, p_z) - val);
+    p_target.y = (this->SampleLinear(p_x, p_y + epsilon, p_z) - val);
+    p_target.z = (this->SampleLinear(p_x, p_y, p_z + epsilon) - val);
     float len = sqrt(p_target.x * p_target.x + p_target.y * p_target.y + p_target.z * p_target.z);
     p_target.x /= len;
     p_target.y /= len;

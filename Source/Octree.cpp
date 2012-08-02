@@ -316,6 +316,8 @@ void Octree::InitIntern(char* p_pData, Octree* p_pFather, char p_sonIndex)
 
 bool Octree::Save(std::fstream& p_stream) const
 {
+    LI_INFO("saving");
+
     unsigned long numNodes = this->GetNumNodes();
     unsigned long numLeafs = this->GetNumLeafs();
     unsigned int dataSize = (unsigned int)(NODE_SIZE_HEAD + (numNodes - numLeafs) * NODE_SIZE_INNER + numLeafs * NODE_SIZE_LEAF);

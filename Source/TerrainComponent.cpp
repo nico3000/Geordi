@@ -44,7 +44,7 @@ bool TerrainComponent::VInit(tinyxml2::XMLElement* p_pData)
         LI_ERROR("terrain initialization failed");
         return false;
     }
-    //m_pTerrain->GenerateTestData();
+    m_pTerrain->GenerateTestData();
      
     tinyxml2::XMLElement* pVisualData = p_pData->FirstChildElement("Visual");
     unsigned int smallradius;

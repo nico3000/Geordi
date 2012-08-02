@@ -3,7 +3,7 @@
 
 
 TerrainData::TerrainData(std::string p_octreeFolder):
-m_pLoadedTiles(0), m_pLastUsed(0), m_octreeFolder(p_octreeFolder)
+m_octreeFolder(p_octreeFolder)
 {
 }
 
@@ -11,12 +11,10 @@ m_pLoadedTiles(0), m_pLastUsed(0), m_octreeFolder(p_octreeFolder)
 TerrainData::~TerrainData(void)
 {
     this->SaveAllOctrees();
-    for(int i=0; i < m_maxActiveOctrees; ++i)
+    for(auto iter=m_loadedTiles.begin(); iter != m_loadedTiles.end(); ++iter)
     {
-        SAFE_DELETE(m_pLoadedTiles[i]);
+        SAFE_DELETE(*iter);
     }
-    SAFE_DELETE(m_pLoadedTiles);
-    SAFE_DELETE(m_pLastUsed);
 }
 
 
@@ -31,84 +29,56 @@ bool TerrainData::Init(unsigned short p_octreeSize, unsigned short p_maxActiveOc
     {
         m_octreeSize = p_octreeSize;
         m_maxActiveOctrees = p_maxActiveOctrees;
-        m_pLoadedTiles = new Octree*[m_maxActiveOctrees];
-        m_pLastUsed = new LONGLONG[m_maxActiveOctrees];
         m_fileTileInfo.Init(-512, -512, -512, 1024);
-        ZeroMemory(m_pLoadedTiles, m_maxActiveOctrees * sizeof(Octree*));
-        ZeroMemory(m_pLastUsed, m_maxActiveOctrees * sizeof(LONGLONG));
         return true;
     }
 }
 
 
-int TerrainData::GetTileForPosition(int p_x, int p_y, int p_z) const
+void TerrainData::PushTileToBack(int p_x, int p_y, int p_z)
 {
-	int index = -1;
-	LONGLONG lastUsed = LONGLONG_MAX;
-	bool alienOctree = true;
-	for(int i=0; i < m_maxActiveOctrees; ++i)
-	{
-		if(m_pLoadedTiles[i])
-		{
-			if(m_pLoadedTiles[i]->IsIn(p_x, p_y, p_z))
-			{
-				index = i;
-				alienOctree = false; // already loaded
-				break;
-			}
-			else if(m_pLastUsed[i] < lastUsed)
-			{
-                alienOctree = true;
-				lastUsed = m_pLastUsed[i];
-				index = i;
-			}
-		}
-		else
-		{
-            alienOctree = false;
-			lastUsed = LONGLONG_MIN; // empty slot found
-			index = i;
-		}
-	}
-
-	if(index == -1)
-	{
-		LI_ERROR("This should not happen!");
-	}
-	if(alienOctree)
-	{
-		this->SaveOctree(index);
-		m_pLoadedTiles[index]->Clear();
-		SAFE_DELETE(m_pLoadedTiles[index]);
-	}
-	if(!m_pLoadedTiles[index])
-	{
-		this->LoadOctree(index, p_x, p_y, p_z);
-	}
-
-    static LARGE_INTEGER now;
-    QueryPerformanceCounter(&now);
-    m_pLastUsed[index] = now.QuadPart;
-
-	return index;
+    if(!m_loadedTiles.empty() && m_loadedTiles.back()->IsIn(p_x, p_y, p_z))
+    {
+        return;
+    }
+    for(auto iter=m_loadedTiles.begin(); iter != m_loadedTiles.end(); ++iter)
+    {
+        if((*iter)->IsIn(p_x, p_y, p_z))
+        {
+            Octree* pTree = *iter;
+            m_loadedTiles.erase(iter);
+            m_loadedTiles.push_back(pTree);
+            return;
+        }
+    }
+    while(m_loadedTiles.size() >= m_maxActiveOctrees)
+    {
+        if(!this->SaveOctree(*m_loadedTiles.begin()))
+        {
+            LI_ERROR("Saving octree failed");
+        }
+        m_loadedTiles.front()->Clear();
+        SAFE_DELETE(*m_loadedTiles.begin());
+        m_loadedTiles.pop_front();
+    }
+    this->LoadOctree(p_x, p_y, p_z);
 }
 
 
-bool TerrainData::SaveOctree(int p_index) const
+bool TerrainData::SaveOctree(Octree* pTree) const
 {
-	Octree* pToSave = m_pLoadedTiles[p_index];
 	bool success = false;
-	if(pToSave)
+	if(pTree)
 	{
-        pToSave->OptimizeStructure();
-        if(!pToSave->IsEmpty())
+        pTree->OptimizeStructure();
+        if(!pTree->IsEmpty())
         {
             std::stringstream octreeStream;
-            octreeStream << "./" << m_octreeFolder << "/terrain." << pToSave->GetMinX() << "." << pToSave->GetMinY() << "." << pToSave->GetMinZ() << ".oct";
+            octreeStream << "./" << m_octreeFolder << "/terrain." << pTree->GetMinX() << "." << pTree->GetMinY() << "." << pTree->GetMinZ() << ".oct";
             std::fstream fileStream(octreeStream.str().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
             if(fileStream.is_open())
             {
-                if(!pToSave->Save(fileStream))
+                if(!pTree->Save(fileStream))
                 {
                     LI_ERROR("Failed to save octree to stream: " + octreeStream.str());
                 }
@@ -136,16 +106,13 @@ bool TerrainData::SaveOctree(int p_index) const
 }
 
 
-bool TerrainData::LoadOctree(int p_index, int p_x, int p_y, int p_z) const
+bool TerrainData::LoadOctree(int p_x, int p_y, int p_z)
 {
     int tileStartX = (int)floor((float)p_x / (float)m_octreeSize) * m_octreeSize;
     int tileStartY = (int)floor((float)p_y / (float)m_octreeSize) * m_octreeSize;
     int tileStartZ = (int)floor((float)p_z / (float)m_octreeSize) * m_octreeSize;
 
-    if(!m_pLoadedTiles[p_index])
-    {
-        m_pLoadedTiles[p_index] = new Octree;
-    }
+    Octree* pTree = new Octree;
 
 	bool success = true;
 	std::stringstream octreeStream;
@@ -153,7 +120,7 @@ bool TerrainData::LoadOctree(int p_index, int p_x, int p_y, int p_z) const
 	std::fstream fileStream(octreeStream.str().c_str(), std::ios::in | std::ios::binary);
 	if(fileStream.is_open())
 	{
-		if(!m_pLoadedTiles[p_index]->Init(fileStream))
+		if(!pTree->Init(fileStream))
 		{
 			LI_ERROR("Failed to load octree from stream: " + octreeStream.str());
             success = false;
@@ -162,46 +129,44 @@ bool TerrainData::LoadOctree(int p_index, int p_x, int p_y, int p_z) const
 	}
     else
     {
-        m_pLoadedTiles[p_index]->Init(tileStartX, tileStartY, tileStartZ, m_octreeSize);
+        pTree->Init(tileStartX, tileStartY, tileStartZ, m_octreeSize);
+    }
+    if(success)
+    {
+        m_loadedTiles.push_back(pTree);
     }
 	return success;
 }
 
 
-void TerrainData::SetDensity(int p_x, int p_y, int p_z, float p_density, bool p_autoOptimizeStructure /* = true */) const
+void TerrainData::SetDensity(int p_x, int p_y, int p_z, float p_density, bool p_autoOptimizeStructure /* = true */)
 {
-	int index = this->GetTileForPosition(p_x, p_y, p_z);
-	m_pLoadedTiles[index]->SetValue(p_x, p_y, p_z, (short)(CLAMP(p_density, -1.0f, 1.0f) * (float)SHORT_MAX), p_autoOptimizeStructure);
+    this->PushTileToBack(p_x, p_y, p_z);
+    m_loadedTiles.back()->SetValue(p_x, p_y, p_z, (short)(CLAMP(p_density, -1.0f, 1.0f) * (float)SHORT_MAX), p_autoOptimizeStructure);
 }
 
 
-float TerrainData::GetDensity(int p_x, int p_y, int p_z) const
+float TerrainData::GetDensity(int p_x, int p_y, int p_z)
 {
-    int index = this->GetTileForPosition(p_x, p_y, p_z);
-    return (float)m_pLoadedTiles[index]->GetValue(p_x, p_y, p_z) / (float)SHORT_MAX;
+    this->PushTileToBack(p_x, p_y, p_z);
+    return m_loadedTiles.back()->GetValue(p_x, p_y, p_z) / (float)SHORT_MAX;
 }
 
 
 void TerrainData::SaveAllOctrees(void) const
 {
-    for(int i=0; i < m_maxActiveOctrees; ++i)
+    for(auto iter=m_loadedTiles.begin(); iter != m_loadedTiles.end(); ++iter)
     {
-        if(m_pLoadedTiles[i])
-        {
-            this->SaveOctree(i);
-        }
+        this->SaveOctree(*iter);
     }
 }
 
 
 void TerrainData::OptimizeAllOctrees(void) const
 {
-    for(int i=0; i < m_maxActiveOctrees; ++i)
+    for(auto iter=m_loadedTiles.begin(); iter != m_loadedTiles.end(); ++iter)
     {
-        if(m_pLoadedTiles[i])
-        {
-            this->m_pLoadedTiles[i]->OptimizeStructure();
-        }
+        (*iter)->OptimizeStructure();
     }
 }
 
@@ -382,7 +347,7 @@ void TerrainData::GenerateTestData(void)
     noise[0].LoadNoise();
     noise[1].LoadNoise();
     noise[2].LoadNoise();
-    static const int presetSize = 256;
+    static const int presetSize = 128;
     int i=0;
     int lastPercentage = -1;
 
@@ -408,27 +373,19 @@ void TerrainData::GenerateTestData(void)
                 XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
                               noise[1].SampleLinear(worldX, worldY, worldZ, 0.004f, 16.0f), 
                               noise[2].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f));
-                worldX += warp.x;
+                //worldX += warp.x;
                 worldY += warp.y;
                 //worldZ += warp.z;
 
                 //density += noise[0].SampleLinear(worldX, worldY, worldZ, 4.03f, 0.25f);
                 //density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
-                density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
-                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.53f, 2.00f);
-                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
-                density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.126f, 8.00f);
-                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
-                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.03137f, 32.00f);
-
-
-				//density += noise.SampleLinear(worldX, worldY, worldZ, 0.50f, 1.96f);
-                //density += noise.SampleLinear(worldX, worldY, worldZ, 1.00f, 1.01f);
-                //density += 4.1f * noise.SampleLinear(0.24f * noise.GetSize() * worldX, 0.26f * noise.GetSize() * worldY, 0.23f * noise.GetSize() * worldZ);
-                //density += 7.9f * noise.SampleLinear(0.127f * noise.GetSize() * worldX, 0.123f * noise.GetSize() * worldY, 0.135f * noise.GetSize() * worldZ);
-                //density += 16.1f * noise.SampleLinear(0.0635f * noise.GetSize() * worldX, 0.0725f * noise.GetSize() * worldY, 0.0615f * noise.GetSize() * worldZ);
-                //density += 0.5f * noise.SampleLinear(2.0f *   noise.GetSize() * worldX, 2.0f *   noise.GetSize() * worldY, 2.0f *   noise.GetSize() * worldZ);
-                //density *= 16.0f;
+                //density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
+                //density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.53f, 2.00f);
+                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
+                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.126f, 8.00f);
+                density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
+                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.03137f, 32.00f);
+                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.015625f, 64.00f);
 
                 this->SetDensity(x, y, z, density, false);
 
@@ -487,7 +444,7 @@ void TerrainData::PrintOctFileContents(std::string p_filename) const
 }
 
 
-bool TerrainData::FillGrid(Grid3D& p_grid, int p_startX, int p_startY, int p_startZ, int p_offset /* = 1 */) const
+bool TerrainData::FillGrid(Grid3D& p_grid, int p_startX, int p_startY, int p_startZ, int p_offset /* = 1 */)
 {
     char geo = 0; // 0 undefined, 1 only positive values, 2 only negative values, 3 positive and negative values
     for(int x=0; x < p_grid.GetSize(); ++x)
