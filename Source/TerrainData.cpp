@@ -83,9 +83,7 @@ int TerrainData::GetTileForPosition(int p_x, int p_y, int p_z) const
 	}
 	if(!m_pLoadedTiles[index])
 	{
-		int tileX, tileY, tileZ;
-		this->GetTile(p_x, p_y, p_z, tileX, tileY, tileZ);
-		this->LoadOctree(index, tileX, tileY, tileZ);
+		this->LoadOctree(index, p_x, p_y, p_z);
 	}
 
     static LARGE_INTEGER now;
@@ -103,26 +101,32 @@ bool TerrainData::SaveOctree(int p_index) const
 	if(pToSave)
 	{
         pToSave->OptimizeStructure();
-
-		std::stringstream octreeStream;
-		octreeStream << "./" << m_octreeFolder << "/terrain." << pToSave->GetMinX() << "." << pToSave->GetMinY() << "." << pToSave->GetMinZ() << ".oct";
-		std::fstream fileStream(octreeStream.str().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
-		if(fileStream.is_open())
-		{
-			if(!pToSave->Save(fileStream))
-			{
-				LI_ERROR("Failed to save octree to stream: " + octreeStream.str());
-			}
-			else
-			{
-				success = true;
-			}
-			fileStream.close();
-		}
-		else
-		{
-			LI_ERROR("Failed to open octree stream for writing: " + octreeStream.str());
-		}
+        if(!pToSave->IsEmpty())
+        {
+            std::stringstream octreeStream;
+            octreeStream << "./" << m_octreeFolder << "/terrain." << pToSave->GetMinX() << "." << pToSave->GetMinY() << "." << pToSave->GetMinZ() << ".oct";
+            std::fstream fileStream(octreeStream.str().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
+            if(fileStream.is_open())
+            {
+                if(!pToSave->Save(fileStream))
+                {
+                    LI_ERROR("Failed to save octree to stream: " + octreeStream.str());
+                }
+                else
+                {
+                    success = true;
+                }
+                fileStream.close();
+            }
+            else
+            {
+                LI_ERROR("Failed to open octree stream for writing: " + octreeStream.str());
+            }
+        }
+        else
+        {
+            LI_INFO("Saving of empty octree skipped");
+        }
 	}
 	else
 	{
@@ -132,8 +136,12 @@ bool TerrainData::SaveOctree(int p_index) const
 }
 
 
-bool TerrainData::LoadOctree(int p_index, int p_tileX, int p_tileY, int p_tileZ) const
+bool TerrainData::LoadOctree(int p_index, int p_x, int p_y, int p_z) const
 {
+    int tileStartX = (int)floor((float)p_x / (float)m_octreeSize) * m_octreeSize;
+    int tileStartY = (int)floor((float)p_y / (float)m_octreeSize) * m_octreeSize;
+    int tileStartZ = (int)floor((float)p_z / (float)m_octreeSize) * m_octreeSize;
+
     if(!m_pLoadedTiles[p_index])
     {
         m_pLoadedTiles[p_index] = new Octree;
@@ -141,7 +149,7 @@ bool TerrainData::LoadOctree(int p_index, int p_tileX, int p_tileY, int p_tileZ)
 
 	bool success = true;
 	std::stringstream octreeStream;
-	octreeStream << "./" << m_octreeFolder << "/terrain." << p_tileX << "." << p_tileY << "." << p_tileZ << ".oct";
+	octreeStream << "./" << m_octreeFolder << "/terrain." << tileStartX << "." << tileStartY << "." << tileStartZ << ".oct";
 	std::fstream fileStream(octreeStream.str().c_str(), std::ios::in | std::ios::binary);
 	if(fileStream.is_open())
 	{
@@ -154,31 +162,23 @@ bool TerrainData::LoadOctree(int p_index, int p_tileX, int p_tileY, int p_tileZ)
 	}
     else
     {
-        m_pLoadedTiles[p_index]->Init(p_tileX, p_tileY, p_tileZ, m_octreeSize);
+        m_pLoadedTiles[p_index]->Init(tileStartX, tileStartY, tileStartZ, m_octreeSize);
     }
 	return success;
-}
-
-
-void TerrainData::GetTile(int p_x, int p_y, int p_z, int& p_tileX, int& p_tileY, int& p_tileZ) const
-{
-	p_tileX = p_x / m_octreeSize;
-	p_tileY = p_y / m_octreeSize;
-	p_tileZ = p_z / m_octreeSize;
 }
 
 
 void TerrainData::SetDensity(int p_x, int p_y, int p_z, float p_density, bool p_autoOptimizeStructure /* = true */) const
 {
 	int index = this->GetTileForPosition(p_x, p_y, p_z);
-	m_pLoadedTiles[index]->SetValue(p_x, p_y, p_z, p_density * (float)SHORT_MAX, p_autoOptimizeStructure);
+	m_pLoadedTiles[index]->SetValue(p_x, p_y, p_z, (short)(CLAMP(p_density, -1.0f, 1.0f) * (float)SHORT_MAX), p_autoOptimizeStructure);
 }
 
 
 float TerrainData::GetDensity(int p_x, int p_y, int p_z) const
 {
     int index = this->GetTileForPosition(p_x, p_y, p_z);
-    return (float)m_pLoadedTiles[index]->GetValue(p_x, p_y, p_z) * (float)SHORT_MAX;
+    return (float)m_pLoadedTiles[index]->GetValue(p_x, p_y, p_z) / (float)SHORT_MAX;
 }
 
 
@@ -301,16 +301,28 @@ void TerrainData::Test(void)
 void TerrainData::GenerateTestData(void)
 {
     
-    Octree octree;
-
+     Octree octree;
+ 
 //     octree.Init(0, 0, 0, 4);
 //     octree.SetValue(0,0,0,1);
 //     octree.SetValue(1,1,1,2);
 //     octree.SetValue(2,2,2,3);
 //     octree.SetValue(3,3,3,4);
 //     std::fstream str("./octree_test/test.oct", std::ios::binary | std::ios::out | std::ios::trunc);
-//     octree.Save(str);
-//     str.close();
+//     if(str.is_open())
+//     {
+//         LI_INFO("offen");
+//         if(!octree.Save(str))
+//         {
+//             LI_ERROR("saving failed");
+//         }
+//         str.close();
+//     }
+//     else
+//     {
+//         LI_ERROR("stream could not be opened");
+//     }
+    
 
 //     std::fstream str("./octree_test/test.oct", std::ios::binary | std::ios::in);
 //     octree.Init(str);
@@ -323,81 +335,115 @@ void TerrainData::GenerateTestData(void)
 
 //    octree.PrintTree();
 
-    std::ostringstream info;
-    std::fstream str("./octree_test/test.oct", std::ios::binary | std::ios::in);
-    short x, y, z;
-    unsigned short size;
-    str.readsome((char*)&x, sizeof(short));
-    str.readsome((char*)&y, sizeof(short));
-    str.readsome((char*)&z, sizeof(short));
-    info << x << " " << y << " " << z << " " << size << std::endl;
-    while(!str.eof())
-    {
-        int val;
-        str.readsome((char*)&val, sizeof(int));
-
-        unsigned int index;
-        str.readsome((char*)&val, sizeof(unsigned int));
-
-        info << "node: " << val << ", offsets: " << index;
-        if(index != 0)
-        {
-            for(int i=1; i < 8; ++i)
-            {
-                str.readsome((char*)&val, sizeof(unsigned int));
-                info << " " << index;
-            }
-        }
-        str << std::endl;
-    }
-    OutputDebugStringA(info.str().c_str());
-
-    return;
-
-    
-//     Grid3D noise;
-//     noise.Init(16);
-//     noise.LoadNoise();
-//     static const int presetSize = 64;
-//     int i=0;
-//     int lastPercentage = -1;
-// 
-//     for(int x=0; x < presetSize; ++x) 
+//     std::ostringstream info;
+//     std::fstream str("./octree_test/test.oct", std::ios::binary | std::ios::in);
+//     if(str.is_open())
 //     {
-//         for(int y=0; y < presetSize; ++y) 
+//         short x, y, z;
+//         unsigned short size;
+//         str.read((char*)&x, sizeof(short));
+//         str.read((char*)&y, sizeof(short));
+//         str.read((char*)&z, sizeof(short));
+//         str.read((char*)&size, sizeof(unsigned short));
+//         info << "minX=" << x << " minY=" << y << " minZ=" << z << ", size=" << size << std::endl;
+//         while(!str.eof())
 //         {
-//             for(int z=0; z < presetSize; ++z) 
+//             int val;
+//             str.read((char*)&val, sizeof(int));
+// 
+//             unsigned int index;
+//             str.read((char*)&index, sizeof(unsigned int));
+// 
+//             info << "node: " << val << ", offsets: " << index;
+//             if(index != 0)
 //             {
-//                 float worldX = (float)x / 32.0f;
-//                 float worldY = (float)y / 32.0f;
-//                 float worldZ = (float)z / 32.0f;
-// 
-//                 //float radius = sqrt(worldX * worldX + worldY * worldY + worldZ * worldZ);
-//                 //float density = 0.75f - radius;
-//                 //float density = worldY - 0.25f * sin(100.0f * worldX) * cos(10.0f * worldZ + 5.0f * worldY) + 0.4f * sin(10.0f * worldY + worldX);
-//                 float density = worldY - 0.1f;
-//                 //density -= 0.25f * noise.SampleLinear(4.0f * worldX, 4.0f * worldY, 4.0f * worldZ);
-// 				density += noise.SampleLinear(worldX, worldY, worldZ, 1.0f, 1.0f);
-// 				//density += noise.SampleLinear(worldX, worldY, worldZ, 0.26f, 4.06f);
-//                 //density += 4.1f * noise.SampleLinear(0.24f * noise.GetSize() * worldX, 0.26f * noise.GetSize() * worldY, 0.23f * noise.GetSize() * worldZ);
-//                 //density += 7.9f * noise.SampleLinear(0.127f * noise.GetSize() * worldX, 0.123f * noise.GetSize() * worldY, 0.135f * noise.GetSize() * worldZ);
-//                 //density += 16.1f * noise.SampleLinear(0.0635f * noise.GetSize() * worldX, 0.0725f * noise.GetSize() * worldY, 0.0615f * noise.GetSize() * worldZ);
-//                 //density += 0.5f * noise.SampleLinear(2.0f *   noise.GetSize() * worldX, 2.0f *   noise.GetSize() * worldY, 2.0f *   noise.GetSize() * worldZ);
-//                 //density *= 16.0f;
-// 
-//                 this->SetDensity(x, y, z, density, false);
-// 
-//                 float percentage = 100.0f * (float)++i / (float)(presetSize * presetSize * presetSize);
-//                 if((int)(percentage) > lastPercentage)
+//                 for(int i=1; i < 8; ++i)
 //                 {
-//                     lastPercentage = percentage;
-//                     std::ostringstream percentageStream;
-//                     percentageStream << (int)(percentage) << "%\n";
-//                     OutputDebugStringA(percentageStream.str().c_str());
+//                     str.read((char*)&index, sizeof(unsigned int));
+//                     info << " " << index;
 //                 }
 //             }
+//             info << std::endl;
 //         }
+//         OutputDebugStringA(info.str().c_str());
+//         str.close();
 //     }
+//     else
+//     {
+//         LI_ERROR("stream not open");
+//     }
+
+     //return;
+    
+    Grid3D noise[3];
+    noise[0].Init(16);
+    noise[1].Init(16);
+    noise[2].Init(16);
+    noise[0].LoadNoise();
+    noise[1].LoadNoise();
+    noise[2].LoadNoise();
+    static const int presetSize = 256;
+    int i=0;
+    int lastPercentage = -1;
+
+    float cosa = cos(1.0f);
+    float sina = sin(1.0f);
+
+    for(int x=-presetSize; x < presetSize; ++x) 
+    {
+        for(int y=-presetSize; y < presetSize; ++y) 
+        {
+            for(int z=-presetSize; z < presetSize; ++z) 
+            {
+                float worldX = (float)x / 2.0f;
+                float worldY = (float)y / 2.0f;
+                float worldZ = (float)z / 2.0f;
+                
+                //float radius = sqrt(worldX * worldX + worldY * worldY + worldZ * worldZ);
+                //float density = 0.75f - radius;
+                //float density = worldY - 0.25f * sin(100.0f * worldX) * cos(10.0f * worldZ + 5.0f * worldY) + 0.4f * sin(10.0f * worldY + worldX);
+                float density = worldY;
+                //density -= 0.25f * noise.SampleLinear(4.0f * worldX, 4.0f * worldY, 4.0f * worldZ);
+
+                XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
+                              noise[1].SampleLinear(worldX, worldY, worldZ, 0.004f, 16.0f), 
+                              noise[2].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f));
+                worldX += warp.x;
+                worldY += warp.y;
+                //worldZ += warp.z;
+
+                //density += noise[0].SampleLinear(worldX, worldY, worldZ, 4.03f, 0.25f);
+                //density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
+                density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
+                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.53f, 2.00f);
+                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
+                density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.126f, 8.00f);
+                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
+                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.03137f, 32.00f);
+
+
+				//density += noise.SampleLinear(worldX, worldY, worldZ, 0.50f, 1.96f);
+                //density += noise.SampleLinear(worldX, worldY, worldZ, 1.00f, 1.01f);
+                //density += 4.1f * noise.SampleLinear(0.24f * noise.GetSize() * worldX, 0.26f * noise.GetSize() * worldY, 0.23f * noise.GetSize() * worldZ);
+                //density += 7.9f * noise.SampleLinear(0.127f * noise.GetSize() * worldX, 0.123f * noise.GetSize() * worldY, 0.135f * noise.GetSize() * worldZ);
+                //density += 16.1f * noise.SampleLinear(0.0635f * noise.GetSize() * worldX, 0.0725f * noise.GetSize() * worldY, 0.0615f * noise.GetSize() * worldZ);
+                //density += 0.5f * noise.SampleLinear(2.0f *   noise.GetSize() * worldX, 2.0f *   noise.GetSize() * worldY, 2.0f *   noise.GetSize() * worldZ);
+                //density *= 16.0f;
+
+                this->SetDensity(x, y, z, density, false);
+
+                float percentage = 100.0f * (float)++i / (float)(2*presetSize * 2*presetSize * 2*presetSize);
+                if((int)(percentage) > lastPercentage)
+                {
+                    lastPercentage = percentage;
+                    std::ostringstream percentageStream;
+                    percentageStream << (int)(percentage) << "%\n";
+                    OutputDebugStringA(percentageStream.str().c_str());
+                }
+            }
+        }
+    }
+    this->SaveAllOctrees();
 }
 
 

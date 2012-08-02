@@ -16,8 +16,7 @@ private:
 
     int GetTileForPosition(int p_x, int p_y, int p_z) const;
 	bool SaveOctree(int p_index) const;
-	bool LoadOctree(int p_index, int p_tileX, int p_tileY, int p_tileZ) const;
-	void GetTile(int p_x, int p_y, int p_z, int& p_tileX, int& p_tileY, int& p_tileZ) const;
+	bool LoadOctree(int p_index, int p_x, int p_y, int p_z) const;
 
 public:
     TerrainData(std::string p_octreeFolder);

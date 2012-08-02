@@ -51,9 +51,9 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
 //     elapsed = 0;
 
     const XMFLOAT3& pos = p_pScene->GetCurrentCamera()->GetPosition();
-    int posX = (int)floor(10.0f * pos.x / (float)m_chunksize);
-    int posY = (int)floor(10.0f * pos.y / (float)m_chunksize);
-    int posZ = (int)floor(10.0f * pos.z / (float)m_chunksize);
+    int posX = (int)floor(32.0f * pos.x / (float)m_chunksize);
+    int posY = (int)floor(32.0f * pos.y / (float)m_chunksize);
+    int posZ = (int)floor(32.0f * pos.z / (float)m_chunksize);
 
     int distance = 0;
     int freeBlock = -1;
@@ -75,7 +75,8 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
         return S_OK;
     }
     
-    int toFillX = -1, toFillY = -1, toFillZ = -1;
+    int toFillX, toFillY, toFillZ;
+    boolean found = false;
     for(int dx=-(int)m_smallradius; dx <= m_smallradius; ++dx)
     {
         for(int dy=-(int)m_smallradius; dy <= m_smallradius; ++dy)
@@ -94,13 +95,14 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
                         toFillX = x;
                         toFillY = y;
                         toFillZ = z;
+                        found = true;
                         distance = currentDistance;
                     }
                 }
             }
         }
     }
-    if(toFillX != -1)
+    if(found)
     {
         bool hasGeometry = m_pTerrain->FillGrid(m_tempGrid, m_chunksize * toFillX, m_chunksize * toFillY, m_chunksize * toFillZ);
         if(hasGeometry)
@@ -133,14 +135,14 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
 
         // visualize chunks
         VertexBuffer::SimpleVertex pVertices[8] = {
-            XMFLOAT3(toFillX * m_chunksize,       toFillY * m_chunksize,       toFillZ * m_chunksize),       XMFLOAT3(0,1,0), XMFLOAT4(1,0,0,1),
-            XMFLOAT3((toFillX + 1) * m_chunksize, toFillY * m_chunksize,       toFillZ * m_chunksize),       XMFLOAT3(0,1,0), XMFLOAT4(1,0,0,1),
-            XMFLOAT3((toFillX + 1) * m_chunksize, (toFillY + 1) * m_chunksize, toFillZ * m_chunksize),       XMFLOAT3(0,1,0), XMFLOAT4(1,0,0,1),
-            XMFLOAT3(toFillX * m_chunksize,       (toFillY + 1) * m_chunksize, toFillZ * m_chunksize),       XMFLOAT3(0,1,0), XMFLOAT4(1,0,0,1),
-            XMFLOAT3(toFillX * m_chunksize,       toFillY * m_chunksize,       (toFillZ + 1) * m_chunksize), XMFLOAT3(0,1,0), XMFLOAT4(1,0,0,1),
-            XMFLOAT3((toFillX + 1) * m_chunksize, toFillY * m_chunksize,       (toFillZ + 1) * m_chunksize), XMFLOAT3(0,1,0), XMFLOAT4(1,0,0,1),
-            XMFLOAT3((toFillX + 1) * m_chunksize, (toFillY + 1) * m_chunksize, (toFillZ + 1) * m_chunksize), XMFLOAT3(0,1,0), XMFLOAT4(1,0,0,1),
-            XMFLOAT3(toFillX * m_chunksize,       (toFillY + 1) * m_chunksize, (toFillZ + 1) * m_chunksize), XMFLOAT3(0,1,0), XMFLOAT4(1,0,0,1),
+            XMFLOAT3(toFillX * m_chunksize,       toFillY * m_chunksize,       toFillZ * m_chunksize),       XMFLOAT3(0,1,0), XMFLOAT4(1,1,0,1),
+            XMFLOAT3((toFillX + 1) * m_chunksize, toFillY * m_chunksize,       toFillZ * m_chunksize),       XMFLOAT3(0,1,0), XMFLOAT4(1,1,0,1),
+            XMFLOAT3((toFillX + 1) * m_chunksize, (toFillY + 1) * m_chunksize, toFillZ * m_chunksize),       XMFLOAT3(0,1,0), XMFLOAT4(1,1,0,1),
+            XMFLOAT3(toFillX * m_chunksize,       (toFillY + 1) * m_chunksize, toFillZ * m_chunksize),       XMFLOAT3(0,1,0), XMFLOAT4(1,1,0,1),
+            XMFLOAT3(toFillX * m_chunksize,       toFillY * m_chunksize,       (toFillZ + 1) * m_chunksize), XMFLOAT3(0,1,0), XMFLOAT4(1,1,0,1),
+            XMFLOAT3((toFillX + 1) * m_chunksize, toFillY * m_chunksize,       (toFillZ + 1) * m_chunksize), XMFLOAT3(0,1,0), XMFLOAT4(1,1,0,1),
+            XMFLOAT3((toFillX + 1) * m_chunksize, (toFillY + 1) * m_chunksize, (toFillZ + 1) * m_chunksize), XMFLOAT3(0,1,0), XMFLOAT4(1,1,0,1),
+            XMFLOAT3(toFillX * m_chunksize,       (toFillY + 1) * m_chunksize, (toFillZ + 1) * m_chunksize), XMFLOAT3(0,1,0), XMFLOAT4(1,1,0,1),
         };
         unsigned int pIndices[] = {
             0, 1, 2, 3, 0, 4, 5, 6, 7, 4, 0xffffffff,

@@ -55,10 +55,6 @@ bool Octree::SetValue(short p_x, short p_y, short p_z, int p_value, bool p_autoO
         {
             this->CheckSons();
         }
-        if(this->IsLeaf() && m_pFather)
-        {
-            m_pFather->CheckSons();
-        }
     }
     return changed;
 }
@@ -95,17 +91,18 @@ void Octree::CheckSons(void)
 {
     if(m_pSons)
     {
-        m_value = m_pSons[0].m_value;
+        int sonsValue = m_pSons[0].m_value;
         bool collapsable = true;
         for(int i=0; collapsable && i < 8; ++i) 
         {
-            if(!m_pSons[i].IsLeaf() || m_pSons[i].m_value != m_value)
+            if(!m_pSons[i].IsLeaf() || m_pSons[i].m_value != sonsValue)
             {
                 collapsable = false;
             }
         }
         if(collapsable)
         {
+            m_value = sonsValue;
             this->ClearSons();
         }
     }
@@ -283,7 +280,7 @@ bool Octree::Init(std::fstream& p_stream)
     short minZ = ((short*)pData)[2];
     unsigned short size = ((unsigned short*)(pData + 3 * sizeof(short)))[0];
 
-    this->Init(minX, m_minY, m_minZ, m_size);
+    this->Init(minX, minY, minZ, size);
 #if defined(_DEBUG) || defined(PROFILE)
     //std::cout << "loading octree..." << std::endl;
     //int id = g_pTimer->Tick(IMMEDIATE);

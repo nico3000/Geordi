@@ -45,14 +45,15 @@ public:
     void PrintStructure(void) const;
     bool operator==(Octree const& second) const;
 	bool IsIn(short p_x, short p_y, short p_z) const;
+    bool IsEmpty(void) const { return this->IsLeaf() && m_value == DEFAULT_VALUE; }
 
     short GetMinX(void) const { return m_minX; }
     short GetMinY(void) const { return m_minY; }
     short GetMinZ(void) const { return m_minZ; }
     short GetSize(void) const { return m_size; }
-    short GetMaxX(void) const { return this->GetMinX() + this->GetSize(); }
-    short GetMaxY(void) const { return this->GetMinY() + this->GetSize(); }
-    short GetMaxZ(void) const { return this->GetMinZ() + this->GetSize(); }
+    short GetMaxX(void) const { return m_minX + m_size; }
+    short GetMaxY(void) const { return m_minY + m_size; }
+    short GetMaxZ(void) const { return m_minZ + m_size; }
     void PrintUsage(void) const { std::cout << "tree usage: " << this->GetNumNodes() << " of " << this->GetMaxNumNodes() << " nodes (" << (unsigned int)(100.0 * (double)this->GetNumNodes() / (double)this->GetMaxNumNodes()) << "%)" << std::endl << std::endl; }
 
     static bool InitMemoryPool(INT p_numChunks) { return sm_pool.Init(8*sizeof(Octree), p_numChunks, true); }
