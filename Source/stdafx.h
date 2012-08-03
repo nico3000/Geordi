@@ -81,3 +81,4 @@
 #define MIX(_val1, _val2, _t) ((1.0f - _t) * (_val1) + (_t) * (_val2))
 #define MOD(_val, _mod) ((((_val) % (_mod)) + (_mod)) % (_mod))
 #define ROUND(_val) ((_val) - floor(_val) >= 0.5f ? ceil(_val) : floor(_val))
+#define IS_IN_RANGE(_val, _min, _max) ((_min) <= (_val) && (_val) < (_max))

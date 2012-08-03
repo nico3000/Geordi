@@ -6,8 +6,10 @@
 #include "Grid3D.h"
 
 
-#define NUM_BLOCKS 1024
-
+#define NUM_LEVELS (5)
+#define BLOCK_DIMENSION (4)
+//#define MAX_BLOCKS ((BLOCK_DIMENSION * BLOCK_DIMENSION * BLOCK_DIMENSION / 8) * (7 * NUM_LEVELS + 1))
+#define MAX_BLOCKS 128
 
 class TerrainNode :
     public ISceneNode
@@ -16,17 +18,23 @@ private:
     struct TerrainBlock 
     {
         int x, y, z;
+        int level;
         std::shared_ptr<Geometry> pGeometry;
     };
 
+    typedef std::list<TerrainBlock> BlockList;
+
     std::shared_ptr<TerrainData> m_pTerrain;
-    TerrainBlock m_blocks[NUM_BLOCKS];
-    Octree m_blockData;
-    int m_smallradius;
+    BlockList m_pBlockLists[NUM_LEVELS];
+    Octree m_pGeometryData[NUM_LEVELS];
     int m_chunksize;
     ShaderProgram m_program;
     std::list<std::shared_ptr<Geometry>> m_empty;
     Grid3D m_tempGrid;
+    float m_scale;
+
+    bool IsValid(int p_blockX, int p_blockY, int p_blockZ, int p_camX, int p_camY, int p_camZ, int p_level) const;
+    bool CreateBlock(int p_level, int p_x, int p_y, int p_z);
 
 public:
     TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksize, int p_smallradius);

@@ -97,7 +97,7 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)(x + t)), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4(0.5f, 1.0f, 0.5f, 1.0f),
+                            XMFLOAT4(0.75f, 0.75f, 1.5f, 1.0f),
                         };
                         p_grid.GenerateGradient((float)x + t, (float)y, (float)z, v.normalMC);
                         this->AddEdge(0, m_vertices.size(), x, y, z);
@@ -114,7 +114,7 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)(y + t)), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4(0.5f, 1.0f, 0.5f, 1.0f),
+                            XMFLOAT4(0.75f, 0.75f, 1.5f, 1.0f),
                         };
                         p_grid.GenerateGradient((float)x, (float)y + t, (float)z, v.normalMC);
                         this->AddEdge(4, m_vertices.size(), x, y, z);
@@ -131,7 +131,7 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)(z + t))),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4(0.5f, 1.0f, 0.5f, 1.0f),
+                            XMFLOAT4(0.75f, 0.75f, 1.5f, 1.0f),
                         };
                         p_grid.GenerateGradient((float)x, (float)y, (float)z + t, v.normalMC);
                         this->AddEdge(8, m_vertices.size(), x, y, z);
