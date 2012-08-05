@@ -1,7 +1,7 @@
 #pragma once
 #include "MemoryPool.h"
 
-#define DEFAULT_VALUE 0
+#define DEFAULT_VALUE 0//-SHORT_MAX
 
 class Octree
 {

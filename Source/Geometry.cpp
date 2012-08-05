@@ -8,6 +8,12 @@ m_pIndices(0), m_pVertices(0)
 }
 
 
+Geometry::Geometry(const Geometry& p_toCopy):
+m_pIndices(p_toCopy.m_pIndices), m_pVertices(p_toCopy.m_pVertices)
+{
+}
+
+
 Geometry::~Geometry(void)
 {
 }

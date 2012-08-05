@@ -71,9 +71,11 @@ void MarchingCubeGrid::AddEdge(char p_edge, unsigned short p_index, short p_x, s
 }
 
 
-bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position, float p_scale, bool p_genNormals)
+bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position, float p_scale)
 {
-    this->ResetCubeCodes(p_grid.GetSize() - (p_genNormals ? 2 : 1));
+    static const XMFLOAT4 color(0.5f, 1.5f, 0.5f, 1.0f);
+
+    this->ResetCubeCodes(p_grid.GetSize() - 3);
     m_vertices.clear();
     m_indices.clear();
     for(short x=0; x < m_cubes + 1; ++x)
@@ -82,14 +84,14 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
         {
             for(short z=0; z < m_cubes + 1; ++z)
             {
-                float base = p_grid.GetValue(x, y, z);
+                float base = p_grid.GetValue(x + 1, y + 1, z + 1);
                 if(base > 0)
                 {
                     this->SetBits(x, y, z);
                 }
                 if(x != m_cubes)
                 {
-                    float w = p_grid.GetValue(x + 1, y, z);
+                    float w = p_grid.GetValue(x + 2, y + 1, z + 1);
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
@@ -97,16 +99,16 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)(x + t)), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4(0.75f, 0.75f, 1.5f, 1.0f),
+                            color,
                         };
-                        p_grid.GenerateGradient((float)x + t, (float)y, (float)z, v.normalMC);
-                        this->AddEdge(0, m_vertices.size(), x, y, z);
+                        p_grid.GenerateGradient((float)(x + 1) + t, (float)(y + 1), (float)(z + 1), v.normalMC);
+                        this->AddEdge(0, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
                 }
                 if(y != m_cubes)
                 {
-                    float w = p_grid.GetValue(x, y + 1, z);
+                    float w = p_grid.GetValue(x + 1, y + 2, z + 1);
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
@@ -114,16 +116,16 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)(y + t)), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4(0.75f, 0.75f, 1.5f, 1.0f),
+                            color,
                         };
-                        p_grid.GenerateGradient((float)x, (float)y + t, (float)z, v.normalMC);
-                        this->AddEdge(4, m_vertices.size(), x, y, z);
+                        p_grid.GenerateGradient((float)(x + 1), (float)(y + 1) + t, (float)(z + 1), v.normalMC);
+                        this->AddEdge(4, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
                 }
                 if(z != m_cubes)
                 {
-                    float w = p_grid.GetValue(x, y, z + 1);
+                    float w = p_grid.GetValue(x + 1, y + 1, z + 2);
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
@@ -131,10 +133,10 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)(z + t))),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4(0.75f, 0.75f, 1.5f, 1.0f),
+                            color,
                         };
-                        p_grid.GenerateGradient((float)x, (float)y, (float)z + t, v.normalMC);
-                        this->AddEdge(8, m_vertices.size(), x, y, z);
+                        p_grid.GenerateGradient((float)(x + 1), (float)(y + 1), (float)(z + 1) + t, v.normalMC);
+                        this->AddEdge(8, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
                 }

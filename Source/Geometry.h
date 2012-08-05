@@ -13,6 +13,7 @@ public:
     typedef std::shared_ptr<VertexBuffer> VertexBufferPtr;
 
     Geometry(void);
+    Geometry(const Geometry& p_toCopy);
     ~Geometry(void);
 
     void Draw(void);

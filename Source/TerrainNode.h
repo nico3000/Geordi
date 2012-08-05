@@ -4,37 +4,62 @@
 #include "Geometry.h"
 #include "ShaderProgram.h"
 #include "Grid3D.h"
+#include "MarchingCubeGrid.h"
 
 
-#define NUM_LEVELS (5)
-#define BLOCK_DIMENSION (4)
-//#define MAX_BLOCKS ((BLOCK_DIMENSION * BLOCK_DIMENSION * BLOCK_DIMENSION / 8) * (7 * NUM_LEVELS + 1))
-#define MAX_BLOCKS 128
+#define LOD_RADIUS 3
+#define NUM_LEVELS 4
+#define NUM_BLOCKS 8
+
 
 class TerrainNode :
     public ISceneNode
 {
+    friend class TerrainBlock;
+
 private:
-    struct TerrainBlock 
+    class TerrainBlock
     {
-        int x, y, z;
-        int level;
-        std::shared_ptr<Geometry> pGeometry;
+    private:
+        TerrainNode* m_pTerrainNode;
+        int m_x, m_y, m_z;
+        int m_level;
+        bool m_isRefined;
+        int m_geometry;
+        std::shared_ptr<TerrainBlock> m_pRefined[8];
+        std::shared_ptr<Geometry> m_pGeometry;
+        std::shared_ptr<Geometry> m_pBackup;
+        std::shared_ptr<Geometry> m_pWireframe;
+
+        void BuildGeometry(void);
+        void ReleaseGeometry(bool p_releaseChildren);
+
+    public:
+        TerrainBlock(int p_x, int p_y, int p_z, int p_level, TerrainNode* p_pTerrainNode);
+        ~TerrainBlock(void);
+
+        void SetPointOfReference(int p_x, int p_y, int p_z);
+
     };
 
-    typedef std::list<TerrainBlock> BlockList;
+    typedef std::list<std::weak_ptr<Geometry>> GeometryList;
 
     std::shared_ptr<TerrainData> m_pTerrain;
-    BlockList m_pBlockLists[NUM_LEVELS];
+
+    std::shared_ptr<TerrainBlock> m_pTest[NUM_BLOCKS * NUM_BLOCKS * NUM_BLOCKS];
+    GeometryList m_blockList;
+    GeometryList m_wireframeList;
     Octree m_pGeometryData[NUM_LEVELS];
     int m_chunksize;
     ShaderProgram m_program;
-    std::list<std::shared_ptr<Geometry>> m_empty;
     Grid3D m_tempGrid;
+    MarchingCubeGrid m_tempMCGrid;
     float m_scale;
-
-    bool IsValid(int p_blockX, int p_blockY, int p_blockZ, int p_camX, int p_camY, int p_camZ, int p_level) const;
-    bool CreateBlock(int p_level, int p_x, int p_y, int p_z);
+    int m_maxBlocksPerFrame;
+    int m_currentBlocksPerFrame;
+    ID3D11ShaderResourceView* m_pDiffuseTex;
+    ID3D11ShaderResourceView* m_pBumpTex;
+    ID3D11ShaderResourceView* m_pNormalTex;
 
 public:
     TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksize, int p_smallradius);

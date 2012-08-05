@@ -1,7 +1,6 @@
 #pragma once
 #include "Octree.h"
 #include "Grid3D.h"
-#define METRES_PER_UNIT 0.5f
 
 class TerrainData
 {

@@ -28,9 +28,12 @@ Texture2D<float4> g_NormalTex : register(t2);
 
 float4 TexOutPS(ScreenQuadFragment input) : SV_Target0
 {
+    float3 lightPos = normalize(float3(cos(1.0 * g_time), 3.0f, sin(1.0 * g_time)));
+
     float4 diffuse = g_DiffuseTex.Sample(PointSampler, input.tex);
     float3 normal = g_NormalTex.Sample(PointSampler, input.tex).xyz;
 	if(dot(normal, normal) == 0) return float4(0,0,0,0);
-    float cosa = 0.5 + 0.5 * dot(normal, float3(0,1,0));
+    //float cosa = 0.5 + 0.5 * dot(normal, lightPos);
+    float cosa = max(0, dot(normal, lightPos));
     return diffuse * lerp(float4(0.1, 0.1, 0.1, 1.0), float4(1.0, 1.0, 1.0, 1.0), cosa);
 }

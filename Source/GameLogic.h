@@ -12,11 +12,19 @@ class GameLogic :
     typedef std::list<std::shared_ptr<IGameView>> GameViewList;
 
 private:
+    struct TimeStruct
+    {
+        float time;
+        float dTime;
+        XMFLOAT2 unused;
+    };
+
     ActorMap m_actors;
     ActorFactory* m_pActorFactory;
     ProcessManager* m_pProcessManager;
     GameViewList m_gameViews;
     ParticleSystem* m_pParticleSystem;
+    ConstantBuffer* m_pTimeBuffer;
 
     bool LoadActors(tinyxml2::XMLElement* p_pActorList);
 

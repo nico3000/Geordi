@@ -5,7 +5,7 @@
 #include "TransformComponent.h"
 
 GameLogic::GameLogic(void) :
-m_pActorFactory(0), m_pParticleSystem(0), m_pProcessManager(0)
+m_pActorFactory(0), m_pParticleSystem(0), m_pProcessManager(0), m_pTimeBuffer(new ConstantBuffer)
 {
 }
 
@@ -17,6 +17,7 @@ GameLogic::~GameLogic(void)
     SAFE_DELETE(m_pActorFactory);
     SAFE_DELETE(m_pProcessManager);
     SAFE_DELETE(m_pParticleSystem);
+    SAFE_DELETE(m_pTimeBuffer);
 }
 
 
@@ -40,6 +41,13 @@ bool GameLogic::VInit(void)
         LI_ERROR("ParticleSystem initialization failed");
         return false;
     }
+    TimeStruct time = { 0.0f, 0.0f, XMFLOAT2(0.0f, 0.0f) };
+    if(!m_pTimeBuffer->CopyDataAndBuild(&time, sizeof(TimeStruct)))
+    {
+        LI_ERROR("TimeBuffer initialization failed");
+        return false;
+    }
+    m_pTimeBuffer->UpdateAndBind(2, TARGET_ALL);
 
     EventListenerDelegate onActorMove = fastdelegate::MakeDelegate(this, &GameLogic::ActorMoveDelegate);
     EventManager::Get()->VAddListener(onActorMove, ActorMoveEvent::sm_eventType);
@@ -61,6 +69,10 @@ void GameLogic::VDestroy(void)
 void GameLogic::VUpdate(unsigned long p_deltaMillis, unsigned long p_gameMillis)
 {
     //LI_INFO("next frame");
+    TimeStruct* pTime = (TimeStruct*)m_pTimeBuffer->GetData();
+    pTime->time = 1e-3f * (float)p_gameMillis;
+    pTime->dTime = 1e-3f * (float)p_deltaMillis;
+    m_pTimeBuffer->UpdateAndBind(2, TARGET_ALL);
 
     m_pProcessManager->UpdateProcesses(p_deltaMillis);
     EventManager::Get()->VUpdate(20);

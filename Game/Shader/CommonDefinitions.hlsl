@@ -33,7 +33,7 @@ SamplerState AnisotropicSampler : register(s2);
 struct DeferredShadingOutput
 {
     float4 diffuse : SV_Target0;
-    float4 view : SV_Target1;
+    float4 world : SV_Target1;
     float4 normal : SV_Target2;
 };
 
@@ -47,7 +47,7 @@ struct SimpleVertex
 
 struct SimpleVertexProjected
 {
-    float4 view : POSITION1;
+    float4 world : POSITION1;
 	float4 projected : SV_POSITION;
     float3 normalWC : NORMAL0;
 	float4 vertexColor : COLOR0;

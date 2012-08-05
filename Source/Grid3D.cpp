@@ -60,13 +60,17 @@ void Grid3D::GenerateGradient(float p_x, float p_y, float p_z, XMFLOAT3& p_targe
 {
     const static float epsilon = 1.0f;
     float val = this->SampleLinear(p_x, p_y, p_z);
-    p_target.x = (this->SampleLinear(p_x + epsilon, p_y, p_z) - val);
-    p_target.y = (this->SampleLinear(p_x, p_y + epsilon, p_z) - val);
-    p_target.z = (this->SampleLinear(p_x, p_y, p_z + epsilon) - val);
-    float len = sqrt(p_target.x * p_target.x + p_target.y * p_target.y + p_target.z * p_target.z);
-    p_target.x /= len;
-    p_target.y /= len;
-    p_target.z /= len;
+    p_target.x = this->SampleLinear(p_x + epsilon, p_y, p_z) - this->SampleLinear(p_x - epsilon, p_y, p_z);
+    p_target.y = this->SampleLinear(p_x, p_y + epsilon, p_z) - this->SampleLinear(p_x, p_y - epsilon, p_z);
+    p_target.z = this->SampleLinear(p_x, p_y, p_z + epsilon) - this->SampleLinear(p_x, p_y, p_z - epsilon);
+//     float len = p_target.x * p_target.x + p_target.y * p_target.y + p_target.z * p_target.z;
+//     if(len != 0)
+//     {
+//         len = 1.0f / sqrt(len);
+//         p_target.x *= len;
+//         p_target.y *= len;
+//         p_target.z *= len;
+//     }
 }
 
 

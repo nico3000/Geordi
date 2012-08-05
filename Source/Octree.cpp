@@ -263,9 +263,7 @@ bool Octree::Init(std::fstream& p_stream)
 
     if(!p_stream.good())
     {
-#if defined(_DEBUG) || defined(PROFILE)
         LI_ERROR("bad stream");
-#endif
         return false;
     }
     p_stream.seekg(0, std::ios::end);
@@ -287,7 +285,7 @@ bool Octree::Init(std::fstream& p_stream)
     this->InitIntern(pData + NODE_SIZE_HEAD, 0, 0);
     //std::cout << "loading took " << (1e-3 * (double)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else
-    this->InitIntern(pData + sizeof(unsigned short), NULL, 0);
+    this->InitIntern(pData + NODE_SIZE_HEAD, 0, 0);
 #endif
     SAFE_DELETE_ARRAY(pData);
     return true;
@@ -316,7 +314,11 @@ void Octree::InitIntern(char* p_pData, Octree* p_pFather, char p_sonIndex)
 
 bool Octree::Save(std::fstream& p_stream) const
 {
-    LI_INFO("saving");
+    if(!p_stream.good())
+    {
+        LI_ERROR("bad stream");
+        return false;
+    }
 
     unsigned long numNodes = this->GetNumNodes();
     unsigned long numLeafs = this->GetNumLeafs();
@@ -339,11 +341,11 @@ bool Octree::Save(std::fstream& p_stream) const
     }
     //std::cout << "saving took " << (1e-3 * (double)g_pTimer->Tock(id, ERASE)) << " secs" << std::endl;
 #else
-    this->SaveIntern(pData + sizeof(unsigned short));
+    this->SaveIntern(pData + NODE_SIZE_HEAD);
 #endif
     p_stream.write(pData, dataSize);
     delete pData;
-	return !p_stream.bad();
+	return p_stream.good();
 }
 
 

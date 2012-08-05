@@ -82,3 +82,4 @@
 #define MOD(_val, _mod) ((((_val) % (_mod)) + (_mod)) % (_mod))
 #define ROUND(_val) ((_val) - floor(_val) >= 0.5f ? ceil(_val) : floor(_val))
 #define IS_IN_RANGE(_val, _min, _max) ((_min) <= (_val) && (_val) < (_max))
+#define MAX3(_a, _b, _c) max(_a, max(_b, _c))

@@ -86,16 +86,17 @@ bool TerrainData::SaveOctree(Octree* pTree) const
                 {
                     success = true;
                 }
-                fileStream.close();
             }
             else
             {
                 LI_ERROR("Failed to open octree stream for writing: " + octreeStream.str());
             }
+            fileStream.close();
         }
         else
         {
-            LI_INFO("Saving of empty octree skipped");
+            success = true;
+            //LI_INFO("Saving of empty octree skipped");
         }
 	}
 	else
@@ -114,28 +115,29 @@ bool TerrainData::LoadOctree(int p_x, int p_y, int p_z)
 
     Octree* pTree = new Octree;
 
-	bool success = true;
-	std::stringstream octreeStream;
-	octreeStream << "./" << m_octreeFolder << "/terrain." << tileStartX << "." << tileStartY << "." << tileStartZ << ".oct";
-	std::fstream fileStream(octreeStream.str().c_str(), std::ios::in | std::ios::binary);
-	if(fileStream.is_open())
-	{
-		if(!pTree->Init(fileStream))
-		{
-			LI_ERROR("Failed to load octree from stream: " + octreeStream.str());
+    bool success = true;
+    std::stringstream octreeStream;
+    octreeStream << "./" << m_octreeFolder << "/terrain." << tileStartX << "." << tileStartY << "." << tileStartZ << ".oct";
+    std::fstream fileStream(octreeStream.str().c_str(), std::ios::in | std::ios::binary);
+    if(fileStream.is_open())
+    {
+        if(!pTree->Init(fileStream))
+        {
+            LI_ERROR("Failed to load octree from stream: " + octreeStream.str());
             success = false;
-		}
-		fileStream.close();
-	}
+        }
+        fileStream.close();
+    }
     else
     {
         pTree->Init(tileStartX, tileStartY, tileStartZ, m_octreeSize);
     }
+    
     if(success)
     {
         m_loadedTiles.push_back(pTree);
     }
-	return success;
+    return success;
 }
 
 
@@ -347,60 +349,89 @@ void TerrainData::GenerateTestData(void)
     noise[0].LoadNoise();
     noise[1].LoadNoise();
     noise[2].LoadNoise();
-    static const int presetSize = 128;
-    int i=0;
+    static const int presetOctreeCount = 2;
+    
     int lastPercentage = -1;
+    int timerID = LostIsland::g_pTimer->Tick(IMMEDIATE);
+    int outID = LostIsland::g_pTimer->Tick(IMMEDIATE);
 
     float cosa = cos(1.0f);
     float sina = sin(1.0f);
-
-    for(int x=-presetSize; x < presetSize; ++x) 
+    ULONGLONG i = 0;
+    ULONGLONG wholesize = m_octreeSize * presetOctreeCount;
+    wholesize = 2 * wholesize * 2 * wholesize * 2 * wholesize;
+    
+    Octree tree;
+    for(int ox=-presetOctreeCount; ox < presetOctreeCount; ++ox)
     {
-        for(int y=-presetSize; y < presetSize; ++y) 
+        for(int oy=-presetOctreeCount; oy < presetOctreeCount; ++oy)
         {
-            for(int z=-presetSize; z < presetSize; ++z) 
+            for(int oz=-presetOctreeCount; oz < presetOctreeCount; ++oz)
             {
-                float worldX = (float)x / 2.0f;
-                float worldY = (float)y / 2.0f;
-                float worldZ = (float)z / 2.0f;
-                
-                //float radius = sqrt(worldX * worldX + worldY * worldY + worldZ * worldZ);
-                //float density = 0.75f - radius;
-                //float density = worldY - 0.25f * sin(100.0f * worldX) * cos(10.0f * worldZ + 5.0f * worldY) + 0.4f * sin(10.0f * worldY + worldX);
-                float density = worldY;
-                //density -= 0.25f * noise.SampleLinear(4.0f * worldX, 4.0f * worldY, 4.0f * worldZ);
-
-                XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
-                              noise[1].SampleLinear(worldX, worldY, worldZ, 0.004f, 16.0f), 
-                              noise[2].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f));
-                //worldX += warp.x;
-                worldY += warp.y;
-                //worldZ += warp.z;
-
-                //density += noise[0].SampleLinear(worldX, worldY, worldZ, 4.03f, 0.25f);
-                //density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
-                //density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
-                //density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.53f, 2.00f);
-                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
-                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.126f, 8.00f);
-                density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
-                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.03137f, 32.00f);
-                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.015625f, 64.00f);
-
-                this->SetDensity(x, y, z, density, false);
-
-                float percentage = 100.0f * (float)++i / (float)(2*presetSize * 2*presetSize * 2*presetSize);
-                if((int)(percentage) > lastPercentage)
+                tree.Clear();
+                tree.Init(ox * m_octreeSize, oy * m_octreeSize, oz * m_octreeSize, m_octreeSize);
+                for(int x=ox * m_octreeSize; x < (ox + 1) * m_octreeSize; ++x)
                 {
-                    lastPercentage = percentage;
-                    std::ostringstream percentageStream;
-                    percentageStream << (int)(percentage) << "%\n";
-                    OutputDebugStringA(percentageStream.str().c_str());
+                    for(int y=oy * m_octreeSize; y < (oy + 1) * m_octreeSize; ++y)
+                    {
+                        for(int z=oz * m_octreeSize; z < (oz + 1) * m_octreeSize; ++z)
+                        {
+                            float worldX = (float)x / 2.0f;
+                            float worldY = (float)y / 2.0f;
+                            float worldZ = (float)z / 2.0f;
+
+                            float density = worldY;
+
+//                             XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
+//                                 noise[1].SampleLinear(worldX, worldY, worldZ, 0.004f, 16.0f), 
+//                                 noise[2].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f));
+//                             worldX += warp.x;
+//                             worldY += warp.y;
+//                             worldZ += warp.z;
+
+                            //density += noise[0].SampleLinear(worldX, worldY, worldZ, 4.03f, 0.25f);
+                            //density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
+                            //density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
+                            density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.53f, 2.00f);
+                            density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
+                            density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.126f, 8.00f);
+                            density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
+                            density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.03137f, 32.00f);
+                            density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.015625f, 64.00f);
+                            density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0078125f, 128.00f);
+
+                            //this->SetDensity(x, y, z, density, false);
+                            int densityToStore = (short)(CLAMP(density, -1.0f, 1.0f) * (float)SHORT_MAX);
+                            tree.SetValue(x, y, z, densityToStore, true);
+
+                            float percentage = 100.0f * (float)++i / (float)wholesize;
+                            if((int)(percentage) > lastPercentage)
+                            {
+                                lastPercentage = (int)percentage;
+                                std::ostringstream percentageStream;
+                                percentageStream << (int)(percentage) << "%\n";
+                                OutputDebugStringA(percentageStream.str().c_str());
+                            }
+                            if(LostIsland::g_pTimer->Tock(outID, KEEPRUNNING) > 5000)
+                            {
+                                LostIsland::g_pTimer->Tock(outID, RESET);
+                                float elapsed = (float)LostIsland::g_pTimer->Tock(timerID, KEEPRUNNING);
+                                std::ostringstream estimated;
+                                float minutes = (1e-3f * (100.0f * elapsed / percentage - elapsed) / 60.0f);
+                                float seconds = 60.0f * (minutes - floor(minutes));
+                                estimated << floor(minutes) << " minutes and " << floor(seconds) << " seconds remaining\n";
+                                OutputDebugStringA(estimated.str().c_str());
+                            }
+                        }
+                    }
+                }
+                if(!tree.IsEmpty())
+                {
+                    this->SaveOctree(&tree);
                 }
             }
         }
     }
-    this->SaveAllOctrees();
 }
 
 

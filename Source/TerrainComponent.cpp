@@ -39,7 +39,7 @@ bool TerrainComponent::VInit(tinyxml2::XMLElement* p_pData)
         LI_ERROR("invalid or no Data element in TerrainComponent");
         return false;
     }
-    if(!m_pTerrain->Init(chunksize, 128))
+    if(!m_pTerrain->Init(chunksize, 256))
     {
         LI_ERROR("terrain initialization failed");
         return false;

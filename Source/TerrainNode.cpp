@@ -9,15 +9,187 @@
 #define GEOMETRY_NOTLOADED (3)
 
 
-TerrainNode::TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksize, int p_smallradius):
-m_pTerrain(p_pTerrain), m_chunksize(p_chunksize), m_scale(0.25f)
+TerrainNode::TerrainBlock::TerrainBlock(int p_x, int p_y, int p_z, int p_level, TerrainNode* p_pTerrainNode):
+m_x(p_x), m_y(p_y), m_z(p_z), m_level(p_level), m_isRefined(false), m_pTerrainNode(p_pTerrainNode)
 {
-    m_tempGrid.Init(p_chunksize + 2);
+    if(p_level != 0)
+    {
+        m_pRefined[0].reset(new TerrainBlock(2 * p_x,     2 * p_y,     2 * p_z,     p_level - 1, p_pTerrainNode));
+        m_pRefined[1].reset(new TerrainBlock(2 * p_x,     2 * p_y,     2 * p_z + 1, p_level - 1, p_pTerrainNode));
+        m_pRefined[2].reset(new TerrainBlock(2 * p_x,     2 * p_y + 1, 2 * p_z,     p_level - 1, p_pTerrainNode));
+        m_pRefined[3].reset(new TerrainBlock(2 * p_x,     2 * p_y + 1, 2 * p_z + 1, p_level - 1, p_pTerrainNode));
+        m_pRefined[4].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y,     2 * p_z,     p_level - 1, p_pTerrainNode));
+        m_pRefined[5].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y,     2 * p_z + 1, p_level - 1, p_pTerrainNode));
+        m_pRefined[6].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y + 1, 2 * p_z,     p_level - 1, p_pTerrainNode));
+        m_pRefined[7].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y + 1, 2 * p_z + 1, p_level - 1, p_pTerrainNode));
+    }    
+    m_geometry = p_pTerrainNode->m_pGeometryData->GetValue(m_x, m_y, m_z);
+}
+
+
+TerrainNode::TerrainBlock::~TerrainBlock(void)
+{
+}
+
+
+void TerrainNode::TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z)
+{
+    int x = (int)floor((float)p_x / (float)(1 << m_level));
+    int y = (int)floor((float)p_y / (float)(1 << m_level));
+    int z = (int)floor((float)p_z / (float)(1 << m_level));
+    if(m_level != 0 && MAX3(abs(x - m_x), abs(y - m_y), abs(z - m_z)) < LOD_RADIUS)
+    {
+        // refine block
+        m_isRefined = true;
+        this->ReleaseGeometry(false);
+        for(int i=0; i < 8; ++i)
+        {
+            m_pRefined[i]->SetPointOfReference(p_x, p_y, p_z);
+        }
+    }
+    else
+    {
+        // do not refine
+        m_isRefined = false;
+        if(m_level != 0)
+        {
+            for(int i=0; i < 8; ++i)
+            {
+                m_pRefined[i]->ReleaseGeometry(true);
+            }
+        }
+        this->BuildGeometry();
+    }
+}
+
+
+void TerrainNode::TerrainBlock::ReleaseGeometry(bool p_releaseChildren)
+{
+    if(m_geometry == GEOMETRY_LOADED)
+    {
+        m_pGeometry.reset((Geometry*)0);
+        m_pWireframe.reset((Geometry*)0);
+        m_geometry = GEOMETRY_NOTLOADED;
+        m_pTerrainNode->m_pGeometryData->SetValue(m_x, m_y, m_z, m_geometry);
+    }
+    else if(p_releaseChildren && m_level != 0)
+    {
+        for(int i=0; i < 8; ++i)
+        {
+            m_pRefined[i]->ReleaseGeometry(true);
+        }
+    }
+}
+
+
+void TerrainNode::TerrainBlock::BuildGeometry(void)
+{
+    bool changed = false;
+    if(m_geometry == GEOMETRY_UNKNOWN && m_pTerrainNode->m_currentBlocksPerFrame < m_pTerrainNode->m_maxBlocksPerFrame)
+    {
+        ++m_pTerrainNode->m_currentBlocksPerFrame;
+
+        int offset = 1 << m_level;
+        int startX = (m_x - 0) * offset * m_pTerrainNode->m_chunksize;
+        int startY = (m_y - 0) * offset * m_pTerrainNode->m_chunksize;
+        int startZ = (m_z - 0) * offset * m_pTerrainNode->m_chunksize;
+
+        bool hasGeometry = m_pTerrainNode->m_pTerrain->FillGrid(m_pTerrainNode->m_tempGrid, startX - offset, startY - offset, startZ - offset, offset);
+        if(hasGeometry)
+        {    
+            hasGeometry = m_pTerrainNode->m_tempMCGrid.ConstructData(m_pTerrainNode->m_tempGrid, XMFLOAT3(
+                (float)(m_x * m_pTerrainNode->m_chunksize),
+                (float)(m_y * m_pTerrainNode->m_chunksize),
+                (float)(m_z * m_pTerrainNode->m_chunksize)),
+                (float)offset * m_pTerrainNode->m_scale);
+        }
+        if(hasGeometry)
+        {
+            m_pBackup = m_pTerrainNode->m_tempMCGrid.CreateGeometry();
+            m_geometry = GEOMETRY_NOTLOADED;
+        }
+        else
+        {
+            m_geometry = GEOMETRY_EMPTY;
+        }
+        changed = true;
+    }
+    if(m_geometry == GEOMETRY_NOTLOADED && m_pBackup)
+    {
+        m_pGeometry.reset(new Geometry(*m_pBackup));
+        m_pTerrainNode->m_blockList.push_back(m_pGeometry);
+        m_geometry = GEOMETRY_LOADED;
+        changed = true;
+    }
+    if(changed)
+    {
+        m_pTerrainNode->m_pGeometryData->SetValue(m_x, m_y, m_z, m_geometry);
+    }
+    
+
+
+//         if(hasGeometry)
+//         {
+//             // wireframe
+//             XMFLOAT4 pColors[] =
+//             {
+//                 XMFLOAT4(1.0f, 0.0f, 0.5f, 1.0f),
+//                 XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f),
+//                 XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f),
+//                 XMFLOAT4(1.0f, 0.5f, 0.0f, 1.0f),
+//                 XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),
+//             };
+// 
+//             float scale = m_pTerrainNode->m_scale;
+//             int chunksize = m_pTerrainNode->m_chunksize;
+//             VertexBuffer::SimpleVertex pVertices[8] = {
+//                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.01f)), scale * (float)(chunksize * offset * (m_y + 0.01f)), scale * (float)(chunksize * offset * (m_z + 0.01f))), XMFLOAT3(0,1,0), pColors[m_level],
+//                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.99f)), scale * (float)(chunksize * offset * (m_y + 0.01f)), scale * (float)(chunksize * offset * (m_z + 0.01f))), XMFLOAT3(0,1,0), pColors[m_level],
+//                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.99f)), scale * (float)(chunksize * offset * (m_y + 0.99f)), scale * (float)(chunksize * offset * (m_z + 0.01f))), XMFLOAT3(0,1,0), pColors[m_level],
+//                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.01f)), scale * (float)(chunksize * offset * (m_y + 0.99f)), scale * (float)(chunksize * offset * (m_z + 0.01f))), XMFLOAT3(0,1,0), pColors[m_level],
+//                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.01f)), scale * (float)(chunksize * offset * (m_y + 0.01f)), scale * (float)(chunksize * offset * (m_z + 0.99f))), XMFLOAT3(0,1,0), pColors[m_level],
+//                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.99f)), scale * (float)(chunksize * offset * (m_y + 0.01f)), scale * (float)(chunksize * offset * (m_z + 0.99f))), XMFLOAT3(0,1,0), pColors[m_level],
+//                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.99f)), scale * (float)(chunksize * offset * (m_y + 0.99f)), scale * (float)(chunksize * offset * (m_z + 0.99f))), XMFLOAT3(0,1,0), pColors[m_level],
+//                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.01f)), scale * (float)(chunksize * offset * (m_y + 0.99f)), scale * (float)(chunksize * offset * (m_z + 0.99f))), XMFLOAT3(0,1,0), pColors[m_level],
+//             };
+//             unsigned int pIndices[] = {
+//                 0, 1, 2, 3, 0, 4, 5, 6, 7, 4, 0xffffffff,
+//                 3, 7, 0xffffffff,
+//                 2, 6, 0xffffffff,
+//                 1, 5, 
+//             };
+//             Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);
+//             pVertexBuffer->Build(pVertices, ARRAYSIZE(pVertices), sizeof(VertexBuffer::SimpleVertex));
+//             Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
+//             pIndexBuffer->Build(pIndices, ARRAYSIZE(pIndices), D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+//             m_pWireframe.reset(new Geometry);
+//             m_pWireframe->SetIndices(pIndexBuffer);
+//             m_pWireframe->SetVertices(pVertexBuffer);
+//             m_pTerrainNode->m_wireframeList.push_back(m_pWireframe);
+//             // end wireframe
+//         }
+}
+
+
+TerrainNode::TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksize, int p_smallradius):
+m_pTerrain(p_pTerrain), m_chunksize(p_chunksize), m_scale(0.25f), m_maxBlocksPerFrame(1), m_pDiffuseTex(0), m_pBumpTex(0), m_pNormalTex(0)
+{
+    m_tempGrid.Init(p_chunksize + 3);
     for(int i=0; i < NUM_LEVELS; ++i)
     {
         m_pGeometryData[i].Init(-512, -512, -512, 1024);
     }
     MarchingCubeGrid::Init();
+    for(int x=0; x < NUM_BLOCKS; ++x)
+    {
+        for(int y=0; y < NUM_BLOCKS; ++y)
+        {
+            for(int z=0; z < NUM_BLOCKS; ++z)
+            {
+                m_pTest[z * NUM_BLOCKS * NUM_BLOCKS + y * NUM_BLOCKS + x].reset(new TerrainBlock(x - NUM_BLOCKS / 2, y - NUM_BLOCKS / 2, z - NUM_BLOCKS / 2, NUM_LEVELS - 1, this));
+            }
+        }
+    }
 }
 
 
@@ -28,30 +200,15 @@ TerrainNode::~TerrainNode(void)
     {
         m_pGeometryData[i].Clear();
     }
-}
-
-
-bool TerrainNode::IsValid(int p_blockX, int p_blockY, int p_blockZ, int p_camX, int p_camY, int p_camZ, int p_level) const
-{
-    bool inRange = IS_IN_RANGE(p_blockX, p_camX - 2, p_camX + 2)
-        && IS_IN_RANGE(p_blockY, p_camY - 2, p_camY + 2)
-        && IS_IN_RANGE(p_blockZ, p_camZ - 2, p_camZ + 2);
-    if(inRange && p_level != 0)
-    {
-        return !IS_IN_RANGE(p_blockX, p_camX - 1, p_camX + 1)
-            || !IS_IN_RANGE(p_blockY, p_camY - 1, p_camY + 1)
-            || !IS_IN_RANGE(p_blockZ, p_camZ - 1, p_camZ + 1);
-    }
-    else
-    {
-        return inRange;
-    }
+    SAFE_RELEASE(m_pDiffuseTex);
+    SAFE_RELEASE(m_pBumpTex);
+    SAFE_RELEASE(m_pNormalTex);
 }
 
 
 HRESULT TerrainNode::VOnRestore(void)
 {
-    if(!m_program.Load(L"./Shader/NicotopiaTest.fx", "SimpleVS", 0, "SimplePS"))
+    if(!m_program.Load(L"./Shader/NicotopiaTest.fx", "SimpleVS", 0, "NormalMappingPS"))
     {
         return S_FALSE;
     }
@@ -59,6 +216,12 @@ HRESULT TerrainNode::VOnRestore(void)
     {
         return S_FALSE;
     }
+    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/stone_diffuse.jpg", 0, 0, &m_pDiffuseTex, 0));
+    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/stone_bump.jpg", 0, 0, &m_pBumpTex, 0));
+    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/stone_normal.jpg", 0, 0, &m_pNormalTex, 0));
+    LostIsland::g_pGraphics->GetContext()->GenerateMips(m_pDiffuseTex);
+    LostIsland::g_pGraphics->GetContext()->GenerateMips(m_pBumpTex);
+    LostIsland::g_pGraphics->GetContext()->GenerateMips(m_pNormalTex);
 
     return S_OK;
 }
@@ -74,136 +237,37 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
 {
 //     static unsigned long elapsed = 0;
 //     elapsed += p_deltaMillis;
-//     if(elapsed < 1000)
+//     if(elapsed < 100)
 //     {
 //         return S_OK;
 //     }
 //     elapsed = 0;
 
+    //const XMFLOAT3& campos = XMFLOAT3(0.0f, 0.0f, 0.0f);
     const XMFLOAT3& campos = p_pScene->GetCurrentCamera()->GetPosition();
 
-    for(int level=0; level < NUM_LEVELS; ++level)
+    float levelZeroBlockSize = m_scale * (float)m_chunksize;
+    int camX = (int)floor(campos.x / levelZeroBlockSize);
+    int camY = (int)floor(campos.y / levelZeroBlockSize);
+    int camZ = (int)floor(campos.z / levelZeroBlockSize);
+
+
+    m_currentBlocksPerFrame = 0;
+
+    for(int i=0; i < NUM_BLOCKS * NUM_BLOCKS * NUM_BLOCKS && m_currentBlocksPerFrame < m_maxBlocksPerFrame; ++i)
     {
-        float levelBlockSize = (float)(1 << level) * m_scale * (float)m_chunksize;
-        int camX = (int)floor(campos.x / levelBlockSize + 0.5f);
-        int camY = (int)floor(campos.y / levelBlockSize + 0.5f);
-        int camZ = (int)floor(campos.z / levelBlockSize + 0.5f);
-        camX += camX % 2;
-        camY += camY % 2;
-        camZ += camZ % 2;
-
-
-        BlockList& blocks = m_pBlockLists[level];
-        for(auto iter=blocks.begin(); iter != blocks.end();)
-        {
-            if(!this->IsValid((*iter).x, (*iter).y, (*iter).z, camX, camY, camZ, level))
-            {
-                if(m_pGeometryData[level].GetValue((*iter).x, (*iter).y, (*iter).z) == GEOMETRY_LOADED)
-                {
-                    m_pGeometryData[level].SetValue((*iter).x, (*iter).y, (*iter).z, GEOMETRY_NOTLOADED);   
-                }
-                iter = blocks.erase(iter);
-            }
-            else
-            {
-                ++iter;
-            }
-        }
-
-        for(int dx=-2; dx < 2; ++dx)
-        {
-            for(int dy=-2; dy < 2; ++dy)
-            {
-                for(int dz=-2; dz < 2; ++dz)
-                {
-                    if(this->IsValid(camX + dx, camY + dy, camZ + dz, camX, camY, camZ, level))
-                    {
-                        int val = m_pGeometryData->GetValue(camX + dx, camY + dy, camZ + dz);
-                        bool wasGeometryCreated = false;
-                        switch(val)
-                        {
-                        case GEOMETRY_UNKNOWN:
-                            wasGeometryCreated = this->CreateBlock(level, camX + dx, camY + dy, camZ + dz);
-                            m_pGeometryData->SetValue(camX + dx, camY + dy, camZ + dz, wasGeometryCreated ? GEOMETRY_LOADED : GEOMETRY_EMPTY);
-                            return S_OK;
-                            //break;
-                        case GEOMETRY_NOTLOADED:
-                            wasGeometryCreated = this->CreateBlock(level, camX + dx, camY + dy, camZ + dz);
-                            if(!wasGeometryCreated)
-                            {
-                                LI_INFO("weird");
-                            }
-                            m_pGeometryData->SetValue(camX + dx, camY + dy, camZ + dz, wasGeometryCreated ? GEOMETRY_LOADED : GEOMETRY_NOTLOADED);
-                            return S_OK;
-                            //break;
-                        case GEOMETRY_LOADED: /* do nothing */ break;
-                        case GEOMETRY_EMPTY: /* do nothing */ break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return S_OK;
-}
-
-
-bool TerrainNode::CreateBlock(int p_level, int p_x, int p_y, int p_z)
-{
-    static MarchingCubeGrid grid;
-    XMFLOAT4 color(1.0f, 0.5f, 0.5f, 1.0f);
-    int offset = 1 << p_level;
-    int startX = p_x * offset * m_chunksize;
-    int startY = p_y * offset * m_chunksize;
-    int startZ = p_z * offset * m_chunksize;
+        m_pTest[i]->SetPointOfReference(camX, camY, camZ);
+    }    
     
-    bool hasGeometry = m_pTerrain->FillGrid(m_tempGrid, startX, startY, startZ, offset);
-    if(hasGeometry)
-    {    
-        hasGeometry = grid.ConstructData(m_tempGrid, XMFLOAT3((float)startX, (float)startY, (float)startZ), m_scale, true);
-    }
-    if(hasGeometry)
-    {
-         TerrainBlock block = { p_x, p_y, p_z, p_level, grid.CreateGeometry() };
-         m_pBlockLists[p_level].push_back(block);
-         color.x = 0.5f;
-         color.y = 1.0f;
-    }
-
-    // visualize chunks
-    VertexBuffer::SimpleVertex pVertices[8] = {
-        XMFLOAT3(m_scale * (float)(m_chunksize * offset * (p_x + 0.01f)), m_scale * (float)(m_chunksize * offset * (p_y + 0.01f)), m_scale * (float)(m_chunksize * offset * (p_z + 0.01f))), XMFLOAT3(0,1,0), color,
-        XMFLOAT3(m_scale * (float)(m_chunksize * offset * (p_x + 0.99f)), m_scale * (float)(m_chunksize * offset * (p_y + 0.01f)), m_scale * (float)(m_chunksize * offset * (p_z + 0.01f))), XMFLOAT3(0,1,0), color,
-        XMFLOAT3(m_scale * (float)(m_chunksize * offset * (p_x + 0.99f)), m_scale * (float)(m_chunksize * offset * (p_y + 0.99f)), m_scale * (float)(m_chunksize * offset * (p_z + 0.01f))), XMFLOAT3(0,1,0), color,
-        XMFLOAT3(m_scale * (float)(m_chunksize * offset * (p_x + 0.01f)), m_scale * (float)(m_chunksize * offset * (p_y + 0.99f)), m_scale * (float)(m_chunksize * offset * (p_z + 0.01f))), XMFLOAT3(0,1,0), color,
-        XMFLOAT3(m_scale * (float)(m_chunksize * offset * (p_x + 0.01f)), m_scale * (float)(m_chunksize * offset * (p_y + 0.01f)), m_scale * (float)(m_chunksize * offset * (p_z + 0.99f))), XMFLOAT3(0,1,0), color,
-        XMFLOAT3(m_scale * (float)(m_chunksize * offset * (p_x + 0.99f)), m_scale * (float)(m_chunksize * offset * (p_y + 0.01f)), m_scale * (float)(m_chunksize * offset * (p_z + 0.99f))), XMFLOAT3(0,1,0), color,
-        XMFLOAT3(m_scale * (float)(m_chunksize * offset * (p_x + 0.99f)), m_scale * (float)(m_chunksize * offset * (p_y + 0.99f)), m_scale * (float)(m_chunksize * offset * (p_z + 0.99f))), XMFLOAT3(0,1,0), color,
-        XMFLOAT3(m_scale * (float)(m_chunksize * offset * (p_x + 0.01f)), m_scale * (float)(m_chunksize * offset * (p_y + 0.99f)), m_scale * (float)(m_chunksize * offset * (p_z + 0.99f))), XMFLOAT3(0,1,0), color,
-    };
-    unsigned int pIndices[] = {
-        0, 1, 2, 3, 0, 4, 5, 6, 7, 4, 0xffffffff,
-        3, 7, 0xffffffff,
-        2, 6, 0xffffffff,
-        1, 5, 
-    };
-    Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);
-    pVertexBuffer->Build(pVertices, ARRAYSIZE(pVertices), sizeof(VertexBuffer::SimpleVertex));
-    Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
-    pIndexBuffer->Build(pIndices, ARRAYSIZE(pIndices), D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
-    std::shared_ptr<Geometry> pGeo(new Geometry);
-    pGeo->SetIndices(pIndexBuffer);
-    pGeo->SetVertices(pVertexBuffer);
-    TerrainBlock block2 = { p_x, p_y, p_z, p_level, pGeo };
-    m_pBlockLists[p_level].push_back(block2);
-    // end visualize chunks
-
-    return hasGeometry;
+    return S_OK;
 }
 
 
 HRESULT TerrainNode::VPreRender(Scene* p_pScene)
 {
+    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(2, 1, &m_pDiffuseTex);
+    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(3, 1, &m_pBumpTex);
+    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(4, 1, &m_pNormalTex);
     return S_OK;
 }
 
@@ -216,16 +280,32 @@ HRESULT TerrainNode::VRender(Scene* p_pScene)
     XMStoreFloat4x4(&data.modelInv, XMMatrixIdentity());
     p_pScene->PushModelMatrices(data, true);
 
-    for(int level=0; level < NUM_LEVELS; ++level)
-    {
-        for(auto iter=m_pBlockLists[level].begin(); iter != m_pBlockLists[level].end(); ++iter)
-        {    
-            (*iter).pGeometry->Draw();
+    auto iter = m_blockList.begin();
+    while(iter != m_blockList.end()) {
+        std::shared_ptr<Geometry> pGeo = (*iter).lock();
+        if(pGeo)
+        {
+            pGeo->Draw();
+            ++iter;
+        }
+        else
+        {
+            iter = m_blockList.erase(iter);
         }
     }
-    for(auto iter=m_empty.begin(); iter != m_empty.end(); ++iter)
-    {
-        (*iter)->Draw();
+
+    iter = m_wireframeList.begin();
+    while(iter != m_wireframeList.end()) {
+        std::shared_ptr<Geometry> pGeo = (*iter).lock();
+        if(pGeo)
+        {
+            pGeo->Draw();
+            ++iter;
+        }
+        else
+        {
+            iter = m_wireframeList.erase(iter);
+        }
     }
 
     p_pScene->PopModelMatrices(false);
