@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "MarchingCubeGrid.h"
 
+#define MATERIAL_MAX 16
 
 void MarchingCubeGrid::ResetCubeCodes(short p_cubes)
 { 
@@ -8,9 +9,12 @@ void MarchingCubeGrid::ResetCubeCodes(short p_cubes)
     {
         m_cubes = p_cubes;
         SAFE_DELETE(m_pCubes);
+        SAFE_DELETE(m_pWeights);
         m_pCubes = new CubeInfo[p_cubes * p_cubes * p_cubes];
+        m_pWeights = new float[MATERIAL_MAX * (p_cubes + 1) * (p_cubes + 1) * (p_cubes + 1)];
     }
     ZeroMemory(m_pCubes, p_cubes * p_cubes * p_cubes * sizeof(CubeInfo));
+    ZeroMemory(m_pWeights, MATERIAL_MAX * (p_cubes + 1) * (p_cubes + 1) * (p_cubes + 1) * sizeof(float));
 }
 
 
@@ -85,6 +89,8 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
             for(short z=0; z < m_cubes + 1; ++z)
             {
                 float base = p_grid.GetValue(x + 1, y + 1, z + 1);
+                int material = 0; // TODO!!!!
+                m_pWeights[material * (m_cubes + 1) * (m_cubes + 1) * (m_cubes + 1) + z * (m_cubes + 1) * (m_cubes + 1) + y * (m_cubes + 1) + x] = 1.0f;
                 if(base > 0)
                 {
                     this->SetBits(x, y, z);
@@ -180,6 +186,17 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(void)
         pGeo->SetVertices(pVertexBuffer);
         return pGeo;
     }
+}
+
+
+ID3D11Texture3D* MarchingCubeGrid::CreateMaterialWeightTexture(void)
+{
+    ID3D11Texture3D* pTex;
+    D3D11_TEXTURE3D_DESC desc;
+    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    desc.CPUAccessFlags = 0;
+    desc.Width = desc.Height = desc.Depth = m_cubes + 1;
+    desc.
 }
 
 

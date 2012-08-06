@@ -19,22 +19,22 @@ groupshared float4 localMem[TILE_SIZE + KERNEL_SIZE - 1];
 [numthreads(TILE_SIZE + KERNEL_SIZE - 1, 1, 1)]
 void BlurHorCS(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID, uint3 dtid : SV_DispatchThreadID)
 {
-	uint texCoord = gid.x * TILE_SIZE + gtid.x - KERNEL_SIZE / 2;
+    uint texCoord = gid.x * TILE_SIZE + gtid.x - KERNEL_SIZE / 2;
     float4 texel = g_Input[uint2(texCoord, dtid.y)];
     float brightness = dot(texel.rgb, g_BrightnessFactors);
     localMem[gtid.x] = ceil(clamp(brightness, 0.0, 2.0) - 1.0) * texel;
 
-	GroupMemoryBarrierWithGroupSync();
+    GroupMemoryBarrierWithGroupSync();
 
-	if(gtid.x < TILE_SIZE)
-	{
-		float4 color = (float4)0;
-		for(int i=0; i < KERNEL_SIZE; ++i)
-		{
-			color += g_Kernel[i] * localMem[gtid.x + i];
-		}
-		g_PrimaryOutput[uint2(gid.x * TILE_SIZE + gtid.x, dtid.y)] = color / g_Sum;
-	}
+    if(gtid.x < TILE_SIZE)
+    {
+        float4 color = (float4)0;
+        for(int i=0; i < KERNEL_SIZE; ++i)
+        {
+            color += g_Kernel[i] * localMem[gtid.x + i];
+        }
+        g_PrimaryOutput[uint2(gid.x * TILE_SIZE + gtid.x, dtid.y)] = color / g_Sum;
+    }
 }
 
 
@@ -44,17 +44,17 @@ void BlurHorCS(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID, uint3 dtid
 [numthreads(1, TILE_SIZE + KERNEL_SIZE - 1, 1)]
 void BlurVerCS(uint3 gid : SV_GroupID, uint3 gtid : SV_GroupThreadID, uint3 dtid : SV_DispatchThreadID)
 {
-	uint texCoord = gid.y * TILE_SIZE + gtid.y - KERNEL_SIZE / 2;
-	localMem[gtid.y] = g_Input[uint2(dtid.x, texCoord)];
-	GroupMemoryBarrierWithGroupSync();
+    uint texCoord = gid.y * TILE_SIZE + gtid.y - KERNEL_SIZE / 2;
+    localMem[gtid.y] = g_Input[uint2(dtid.x, texCoord)];
+    GroupMemoryBarrierWithGroupSync();
 
-	if(gtid.y < TILE_SIZE)
-	{
-		float4 color = (float4)0;
-		for(int i=0; i < KERNEL_SIZE; ++i)
-		{
-			color += g_Kernel[i] * localMem[gtid.y + i];
-		}
-		g_PrimaryOutput[uint2(dtid.x, gid.y * TILE_SIZE + gtid.y)] = g_Source[uint2(dtid.x, gid.y * TILE_SIZE + gtid.y)] + color / g_Sum;
-	}
+    if(gtid.y < TILE_SIZE)
+    {
+        float4 color = (float4)0;
+        for(int i=0; i < KERNEL_SIZE; ++i)
+        {
+            color += g_Kernel[i] * localMem[gtid.y + i];
+        }
+        g_PrimaryOutput[uint2(dtid.x, gid.y * TILE_SIZE + gtid.y)] = g_Source[uint2(dtid.x, gid.y * TILE_SIZE + gtid.y)] + color / g_Sum;
+    }
 }

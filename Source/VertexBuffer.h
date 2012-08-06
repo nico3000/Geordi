@@ -28,5 +28,6 @@ public:
     };
     static D3D11_INPUT_ELEMENT_DESC sm_pScreenQuadVertexElementDesc[1];
     static unsigned int sm_screenQuadVertexNumElements;
+
 };
 

@@ -67,9 +67,9 @@ void TerrainData::PushTileToBack(int p_x, int p_y, int p_z)
 
 bool TerrainData::SaveOctree(Octree* pTree) const
 {
-	bool success = false;
-	if(pTree)
-	{
+    bool success = false;
+    if(pTree)
+    {
         pTree->OptimizeStructure();
         if(!pTree->IsEmpty())
         {
@@ -98,12 +98,12 @@ bool TerrainData::SaveOctree(Octree* pTree) const
             success = true;
             //LI_INFO("Saving of empty octree skipped");
         }
-	}
-	else
-	{
-		LI_ERROR("Trying to save empty octree tile");
-	}
-	return success;
+    }
+    else
+    {
+        LI_ERROR("Trying to save empty octree tile");
+    }
+    return success;
 }
 
 
@@ -349,14 +349,20 @@ void TerrainData::GenerateTestData(void)
     noise[0].LoadNoise();
     noise[1].LoadNoise();
     noise[2].LoadNoise();
-    static const int presetOctreeCount = 2;
+    static const int presetOctreeCount = 4;
     
     int lastPercentage = -1;
     int timerID = LostIsland::g_pTimer->Tick(IMMEDIATE);
     int outID = LostIsland::g_pTimer->Tick(IMMEDIATE);
 
-    float cosa = cos(1.0f);
-    float sina = sin(1.0f);
+    float cosa0 = cos(noise[0].GetValue(0));
+    float sina0 = sin(noise[0].GetValue(0));
+    float cosa1 = cos(noise[1].GetValue(0));
+    float sina1 = sin(noise[1].GetValue(0));
+    float cosa2 = cos(noise[2].GetValue(0));
+    float sina2 = sin(noise[2].GetValue(0));
+    float cosa3 = cos(noise[0].GetValue(1));
+    float sina3 = sin(noise[0].GetValue(1));
     ULONGLONG i = 0;
     ULONGLONG wholesize = m_octreeSize * presetOctreeCount;
     wholesize = 2 * wholesize * 2 * wholesize * 2 * wholesize;
@@ -380,6 +386,15 @@ void TerrainData::GenerateTestData(void)
                             float worldY = (float)y / 2.0f;
                             float worldZ = (float)z / 2.0f;
 
+                            float rotatedX0 = cosa0 * worldX - sina0 * worldZ;
+                            float rotatedZ0 = sina0 * worldX + cosa0 * worldZ;
+                            float rotatedX1 = cosa1 * worldX - sina1 * worldZ;
+                            float rotatedZ1 = sina1 * worldX + cosa1 * worldZ;
+                            float rotatedX2 = cosa2 * worldX - sina2 * worldZ;
+                            float rotatedZ2 = sina2 * worldX + cosa2 * worldZ;
+                            float rotatedX3 = cosa3 * worldX - sina3 * worldZ;
+                            float rotatedZ3 = sina3 * worldX + cosa3 * worldZ;
+
                             float density = worldY;
 
 //                             XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
@@ -390,37 +405,37 @@ void TerrainData::GenerateTestData(void)
 //                             worldZ += warp.z;
 
                             //density += noise[0].SampleLinear(worldX, worldY, worldZ, 4.03f, 0.25f);
-                            //density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
-                            //density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
-                            density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.53f, 2.00f);
+                            density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
+                            density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
+                            density += noise[0].SampleLinear(rotatedX0, worldY, rotatedZ0, 0.53f, 2.00f);
                             density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
-                            density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.126f, 8.00f);
+                            density += noise[1].SampleLinear(rotatedX1, worldY, rotatedZ1, 0.126f, 8.00f);
                             density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
-                            density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.03137f, 32.00f);
+                            density += noise[0].SampleLinear(rotatedX2, worldY, rotatedZ2, 0.03137f, 32.00f);
                             density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.015625f, 64.00f);
-                            density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0078125f, 128.00f);
+                            density += noise[2].SampleLinear(rotatedX3, worldY, rotatedZ3, 0.0078125f, 128.00f);
 
                             //this->SetDensity(x, y, z, density, false);
                             int densityToStore = (short)(CLAMP(density, -1.0f, 1.0f) * (float)SHORT_MAX);
                             tree.SetValue(x, y, z, densityToStore, true);
 
                             float percentage = 100.0f * (float)++i / (float)wholesize;
-                            if((int)(percentage) > lastPercentage)
-                            {
-                                lastPercentage = (int)percentage;
-                                std::ostringstream percentageStream;
-                                percentageStream << (int)(percentage) << "%\n";
-                                OutputDebugStringA(percentageStream.str().c_str());
-                            }
+//                             if((int)(percentage) > lastPercentage)
+//                             {
+//                                 lastPercentage = (int)percentage;
+//                                 std::ostringstream percentageStream;
+//                                 percentageStream << (int)(percentage) << "%\n";
+//                                 OutputDebugStringA(percentageStream.str().c_str());
+//                             }
                             if(LostIsland::g_pTimer->Tock(outID, KEEPRUNNING) > 5000)
                             {
                                 LostIsland::g_pTimer->Tock(outID, RESET);
                                 float elapsed = (float)LostIsland::g_pTimer->Tock(timerID, KEEPRUNNING);
-                                std::ostringstream estimated;
+                                std::ostringstream stats;
                                 float minutes = (1e-3f * (100.0f * elapsed / percentage - elapsed) / 60.0f);
                                 float seconds = 60.0f * (minutes - floor(minutes));
-                                estimated << floor(minutes) << " minutes and " << floor(seconds) << " seconds remaining\n";
-                                OutputDebugStringA(estimated.str().c_str());
+                                stats << "Terrain Generation: " << ((float)(int)(100.0f * percentage) / 100.0f) << "%. " << floor(minutes) << " minutes and " << floor(seconds) << " seconds remaining\n";
+                                OutputDebugStringA(stats.str().c_str());
                             }
                         }
                     }

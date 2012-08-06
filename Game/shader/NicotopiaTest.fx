@@ -10,12 +10,12 @@ Texture2D g_normalTex : register(t4);
 
 SimpleVertexProjected SimpleVS(SimpleVertex input)
 {
-	SimpleVertexProjected output = (SimpleVertexProjected)0;
+    SimpleVertexProjected output = (SimpleVertexProjected)0;
     output.world = mul(g_model, float4(input.positionMC, 1.0));
-	output.projected = mul(g_projectionView, output.world);
+    output.projected = mul(g_projectionView, output.world);
     output.normalWC = mul(transpose(g_modelInv), float4(input.normalMC, 0)).xyz;
-	output.vertexColor = input.vertexColor;
-	return output;
+    output.vertexColor = input.vertexColor;
+    return output;
 }
 
 
@@ -23,13 +23,13 @@ StructuredBuffer<Particle> g_Particles : register(t0);
 
 SimpleVertexProjected ParticleVS(uint vid : SV_VertexID)
 {
-	SimpleVertexProjected output = (SimpleVertexProjected)0;
+    SimpleVertexProjected output = (SimpleVertexProjected)0;
     output.world = mul(g_model, float4(g_Particles[vid].pos, 1.0));
-	output.projected = mul(g_projectionView, output.world);
-	//output.vertexColor = float4(0.5 + 0.5 * normalize(g_Particles[vid].velocity), 1.0);
+    output.projected = mul(g_projectionView, output.world);
+    //output.vertexColor = float4(0.5 + 0.5 * normalize(g_Particles[vid].velocity), 1.0);
     output.vertexColor = g_Particles[vid].color;
     //output.vertexColor *= 0.5;
-	return output;
+    return output;
 }
 
 

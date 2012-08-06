@@ -25,7 +25,7 @@ void Grid3D::LoadNoise(void)
 
 float Grid3D::SampleLinear(float p_x, float p_y, float p_z, float p_frequency, float p_amplitude) const
 {
-	return p_amplitude * this->SampleLinear(p_frequency * p_x, p_frequency * p_y, p_frequency * p_z);
+    return p_amplitude * this->SampleLinear(p_frequency * p_x, p_frequency * p_y, p_frequency * p_z);
 }
 
 

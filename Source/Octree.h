@@ -1,7 +1,7 @@
 #pragma once
 #include "MemoryPool.h"
 
-#define DEFAULT_VALUE 0//-SHORT_MAX
+#define OCTREE_DEFAULT_VALUE -SHORT_MAX
 
 class Octree
 {
@@ -25,7 +25,7 @@ private:
     void InitIntern(char* p_pData, Octree* p_pFather, char p_sonIndex);
     char* SaveIntern(char* p_pData) const;
     void ClearSons(void);
-	bool IsLeaf(void) const { return !m_pSons; }
+    bool IsLeaf(void) const { return !m_pSons; }
 
 public:
     Octree(void);
@@ -44,8 +44,8 @@ public:
     void PrintTree(void) const;
     void PrintStructure(void) const;
     bool operator==(Octree const& second) const;
-	bool IsIn(short p_x, short p_y, short p_z) const;
-    bool IsEmpty(void) const { return this->IsLeaf() && m_value == DEFAULT_VALUE; }
+    bool IsIn(short p_x, short p_y, short p_z) const;
+    bool IsEmpty(void) const { return this->IsLeaf() && m_value == OCTREE_DEFAULT_VALUE; }
 
     short GetMinX(void) const { return m_minX; }
     short GetMinY(void) const { return m_minY; }

@@ -3,10 +3,21 @@
 #include "Scene.h"
 #include "MarchingCubeGrid.h"
 
-#define GEOMETRY_UNKNOWN (0)
+#define GEOMETRY_UNKNOWN OCTREE_DEFAULT_VALUE
 #define GEOMETRY_EMPTY (1)
 #define GEOMETRY_LOADED (2)
 #define GEOMETRY_NOTLOADED (3)
+
+
+unsigned int TerrainNode::sm_clipmapVertexNumElements = 6;
+D3D11_INPUT_ELEMENT_DESC TerrainNode::sm_pClipmapVertexElementDesc[6] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 56, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 72, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+};
 
 
 TerrainNode::TerrainBlock::TerrainBlock(int p_x, int p_y, int p_z, int p_level, TerrainNode* p_pTerrainNode):
@@ -32,8 +43,9 @@ TerrainNode::TerrainBlock::~TerrainBlock(void)
 }
 
 
-void TerrainNode::TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z)
+bool TerrainNode::TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z)
 {
+    bool done = true;
     int x = (int)floor((float)p_x / (float)(1 << m_level));
     int y = (int)floor((float)p_y / (float)(1 << m_level));
     int z = (int)floor((float)p_z / (float)(1 << m_level));
@@ -41,10 +53,13 @@ void TerrainNode::TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z)
     {
         // refine block
         m_isRefined = true;
-        this->ReleaseGeometry(false);
         for(int i=0; i < 8; ++i)
         {
-            m_pRefined[i]->SetPointOfReference(p_x, p_y, p_z);
+            done &= m_pRefined[i]->SetPointOfReference(p_x, p_y, p_z);
+        }
+        if(done && m_pGeometry)
+        {
+            this->ReleaseGeometry(false);
         }
     }
     else
@@ -58,8 +73,9 @@ void TerrainNode::TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z)
                 m_pRefined[i]->ReleaseGeometry(true);
             }
         }
-        this->BuildGeometry();
+        done = this->BuildGeometry();
     }
+    return done;
 }
 
 
@@ -82,9 +98,10 @@ void TerrainNode::TerrainBlock::ReleaseGeometry(bool p_releaseChildren)
 }
 
 
-void TerrainNode::TerrainBlock::BuildGeometry(void)
+bool TerrainNode::TerrainBlock::BuildGeometry(void)
 {
     bool changed = false;
+    bool done = true;
     if(m_geometry == GEOMETRY_UNKNOWN && m_pTerrainNode->m_currentBlocksPerFrame < m_pTerrainNode->m_maxBlocksPerFrame)
     {
         ++m_pTerrainNode->m_currentBlocksPerFrame;
@@ -114,6 +131,10 @@ void TerrainNode::TerrainBlock::BuildGeometry(void)
         }
         changed = true;
     }
+    else
+    {
+        done = m_geometry != GEOMETRY_UNKNOWN;
+    }
     if(m_geometry == GEOMETRY_NOTLOADED && m_pBackup)
     {
         m_pGeometry.reset(new Geometry(*m_pBackup));
@@ -125,7 +146,7 @@ void TerrainNode::TerrainBlock::BuildGeometry(void)
     {
         m_pTerrainNode->m_pGeometryData->SetValue(m_x, m_y, m_z, m_geometry);
     }
-    
+    return done;
 
 
 //         if(hasGeometry)
@@ -175,9 +196,11 @@ TerrainNode::TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksiz
 m_pTerrain(p_pTerrain), m_chunksize(p_chunksize), m_scale(0.25f), m_maxBlocksPerFrame(1), m_pDiffuseTex(0), m_pBumpTex(0), m_pNormalTex(0)
 {
     m_tempGrid.Init(p_chunksize + 3);
+    int size = NUM_BLOCKS * (1 << NUM_LEVELS);
     for(int i=0; i < NUM_LEVELS; ++i)
     {
-        m_pGeometryData[i].Init(-512, -512, -512, 1024);
+        m_pGeometryData[i].Init(-size / 2, -size / 2, -size / 2, size);
+        size /= 2;
     }
     MarchingCubeGrid::Init();
     for(int x=0; x < NUM_BLOCKS; ++x)
@@ -216,9 +239,22 @@ HRESULT TerrainNode::VOnRestore(void)
     {
         return S_FALSE;
     }
-    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/stone_diffuse.jpg", 0, 0, &m_pDiffuseTex, 0));
-    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/stone_bump.jpg", 0, 0, &m_pBumpTex, 0));
-    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/stone_normal.jpg", 0, 0, &m_pNormalTex, 0));
+    D3DX11_IMAGE_LOAD_INFO info;
+    info.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    info.CpuAccessFlags = D3DX11_DEFAULT;
+    info.Width = D3DX11_DEFAULT;
+    info.Height = D3DX11_DEFAULT;
+    info.Depth = D3DX11_DEFAULT;
+    info.Filter = D3DX11_DEFAULT;
+    info.FirstMipLevel = D3DX11_DEFAULT;
+    info.Format = DXGI_FORMAT_FROM_FILE;
+    info.MipFilter = D3DX11_DEFAULT;
+    info.MipLevels = D3DX11_DEFAULT;
+    info.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+    info.pSrcInfo = 0;       
+    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/polishedstone_diffuse.jpg", &info, 0, &m_pDiffuseTex, 0));
+    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/polishedstone_bump.jpg", &info, 0, &m_pBumpTex, 0));
+    RETURN_IF_FAILED(D3DX11CreateShaderResourceViewFromFileA(LostIsland::g_pGraphics->GetDevice(), "../Assets/polishedstone_normal.jpg", &info, 0, &m_pNormalTex, 0));
     LostIsland::g_pGraphics->GetContext()->GenerateMips(m_pDiffuseTex);
     LostIsland::g_pGraphics->GetContext()->GenerateMips(m_pBumpTex);
     LostIsland::g_pGraphics->GetContext()->GenerateMips(m_pNormalTex);
@@ -246,19 +282,27 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
     //const XMFLOAT3& campos = XMFLOAT3(0.0f, 0.0f, 0.0f);
     const XMFLOAT3& campos = p_pScene->GetCurrentCamera()->GetPosition();
 
+    static int lastCamPos[3] = { 0, 0, 0, };
+    static bool done = false;
+
     float levelZeroBlockSize = m_scale * (float)m_chunksize;
     int camX = (int)floor(campos.x / levelZeroBlockSize);
     int camY = (int)floor(campos.y / levelZeroBlockSize);
     int camZ = (int)floor(campos.z / levelZeroBlockSize);
 
+     if(!done || camX != lastCamPos[0] || camY != lastCamPos[1] || camZ != lastCamPos[2])
+     {
+         m_currentBlocksPerFrame = 0;
+         done = true;
 
-    m_currentBlocksPerFrame = 0;
-
-    for(int i=0; i < NUM_BLOCKS * NUM_BLOCKS * NUM_BLOCKS && m_currentBlocksPerFrame < m_maxBlocksPerFrame; ++i)
-    {
-        m_pTest[i]->SetPointOfReference(camX, camY, camZ);
-    }    
-    
+        for(int i=0; i < NUM_BLOCKS * NUM_BLOCKS * NUM_BLOCKS/* && m_currentBlocksPerFrame < m_maxBlocksPerFrame*/; ++i)
+        {
+            done &= m_pTest[i]->SetPointOfReference(camX, camY, camZ);
+        }
+        lastCamPos[0] = camX;
+        lastCamPos[1] = camY;
+        lastCamPos[2] = camZ;
+     }   
     return S_OK;
 }
 
@@ -292,6 +336,14 @@ HRESULT TerrainNode::VRender(Scene* p_pScene)
         {
             iter = m_blockList.erase(iter);
         }
+    }
+    static int frames = 0;
+    if(++frames == 1000)
+    {
+        frames = 0;
+        std::ostringstream info;
+        info << m_blockList.size() << " blocks";
+        LI_INFO(info.str());
     }
 
     iter = m_wireframeList.begin();

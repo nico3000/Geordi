@@ -6,7 +6,7 @@
 MemoryPool Octree::sm_pool;
 
 Octree::Octree(void):
-m_pFather(0), m_pSons(0), m_value(DEFAULT_VALUE)
+m_pFather(0), m_pSons(0), m_value(OCTREE_DEFAULT_VALUE)
 {
 }
 
@@ -82,7 +82,7 @@ int Octree::GetValue(short p_x, short p_y, short p_z) const
     else
     {
         int index = this->GetSonIndex(p_x, p_y, p_z);
-        return index == -1 ? DEFAULT_VALUE : m_pSons[index].GetValue(p_x, p_y, p_z);
+        return index == -1 ? OCTREE_DEFAULT_VALUE : m_pSons[index].GetValue(p_x, p_y, p_z);
     }
 }
 
@@ -233,7 +233,7 @@ void Octree::Init(short p_minX, short p_minY, short p_minZ, short p_size)
     m_minY = p_minY;
     m_minZ = p_minZ;
     m_size = p_size;
-    m_value = DEFAULT_VALUE;
+    m_value = OCTREE_DEFAULT_VALUE;
     m_pFather = 0;
     m_pSons = 0;
 }
@@ -345,7 +345,7 @@ bool Octree::Save(std::fstream& p_stream) const
 #endif
     p_stream.write(pData, dataSize);
     delete pData;
-	return p_stream.good();
+    return p_stream.good();
 }
 
 
@@ -424,5 +424,5 @@ void Octree::ClearSons(void)
 void Octree::Clear(void)
 {
     this->ClearSons();
-    m_value = DEFAULT_VALUE;
+    m_value = OCTREE_DEFAULT_VALUE;
 }

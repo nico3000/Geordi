@@ -7,7 +7,7 @@
 #include "MarchingCubeGrid.h"
 
 
-#define LOD_RADIUS 3
+#define LOD_RADIUS 2
 #define NUM_LEVELS 4
 #define NUM_BLOCKS 8
 
@@ -31,16 +31,25 @@ private:
         std::shared_ptr<Geometry> m_pBackup;
         std::shared_ptr<Geometry> m_pWireframe;
 
-        void BuildGeometry(void);
+        bool BuildGeometry(void);
         void ReleaseGeometry(bool p_releaseChildren);
 
     public:
         TerrainBlock(int p_x, int p_y, int p_z, int p_level, TerrainNode* p_pTerrainNode);
         ~TerrainBlock(void);
 
-        void SetPointOfReference(int p_x, int p_y, int p_z);
+        bool SetPointOfReference(int p_x, int p_y, int p_z);
 
     };
+
+    struct ClipmapVertex
+    {
+        XMFLOAT3 positionMC;
+        XMFLOAT3 normalMC;
+        XMFLOAT4X4 materialWeight;
+    };
+    static D3D11_INPUT_ELEMENT_DESC sm_pClipmapVertexElementDesc[6];
+    static unsigned int sm_clipmapVertexNumElements;
 
     typedef std::list<std::weak_ptr<Geometry>> GeometryList;
 

@@ -5,7 +5,7 @@
 class TerrainData
 {
 private:
-	typedef std::list<Octree*> OctreeList;
+    typedef std::list<Octree*> OctreeList;
 
     OctreeList m_loadedTiles;
     std::string m_octreeFolder;
@@ -14,8 +14,8 @@ private:
     unsigned short m_maxActiveOctrees;
 
     void PushTileToBack(int p_x, int p_y, int p_z);
-	bool SaveOctree(Octree* pTree) const;
-	bool LoadOctree(int p_x, int p_y, int p_z);
+    bool SaveOctree(Octree* pTree) const;
+    bool LoadOctree(int p_x, int p_y, int p_z);
 
 public:
     TerrainData(std::string p_octreeFolder);

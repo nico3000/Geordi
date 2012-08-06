@@ -1,10 +1,10 @@
 cbuffer Camera : register(b0)
 {
-	float4x4 g_view;
-	float4x4 g_projection;
-	float4x4 g_projectionView;
-	float3 g_camPosition;
-	float g_viewDistance;
+    float4x4 g_view;
+    float4x4 g_projection;
+    float4x4 g_projectionView;
+    float3 g_camPosition;
+    float g_viewDistance;
     float g_aspect;
     float3 Camera_unused;
 };
@@ -40,16 +40,16 @@ struct DeferredShadingOutput
 
 struct SimpleVertex
 {
-	float3 positionMC : POSITION0;
+    float3 positionMC : POSITION0;
     float3 normalMC : NORMAL0;
-	float4 vertexColor : COLOR0;
+    float4 vertexColor : COLOR0;
 };
 
 struct SimpleVertexProjected
 {
     float4 world : POSITION1;
-	float4 projected : SV_POSITION;
+    float4 projected : SV_POSITION;
     float3 normalWC : NORMAL0;
-	float4 vertexColor : COLOR0;
+    float4 vertexColor : COLOR0;
     float2 tex : TEXCOORD0;
 };

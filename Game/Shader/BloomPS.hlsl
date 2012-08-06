@@ -16,33 +16,33 @@ Texture2D<float4> g_BlurredTex : register(t1);
 
 float4 BlurHorPS(ScreenQuadFragment input) : SV_Target0
 {
-	uint width, height;
-	g_SourceTex.GetDimensions(width, height);
-	float2 offset = float2(0.0, 0.0);
-	offset.x = 1.0 / (float)width;
-	float4 color = float4(0.0, 0.0, 0.0, 0.0);
-	for(int i=0; i < KERNEL_SIZE; ++i)
-	{
-		float4 texel = g_SourceTex.Sample(PointSampler, input.tex + ((float)i - floor(KERNEL_SIZE / 2)) * offset);
-		float brightness = dot(texel.rgb, g_BrightnessFactors);
-		color += ceil(clamp(brightness, 0.0, 2.0) - 1.0) * texel * g_Kernel[i];
-	}
+    uint width, height;
+    g_SourceTex.GetDimensions(width, height);
+    float2 offset = float2(0.0, 0.0);
+    offset.x = 1.0 / (float)width;
+    float4 color = float4(0.0, 0.0, 0.0, 0.0);
+    for(int i=0; i < KERNEL_SIZE; ++i)
+    {
+        float4 texel = g_SourceTex.Sample(PointSampler, input.tex + ((float)i - floor(KERNEL_SIZE / 2)) * offset);
+        float brightness = dot(texel.rgb, g_BrightnessFactors);
+        color += ceil(clamp(brightness, 0.0, 2.0) - 1.0) * texel * g_Kernel[i];
+    }
     return color / g_Sum;
 }
 
 
 float4 BlurVerPS(ScreenQuadFragment input) : SV_Target0
 {
-	uint width, height;
-	g_BlurredTex.GetDimensions(width, height);
-	float2 offset = float2(0.0, 0.0);
-	offset.y = 1.0 / (float)height;
-	float4 color = float4(0.0, 0.0, 0.0, 0.0);
-	for(int i=0; i < KERNEL_SIZE; ++i)
-	{
-		float4 texel = g_BlurredTex.Sample(PointSampler, input.tex + ((float)i - floor(KERNEL_SIZE / 2)) * offset);
+    uint width, height;
+    g_BlurredTex.GetDimensions(width, height);
+    float2 offset = float2(0.0, 0.0);
+    offset.y = 1.0 / (float)height;
+    float4 color = float4(0.0, 0.0, 0.0, 0.0);
+    for(int i=0; i < KERNEL_SIZE; ++i)
+    {
+        float4 texel = g_BlurredTex.Sample(PointSampler, input.tex + ((float)i - floor(KERNEL_SIZE / 2)) * offset);
 
-		color += texel * g_Kernel[i];
-	}
+        color += texel * g_Kernel[i];
+    }
     return g_SourceTex.Sample(PointSampler, input.tex) + color / g_Sum;
 }
