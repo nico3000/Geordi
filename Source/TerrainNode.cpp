@@ -9,17 +9,6 @@
 #define GEOMETRY_NOTLOADED (3)
 
 
-unsigned int TerrainNode::sm_clipmapVertexNumElements = 6;
-D3D11_INPUT_ELEMENT_DESC TerrainNode::sm_pClipmapVertexElementDesc[6] = {
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "MATERIAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "MATERIAL", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "MATERIAL", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 56, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "MATERIAL", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 72, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-};
-
-
 TerrainNode::TerrainBlock::TerrainBlock(int p_x, int p_y, int p_z, int p_level, TerrainNode* p_pTerrainNode):
 m_x(p_x), m_y(p_y), m_z(p_z), m_level(p_level), m_isRefined(false), m_pTerrainNode(p_pTerrainNode)
 {
@@ -231,11 +220,11 @@ TerrainNode::~TerrainNode(void)
 
 HRESULT TerrainNode::VOnRestore(void)
 {
-    if(!m_program.Load(L"./Shader/NicotopiaTest.fx", "SimpleVS", 0, "NormalMappingPS"))
+    if(!m_program.Load(L"./Shader/Terrain.hlsl", "TerrainVS", 0, "TerrainNormalMappingPS"))
     {
         return S_FALSE;
     }
-    if(!m_program.CreateInputLayout(VertexBuffer::sm_pSimpleVertexElementDesc, VertexBuffer::sm_simpleVertexNumElements))
+    if(!m_program.CreateInputLayout(MarchingCubeGrid::sm_pTerrainVertexElementDesc, MarchingCubeGrid::sm_terrainVertexNumElements))
     {
         return S_FALSE;
     }
@@ -309,9 +298,9 @@ HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
 
 HRESULT TerrainNode::VPreRender(Scene* p_pScene)
 {
-    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(2, 1, &m_pDiffuseTex);
-    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(3, 1, &m_pBumpTex);
-    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(4, 1, &m_pNormalTex);
+    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(0, 1, &m_pDiffuseTex);
+    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(1, 1, &m_pBumpTex);
+    LostIsland::g_pGraphics->GetContext()->PSSetShaderResources(2, 1, &m_pNormalTex);
     return S_OK;
 }
 

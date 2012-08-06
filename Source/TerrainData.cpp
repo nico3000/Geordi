@@ -395,7 +395,7 @@ void TerrainData::GenerateTestData(void)
                             float rotatedX3 = cosa3 * worldX - sina3 * worldZ;
                             float rotatedZ3 = sina3 * worldX + cosa3 * worldZ;
 
-                            float density = worldY;
+                            float density = -worldY;
 
 //                             XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
 //                                 noise[1].SampleLinear(worldX, worldY, worldZ, 0.004f, 16.0f), 

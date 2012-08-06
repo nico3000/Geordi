@@ -42,15 +42,6 @@ private:
 
     };
 
-    struct ClipmapVertex
-    {
-        XMFLOAT3 positionMC;
-        XMFLOAT3 normalMC;
-        XMFLOAT4X4 materialWeight;
-    };
-    static D3D11_INPUT_ELEMENT_DESC sm_pClipmapVertexElementDesc[6];
-    static unsigned int sm_clipmapVertexNumElements;
-
     typedef std::list<std::weak_ptr<Geometry>> GeometryList;
 
     std::shared_ptr<TerrainData> m_pTerrain;

@@ -250,6 +250,7 @@
     <None Include="..\Game\Shader\ParticleSystemCS.hlsl" />
     <None Include="..\Game\Shader\NicotopiaTest.fx" />
     <None Include="..\Game\Shader\ParticleStructs.hlsl" />
+    <None Include="..\Game\Shader\Terrain.hlsl" />
     <None Include="Geordi.ico" />
     <None Include="ReadMe.txt" />
     <None Include="small.ico" />

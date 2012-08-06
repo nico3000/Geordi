@@ -3,18 +3,27 @@
 
 #define MATERIAL_MAX 16
 
+
+unsigned int MarchingCubeGrid::sm_terrainVertexNumElements = 6;
+D3D11_INPUT_ELEMENT_DESC MarchingCubeGrid::sm_pTerrainVertexElementDesc[6] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 56, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 72, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+};
+
+
 void MarchingCubeGrid::ResetCubeCodes(short p_cubes)
 { 
     if(m_cubes != p_cubes)
     {
         m_cubes = p_cubes;
         SAFE_DELETE(m_pCubes);
-        SAFE_DELETE(m_pWeights);
         m_pCubes = new CubeInfo[p_cubes * p_cubes * p_cubes];
-        m_pWeights = new float[MATERIAL_MAX * (p_cubes + 1) * (p_cubes + 1) * (p_cubes + 1)];
     }
     ZeroMemory(m_pCubes, p_cubes * p_cubes * p_cubes * sizeof(CubeInfo));
-    ZeroMemory(m_pWeights, MATERIAL_MAX * (p_cubes + 1) * (p_cubes + 1) * (p_cubes + 1) * sizeof(float));
 }
 
 
@@ -89,8 +98,6 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
             for(short z=0; z < m_cubes + 1; ++z)
             {
                 float base = p_grid.GetValue(x + 1, y + 1, z + 1);
-                int material = 0; // TODO!!!!
-                m_pWeights[material * (m_cubes + 1) * (m_cubes + 1) * (m_cubes + 1) + z * (m_cubes + 1) * (m_cubes + 1) + y * (m_cubes + 1) + x] = 1.0f;
                 if(base > 0)
                 {
                     this->SetBits(x, y, z);
@@ -101,11 +108,11 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
-                        VertexBuffer::SimpleVertex v =
+                        TerrainVertex v =
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)(x + t)), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            color,
+                            XMFLOAT4X4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
                         p_grid.GenerateGradient((float)(x + 1) + t, (float)(y + 1), (float)(z + 1), v.normalMC);
                         this->AddEdge(0, (unsigned short)m_vertices.size(), x, y, z);
@@ -118,11 +125,11 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
-                        VertexBuffer::SimpleVertex v =
+                        TerrainVertex v =
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)(y + t)), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            color,
+                            XMFLOAT4X4(y > 8 ? t : 1 - t, y > 8 ? 1 - t : t, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
                         p_grid.GenerateGradient((float)(x + 1), (float)(y + 1) + t, (float)(z + 1), v.normalMC);
                         this->AddEdge(4, (unsigned short)m_vertices.size(), x, y, z);
@@ -135,11 +142,11 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
-                        VertexBuffer::SimpleVertex v =
+                        TerrainVertex v =
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)(z + t))),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            color,
+                            XMFLOAT4X4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
                         p_grid.GenerateGradient((float)(x + 1), (float)(y + 1), (float)(z + 1) + t, v.normalMC);
                         this->AddEdge(8, (unsigned short)m_vertices.size(), x, y, z);
@@ -179,24 +186,13 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(void)
         Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
         pIndexBuffer->Build(&m_indices[0], (unsigned int)m_indices.size(), D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
         Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);
-        pVertexBuffer->Build(&m_vertices[0], (unsigned int)m_vertices.size(), sizeof(VertexBuffer::SimpleVertex));
+        pVertexBuffer->Build(&m_vertices[0], (unsigned int)m_vertices.size(), sizeof(TerrainVertex));
 
         std::shared_ptr<Geometry> pGeo(new Geometry);
         pGeo->SetIndices(pIndexBuffer);
         pGeo->SetVertices(pVertexBuffer);
         return pGeo;
     }
-}
-
-
-ID3D11Texture3D* MarchingCubeGrid::CreateMaterialWeightTexture(void)
-{
-    ID3D11Texture3D* pTex;
-    D3D11_TEXTURE3D_DESC desc;
-    desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    desc.CPUAccessFlags = 0;
-    desc.Width = desc.Height = desc.Depth = m_cubes + 1;
-    desc.
 }
 
 
@@ -214,26 +210,26 @@ void MarchingCubeGrid::Init(void)
     };
     unsigned char pTriangles[NUM_BASE_CUBES][16] = {
         { 0 },                                                      // 00000000 = 0
-        { 1, 0, 4, 8, },                                            // 00000001 = 1
-        { 2, 4, 8, 5, 5, 8, 9, },                                   // 00000011 = 3
-        { 2, 0, 4, 8, 3, 5, 10, },                                  // 00000101 = 5
-        { 3, 8, 9, 10, 8, 10, 3, 8, 3, 4 },                         // 00000111 = 7
-        { 2, 8, 9, 11, 9, 10, 11, },                                // 00001111 = 15
-        { 2, 1, 8, 7, 3, 5, 10, },                                  // 00010100 = 20
-        { 3, 0, 4, 1, 4, 7, 1, 3, 5, 10, },                         // 00010101 = 21
-        { 4, 4, 7, 3, 3, 7, 10, 10, 7, 1, 1, 9, 10  },              // 00010111 = 23
-        { 3, 0, 9, 5, 1, 8, 7, 3, 11, 4, },                         // 00011010 = 26
-        { 4, 1, 9, 5, 1, 5, 3, 1, 3, 7, 7, 3, 11, },                // 00011011 = 27
-        { 4, 1, 8, 7, 9, 10, 11, 9, 11, 0, 0, 11, 4, },             // 00011110 = 30
-        { 3, 9, 10, 11, 9, 11, 1, 1, 11, 7, },                      // 00011111 = 31
-        { 4, 6, 9, 7, 7, 9, 8, 4, 5, 11, 11, 5, 10, },              // 00111100 = 60
-        { 5, 10, 11, 5, 5, 11, 0, 0, 11, 9, 9, 11, 7, 9, 7, 6 },    // 00111101 = 61
-        { 2, 11, 7, 10, 10, 7, 6, },                                // 00111111 = 63
-        { 4, 0, 9, 5, 1, 8, 7, 2, 10, 6, 3, 11, 4, },               // 01011010 = 90
-        { 5, 2, 10, 6, 9, 5, 1, 1, 5, 7, 5, 3, 7, 3, 11, 7, },      // 01011011 = 91
-        { 4, 2, 11, 6, 6, 11, 9, 9, 11, 1, 1, 11, 7, },             // 01011111 = 95
-        { 2, 0, 5, 9, 2, 11, 7, },                                  // 01111101 = 125
-        { 1, 2, 11, 7, },                                           // 01111111 = 127
+        { 1, 0, 8, 4, },                                            // 00000001 = 1
+        { 2, 4, 5, 8, 5, 9, 8, },                                   // 00000011 = 3
+        { 2, 0, 8, 4, 3, 10, 5, },                                  // 00000101 = 5
+        { 3, 8, 10, 9, 8, 3, 10, 8, 4, 3, },                        // 00000111 = 7
+        { 2, 8, 11, 9, 9, 11, 10, },                                // 00001111 = 15
+        { 2, 1, 7, 8, 3, 10, 5, },                                  // 00010100 = 20
+        { 3, 0, 1, 4, 4, 1, 7, 3, 10, 5, },                         // 00010101 = 21
+        { 4, 4, 3, 7, 3, 10, 7, 10, 1, 7, 1, 10, 9  },              // 00010111 = 23
+        { 3, 0, 5, 9, 1, 7, 8, 3, 4, 11, },                         // 00011010 = 26
+        { 4, 1, 5, 9, 1, 3, 5, 1, 7, 3, 7, 11, 3, },                // 00011011 = 27
+        { 4, 1, 7, 8, 9, 11, 10, 9, 0, 11, 0, 4, 11, },             // 00011110 = 30
+        { 3, 9, 11, 10, 9, 1, 11, 1, 7, 11, },                      // 00011111 = 31
+        { 4, 6, 7, 9, 7, 8, 9, 4, 11, 5, 11, 10, 5, },              // 00111100 = 60
+        { 5, 10, 5, 11, 5, 0, 11, 0, 9, 11, 9, 7, 11, 9, 6, 7 },    // 00111101 = 61
+        { 2, 11, 10, 7, 10, 6, 7, },                                // 00111111 = 63
+        { 4, 0, 5, 9, 1, 7, 8, 2, 6, 10, 3, 4, 11, },               // 01011010 = 90
+        { 5, 2, 6, 10, 9, 1, 5, 1, 7, 5, 5, 7, 3, 3, 7, 11, },      // 01011011 = 91
+        { 4, 2, 6, 11, 6, 9, 11, 9, 1, 11, 1, 7, 11, },             // 01011111 = 95
+        { 2, 0, 9, 5, 2, 7, 11, },                                  // 01111101 = 125
+        { 1, 2, 7, 11, },                                           // 01111111 = 127
         { 0 },                                                      // 11111111 = 255
     };
     for(int i=0; i < NUM_BASE_CUBES; ++i)

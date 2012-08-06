@@ -2,10 +2,14 @@
 #include "Grid3D.h"
 #include "Geometry.h"
 
+
 class MarchingCubeGrid
 {
+public:
+    struct TerrainVertex;
+
 private:
-    typedef std::vector<VertexBuffer::SimpleVertex> Vertices;
+    typedef std::vector<TerrainVertex> Vertices;
     typedef std::vector<unsigned int> Indices;
     struct CubeInfo
     {
@@ -21,7 +25,6 @@ private:
     Indices m_indices;
     short m_cubes;
     CubeInfo* m_pCubes;
-    float* m_pWeights;
 
     bool IsIn(short p_x, short p_y, short p_z) const { return 0 <= p_x && p_x < m_cubes && 0 <= p_y && p_y < m_cubes && 0 <= p_z && p_z < m_cubes; }
     CubeInfo& GetCube(short p_x, short p_y, short p_z) { return m_pCubes[m_cubes * m_cubes * p_z + m_cubes * p_y + p_x]; }
@@ -37,14 +40,24 @@ private:
     static void CopyTriangles(unsigned char p_code, unsigned char* p_pTriangles, bool mirrored);
 
 public:
-    MarchingCubeGrid(void) : m_pCubes(0), m_pWeights(0) {}
+    MarchingCubeGrid(void) : m_pCubes(0) {}
     ~MarchingCubeGrid(void) { SAFE_DELETE(m_pCubes); }
       
     std::shared_ptr<Geometry> CreateGeometry(void);
-    ID3D11Texture3D* CreateMaterialWeightTexture(void);
     bool ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position, float p_scale);
     
     static void Init(void);
+
+
+    struct TerrainVertex
+    {
+        XMFLOAT3 positionMC;
+        XMFLOAT3 normalMC;
+        XMFLOAT4X4 materialWeight;
+    };
+    static D3D11_INPUT_ELEMENT_DESC sm_pTerrainVertexElementDesc[6];
+    static unsigned int sm_terrainVertexNumElements;
+
 
 };
 
