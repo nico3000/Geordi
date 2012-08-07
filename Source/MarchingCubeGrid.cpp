@@ -84,11 +84,18 @@ void MarchingCubeGrid::AddEdge(char p_edge, unsigned short p_index, short p_x, s
 }
 
 
-bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position, float p_scale)
+void SetMaterial(int p_material1, int p_material2, float p_t, XMFLOAT4X4& p_target)
+{
+    p_target.m[p_material1 / 4][p_material1 % 4] += 1.0f - p_t;
+    p_target.m[p_material2 / 4][p_material2 % 4] += p_t;
+}
+
+
+bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGrid, const XMFLOAT3& m_position, float p_scale)
 {
     static const XMFLOAT4 color(0.5f, 1.5f, 0.5f, 1.0f);
 
-    this->ResetCubeCodes(p_grid.GetSize() - 3);
+    this->ResetCubeCodes(p_weightGrid.GetSize() - 3);
     m_vertices.clear();
     m_indices.clear();
     for(short x=0; x < m_cubes + 1; ++x)
@@ -97,14 +104,16 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
         {
             for(short z=0; z < m_cubes + 1; ++z)
             {
-                float base = p_grid.GetValue(x + 1, y + 1, z + 1);
+                float base = p_weightGrid.GetValue(x + 1, y + 1, z + 1);
+                int baseMaterial = (int)p_materialGrid.GetValue(x + 1, y + 1, z + 1);
                 if(base > 0)
                 {
                     this->SetBits(x, y, z);
                 }
                 if(x != m_cubes)
                 {
-                    float w = p_grid.GetValue(x + 2, y + 1, z + 1);
+                    float w = p_weightGrid.GetValue(x + 2, y + 1, z + 1);
+                    int m = (int)p_materialGrid.GetValue(x + 2, y + 1, z + 1);
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
@@ -112,16 +121,18 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)(x + t)), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4X4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
+                            XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
-                        p_grid.GenerateGradient((float)(x + 1) + t, (float)(y + 1), (float)(z + 1), v.normalMC);
+                        SetMaterial(baseMaterial, m, t, v.materialWeight);
+                        p_weightGrid.GenerateGradient((float)(x + 1) + t, (float)(y + 1), (float)(z + 1), v.normalMC);
                         this->AddEdge(0, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
                 }
                 if(y != m_cubes)
                 {
-                    float w = p_grid.GetValue(x + 1, y + 2, z + 1);
+                    float w = p_weightGrid.GetValue(x + 1, y + 2, z + 1);
+                    int m = (int)p_materialGrid.GetValue(x + 1, y + 2, z + 1);
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
@@ -129,16 +140,18 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)(y + t)), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4X4(y > 8 ? t : 1 - t, y > 8 ? 1 - t : t, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
+                            XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
-                        p_grid.GenerateGradient((float)(x + 1), (float)(y + 1) + t, (float)(z + 1), v.normalMC);
+                        SetMaterial(baseMaterial, m, t, v.materialWeight);
+                        p_weightGrid.GenerateGradient((float)(x + 1), (float)(y + 1) + t, (float)(z + 1), v.normalMC);
                         this->AddEdge(4, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
                 }
                 if(z != m_cubes)
                 {
-                    float w = p_grid.GetValue(x + 1, y + 1, z + 2);
+                    float w = p_weightGrid.GetValue(x + 1, y + 1, z + 2);
+                    int m = (int)p_materialGrid.GetValue(x + 1, y + 1, z + 2);
                     if(w != base && w * base <= 0)
                     {
                         float t = base / (base - w);
@@ -146,9 +159,10 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_grid, const XMFLOAT3& m_position,
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)(z + t))),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4X4(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
+                            XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
-                        p_grid.GenerateGradient((float)(x + 1), (float)(y + 1), (float)(z + 1) + t, v.normalMC);
+                        SetMaterial(baseMaterial, m, t, v.materialWeight);
+                        p_weightGrid.GenerateGradient((float)(x + 1), (float)(y + 1), (float)(z + 1) + t, v.normalMC);
                         this->AddEdge(8, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
                     }
@@ -191,6 +205,28 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(void)
         std::shared_ptr<Geometry> pGeo(new Geometry);
         pGeo->SetIndices(pIndexBuffer);
         pGeo->SetVertices(pVertexBuffer);
+
+        physx::PxCooking* pCooking = LostIsland::g_pPhysics->GetCooking();
+        physx::PxTriangleMeshDesc desc;
+        desc.points.data = &m_vertices[0];
+        desc.points.count = (int)m_vertices.size();
+        desc.points.stride = sizeof(TerrainVertex);
+        desc.triangles.data = &m_indices[0];
+        desc.triangles.count = (int)m_indices.size();
+        desc.triangles.stride = 3 * sizeof(unsigned int);
+        physx::PxDefaultMemoryOutputStream output;
+        bool status = pCooking->cookTriangleMesh(desc, output);
+        if(!status)
+        {
+            LI_ERROR("cookTriangleMesh() failed");
+        }
+        else
+        {
+            physx::PxDefaultMemoryInputData input(output.getData(), output.getSize());
+            physx::PxTriangleMesh* pMesh = LostIsland::g_pPhysics->GetPhysics()->createTriangleMesh(input);
+            physx::PxRigidStatic* pBody = LostIsland::g_pPhysics->GetPhysics()->createRigidStatic(physx::PxTransform());
+            //pBody->createShape(*pMesh, 0);
+        }
         return pGeo;
     }
 }

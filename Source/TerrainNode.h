@@ -52,7 +52,8 @@ private:
     Octree m_pGeometryData[NUM_LEVELS];
     int m_chunksize;
     ShaderProgram m_program;
-    Grid3D m_tempGrid;
+    Grid3D m_weightGrid;
+    Grid3D m_materialGrid;
     MarchingCubeGrid m_tempMCGrid;
     float m_scale;
     int m_maxBlocksPerFrame;

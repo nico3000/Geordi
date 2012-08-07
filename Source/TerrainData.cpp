@@ -1,6 +1,9 @@
 #include "StdAfx.h"
 #include "TerrainData.h"
 
+#define HEIGHT_MASK 0x0000ffff
+#define MATERIAL_MASK 0x000f0000
+
 
 TerrainData::TerrainData(std::string p_octreeFolder):
 m_octreeFolder(p_octreeFolder)
@@ -15,6 +18,19 @@ TerrainData::~TerrainData(void)
     {
         SAFE_DELETE(*iter);
     }
+}
+
+
+int TerrainData::Implode(float p_density, int p_material) const
+{
+    return (int)(CLAMP(p_density, -1.0, 1.0) * (float)SHORT_MAX) | (p_material << 16);
+}
+
+
+void TerrainData::Explode(int p_value, float& p_density, int& p_material) const
+{
+    p_material = p_value >> 16;
+    p_density = (float)(short)(p_value & 0x0000ffff) / (float)SHORT_MAX;
 }
 
 
@@ -141,17 +157,53 @@ bool TerrainData::LoadOctree(int p_x, int p_y, int p_z)
 }
 
 
-void TerrainData::SetDensity(int p_x, int p_y, int p_z, float p_density, bool p_autoOptimizeStructure /* = true */)
+void TerrainData::SetRawValue(int p_x, int p_y, int p_z, int p_value, bool p_autoOptimizeStructure /* = true */)
 {
     this->PushTileToBack(p_x, p_y, p_z);
-    m_loadedTiles.back()->SetValue(p_x, p_y, p_z, (short)(CLAMP(p_density, -1.0f, 1.0f) * (float)SHORT_MAX), p_autoOptimizeStructure);
+    m_loadedTiles.back()->SetValue(p_x, p_y, p_z, p_value, p_autoOptimizeStructure);
+}
+
+
+int TerrainData::GetRawValue(int p_x, int p_y, int p_z)
+{
+    this->PushTileToBack(p_x, p_y, p_z);
+    return m_loadedTiles.back()->GetValue(p_x, p_y, p_z);
+}
+
+
+void TerrainData::SetDensity(int p_x, int p_y, int p_z, float p_density, bool p_autoOptimizeStructure /* = true */)
+{
+    float density;
+    int material;
+    this->Explode(this->GetRawValue(p_x, p_y, p_z), density, material);
+    this->SetRawValue(p_x, p_y, p_z, this->Implode(p_density, material), p_autoOptimizeStructure);
 }
 
 
 float TerrainData::GetDensity(int p_x, int p_y, int p_z)
 {
-    this->PushTileToBack(p_x, p_y, p_z);
-    return m_loadedTiles.back()->GetValue(p_x, p_y, p_z) / (float)SHORT_MAX;
+    float density;
+    int material;
+    this->Explode(this->GetRawValue(p_x, p_y, p_z), density, material);
+    return density;
+}
+
+
+void TerrainData::SetMaterial(int p_x, int p_y, int p_z, int p_material, bool p_autoOptimizeStructure /* = true */)
+{
+    float density;
+    int material;
+    this->Explode(this->GetRawValue(p_x, p_y, p_z), density, material);
+    this->SetRawValue(p_x, p_y, p_z, this->Implode(density, p_material), p_autoOptimizeStructure);
+}
+
+
+int TerrainData::GetMaterial(int p_x, int p_y, int p_z)
+{
+    float density;
+    int material;
+    this->Explode(this->GetRawValue(p_x, p_y, p_z), density, material);
+    return material;
 }
 
 
@@ -267,6 +319,11 @@ void TerrainData::Test(void)
 
 void TerrainData::GenerateTestData(void)
 {
+//     float density = 0.1f;
+//     int material = 14;
+//     int val = this->Implode(density, material);
+//     this->Explode(val, density, material);
+//     return;
     
      Octree octree;
  
@@ -396,6 +453,7 @@ void TerrainData::GenerateTestData(void)
                             float rotatedZ3 = sina3 * worldX + cosa3 * worldZ;
 
                             float density = -worldY;
+                            
 
 //                             XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
 //                                 noise[1].SampleLinear(worldX, worldY, worldZ, 0.004f, 16.0f), 
@@ -416,8 +474,10 @@ void TerrainData::GenerateTestData(void)
                             density += noise[2].SampleLinear(rotatedX3, worldY, rotatedZ3, 0.0078125f, 128.00f);
 
                             //this->SetDensity(x, y, z, density, false);
-                            int densityToStore = (short)(CLAMP(density, -1.0f, 1.0f) * (float)SHORT_MAX);
-                            tree.SetValue(x, y, z, densityToStore, true);
+                            //int densityToStore = (short)(CLAMP(density, -1.0f, 1.0f) * (float)SHORT_MAX);
+                            //tree.SetValue(x, y, z, densityToStore, true);
+                            int material = worldY > 0 ? 0 : 1;
+                            tree.SetValue(x, y, z, this->Implode(density, material), false);
 
                             float percentage = 100.0f * (float)++i / (float)wholesize;
 //                             if((int)(percentage) > lastPercentage)
@@ -490,16 +550,19 @@ void TerrainData::PrintOctFileContents(std::string p_filename) const
 }
 
 
-bool TerrainData::FillGrid(Grid3D& p_grid, int p_startX, int p_startY, int p_startZ, int p_offset /* = 1 */)
+bool TerrainData::FillGrid(Grid3D& p_weightGrid, Grid3D& p_materialGrid, int p_startX, int p_startY, int p_startZ, int p_offset /* = 1 */)
 {
     char geo = 0; // 0 undefined, 1 only positive values, 2 only negative values, 3 positive and negative values
-    for(int x=0; x < p_grid.GetSize(); ++x)
+    for(int x=0; x < p_weightGrid.GetSize(); ++x)
     {
-        for(int y=0; y < p_grid.GetSize(); ++y)
+        for(int y=0; y < p_weightGrid.GetSize(); ++y)
         {
-            for(int z=0; z < p_grid.GetSize(); ++z)
+            for(int z=0; z < p_weightGrid.GetSize(); ++z)
             {
-                float density = this->GetDensity(p_startX + p_offset * x, p_startY + p_offset * y, p_startZ + p_offset * z);
+                float density;
+                int material;
+                int raw = this->GetRawValue(p_startX + p_offset * x, p_startY + p_offset * y, p_startZ + p_offset * z);
+                this->Explode(raw, density, material);
                 if(density > 0)
                 {
                     switch(geo)
@@ -520,7 +583,8 @@ bool TerrainData::FillGrid(Grid3D& p_grid, int p_startX, int p_startY, int p_sta
                         case 3: break;
                     }
                 }
-                p_grid.SetValue(x, y, z, density);
+                p_weightGrid.SetValue(x, y, z, density);
+                p_materialGrid.SetValue(x, y, z, material);
             }
         }
     }

@@ -17,6 +17,7 @@ private:
     physx::PxPhysics* m_pPhysics;
     physx::PxScene* m_pScene;
     physx::PxDefaultCpuDispatcher* m_pCpuDispatcher;
+    physx::PxCooking* m_pCooking;
     PVD::PvdConnection* m_pPVDConnection;
     float m_stepSize;
 
@@ -30,6 +31,7 @@ public:
 
     physx::PxPhysics* GetPhysics(void) const { return m_pPhysics; }
     physx::PxScene* GetScene(void) const { return m_pScene; }
+    physx::PxCooking* GetCooking(void) const { return m_pCooking; }
 
 };
 

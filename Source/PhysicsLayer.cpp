@@ -1,5 +1,6 @@
 #include "StdAfx.h"
 #include "PhysicsLayer.h"
+#include <cooking/PxCooking.h>
 
 #define LI_LOGGER_TAG "PhysicsLayer"
 
@@ -33,13 +34,14 @@ void PhysicsLayer::ErrorCallBack::reportError(physx::PxErrorCode::Enum code, con
 
 
 PhysicsLayer::PhysicsLayer(void):
-m_pFoundation(0), m_pPhysics(0), m_pScene(0), m_pCpuDispatcher(0), m_pPVDConnection(0)
+m_pFoundation(0), m_pPhysics(0), m_pScene(0), m_pCpuDispatcher(0), m_pPVDConnection(0), m_pCooking(0)
 {
 }
 
 
 PhysicsLayer::~PhysicsLayer(void)
 {
+    SAFE_rELEASE(m_pCooking);
     SAFE_rELEASE(m_pScene);
     SAFE_rELEASE(m_pCpuDispatcher);
     SAFE_rELEASE(m_pPVDConnection);
@@ -93,6 +95,12 @@ bool PhysicsLayer::Init(void)
         physx::PxRigidStatic* pPlane = PxCreatePlane(*m_pPhysics, physx::PxPlane(physx::PxVec3(0,1,0), +5.0f), *pMaterial);        
         m_pScene->addActor(*pPlane);
         
+        m_pCooking = PxCreateCooking(PX_PHYSICS_VERSION, *m_pFoundation, PxCookingParams());
+        if(!m_pCooking)
+        {
+            LI_ERROR("PxCreateCooking() failed");
+            return false;
+        }
 
         LI_LOG_WITH_TAG("PhysX successfully initialized");
         return true;
