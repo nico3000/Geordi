@@ -111,7 +111,7 @@ bool TerrainNode::TerrainBlock::BuildGeometry(void)
         }
         if(hasGeometry)
         {
-            m_pBackup = m_pTerrainNode->m_tempMCGrid.CreateGeometry();
+            m_pBackup = m_pTerrainNode->m_tempMCGrid.CreateGeometry(m_level == 0);
             m_geometry = GEOMETRY_NOTLOADED;
         }
         else

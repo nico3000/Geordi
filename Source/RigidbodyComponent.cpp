@@ -53,7 +53,7 @@ bool RigidbodyComponent::VInit(tinyxml2::XMLElement* p_pData)
                 {
                     LI_WARNING("illegal Center attributes for cubetype Shape");
                 }
-                physx::PxShape* pShape = m_pBody->createShape(physx::PxBoxGeometry(halfextents), *LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.7f), physx::PxTransform(center));
+                physx::PxShape* pShape = m_pBody->createShape(physx::PxBoxGeometry(halfextents), *LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.1f), physx::PxTransform(center));
             }
             else
             {
@@ -76,7 +76,7 @@ bool RigidbodyComponent::VInit(tinyxml2::XMLElement* p_pData)
                 {
                     LI_WARNING("illegal Center attributes for cubetype Shape");
                 }
-                physx::PxShape* pShape = m_pBody->createShape(physx::PxSphereGeometry(radius), *LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.5f), physx::PxTransform(center));
+                physx::PxShape* pShape = m_pBody->createShape(physx::PxSphereGeometry(radius), *LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.1f), physx::PxTransform(center));
             }
             else
             {

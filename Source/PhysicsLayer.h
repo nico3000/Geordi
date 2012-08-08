@@ -32,6 +32,7 @@ public:
     physx::PxPhysics* GetPhysics(void) const { return m_pPhysics; }
     physx::PxScene* GetScene(void) const { return m_pScene; }
     physx::PxCooking* GetCooking(void) const { return m_pCooking; }
+    physx::PxFoundation* GetFoundation(void) const { return m_pFoundation; }
 
 };
 

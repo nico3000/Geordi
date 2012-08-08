@@ -4,20 +4,52 @@
         <Actor type="Particles2" id="particles2" /-->
         <Actor type="Cube" id="cube1">
             <TransformComponent>
-                <Position x="-0.1" y="2.0" z="0.1" />
+                <Position x="-2.1" y="-5.0" z="1.1" />
                 <Rotation pitch="1.0" yaw="1.2" />
             </TransformComponent>
         </Actor>
         <Actor type="Cube" id="cube2">
             <TransformComponent>
-                <Position x="0.0" y="0.0" z="0.0" />
+                <Position x="1.0" y="-10.0" z="4.0" />
             </TransformComponent>
         </Actor>
         <Actor type="Cube" id="cube3">
             <TransformComponent>
-                <Position x="0.1" y="4.0" z="0.1" />
+                <Position x="2.1" y="-15.0" z="4.1" />
             </TransformComponent>
         </Actor>
+        <Actor type="Cube" id="cube1">
+            <TransformComponent>
+                <Position x="-3.1" y="-20.0" z="1.1" />
+                <Rotation pitch="1.0" yaw="1.2" />
+            </TransformComponent>
+        </Actor>
+        <Actor type="Cube" id="cube2">
+            <TransformComponent>
+                <Position x="4.0" y="-25.0" z="2.0" />
+            </TransformComponent>
+        </Actor>
+        <Actor type="Cube" id="cube3">
+            <TransformComponent>
+                <Position x="3.1" y="-30.0" z="2.1" />
+            </TransformComponent>
+        </Actor>
+        <Actor type="Cube" id="cube1">
+            <TransformComponent>
+                <Position x="-4.1" y="-0.0" z="2.1" />
+                <Rotation pitch="1.0" yaw="1.2" />
+            </TransformComponent>
+        </Actor>
+        <Actor type="Cube" id="cube2">
+            <TransformComponent>
+                <Position x="3.0" y="5.0" z="1.0" />
+            </TransformComponent>
+        </Actor>
+        <Actor type="Cube" id="cube3">
+            <TransformComponent>
+                <Position x="2.1" y="10.0" z="1.1" />
+            </TransformComponent>
+        </Actor>        
         <!--Actor type="ClipmapTerrain" id="terrain" /-->
         <!--Actor type="HeightField" id="height1" /-->
         <Actor type="Empty" id="terrain">

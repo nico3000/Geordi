@@ -174,7 +174,7 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGri
 }
 
 
-std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(void)
+std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(bool p_withPhysics)
 {
     if(m_vertices.empty())
     {
@@ -205,28 +205,44 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(void)
         std::shared_ptr<Geometry> pGeo(new Geometry);
         pGeo->SetIndices(pIndexBuffer);
         pGeo->SetVertices(pVertexBuffer);
-
-        physx::PxCooking* pCooking = LostIsland::g_pPhysics->GetCooking();
-        physx::PxTriangleMeshDesc desc;
-        desc.points.data = &m_vertices[0];
-        desc.points.count = (int)m_vertices.size();
-        desc.points.stride = sizeof(TerrainVertex);
-        desc.triangles.data = &m_indices[0];
-        desc.triangles.count = (int)m_indices.size();
-        desc.triangles.stride = 3 * sizeof(unsigned int);
-        physx::PxDefaultMemoryOutputStream output;
-        bool status = pCooking->cookTriangleMesh(desc, output);
-        if(!status)
+        
+        if(p_withPhysics)
         {
-            LI_ERROR("cookTriangleMesh() failed");
+            physx::PxCooking* pCooking = LostIsland::g_pPhysics->GetCooking();
+            physx::PxTriangleMeshDesc desc;
+            ZeroMemory(&desc, sizeof(physx::PxTriangleMeshDesc));
+            desc.setToDefault();
+            desc.points.data = &m_vertices[0];
+            desc.points.count = (unsigned int)m_vertices.size();
+            desc.points.stride = sizeof(TerrainVertex);
+            desc.triangles.data = &m_indices[0];
+            desc.triangles.count = (unsigned int)m_indices.size() / 3;
+            desc.triangles.stride = 3 * sizeof(unsigned int);
+            if(!desc.isValid())
+            {
+                LI_ERROR("PxTriangleMeshDesc invalid");
+            }
+            else
+            {
+                //CustomOutputStream output;
+                physx::PxDefaultMemoryOutputStream output;
+                bool status = pCooking->cookTriangleMesh(desc, output);
+                if(!status)
+                {
+                    LI_ERROR("cookTriangleMesh() failed");
+                }
+                else
+                {
+                    physx::PxDefaultMemoryInputData input(output.getData(), output.getSize());
+                    physx::PxTriangleMesh* pMesh = LostIsland::g_pPhysics->GetPhysics()->createTriangleMesh(input);
+                    physx::PxMaterial* pMaterial = LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.1f);
+                    physx::PxRigidStatic* pActor = LostIsland::g_pPhysics->GetPhysics()->createRigidStatic(physx::PxTransform::createIdentity());
+                    physx::PxShape* pShape = pActor->createShape(physx::PxTriangleMeshGeometry(pMesh), *pMaterial);
+                    LostIsland::g_pPhysics->GetScene()->addActor(*pActor);
+                }
+            }
         }
-        else
-        {
-            physx::PxDefaultMemoryInputData input(output.getData(), output.getSize());
-            physx::PxTriangleMesh* pMesh = LostIsland::g_pPhysics->GetPhysics()->createTriangleMesh(input);
-            physx::PxRigidStatic* pBody = LostIsland::g_pPhysics->GetPhysics()->createRigidStatic(physx::PxTransform());
-            //pBody->createShape(*pMesh, 0);
-        }
+        
         return pGeo;
     }
 }
@@ -345,3 +361,24 @@ const unsigned char MarchingCubeGrid::sm_pEdgeTransforms[4][12] = {
 
 
 unsigned char MarchingCubeGrid::sm_pTriangles[256][16];
+
+
+physx::PxU32 CustomOutputStream::write(const void* src, physx::PxU32 count)
+{
+    if(m_reservedSize == 0)
+    {
+        m_pData = new physx::PxU8[count];
+        m_reservedSize = count;
+    }
+    while(m_reservedSize - m_writtenSize < count)
+    {
+        physx::PxU8* pData = new physx::PxU8[2 * m_reservedSize];
+        memcpy(pData, m_pData, m_writtenSize * sizeof(physx::PxU8));
+        m_reservedSize *= 2;
+        SAFE_DELETE(m_pData);
+        m_pData = pData;
+    }
+    memcpy((char*)m_pData + m_writtenSize, src, count * sizeof(physx::PxU8));
+    m_writtenSize += count;
+    return count;
+}

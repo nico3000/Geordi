@@ -91,9 +91,9 @@ bool PhysicsLayer::Init(void)
         }
 
 
-        physx::PxMaterial* pMaterial = m_pPhysics->createMaterial(0.5f, 0.5f, 0.1f);
-        physx::PxRigidStatic* pPlane = PxCreatePlane(*m_pPhysics, physx::PxPlane(physx::PxVec3(0,1,0), +5.0f), *pMaterial);        
-        m_pScene->addActor(*pPlane);
+        //physx::PxMaterial* pMaterial = m_pPhysics->createMaterial(0.5f, 0.5f, 0.1f);
+        //physx::PxRigidStatic* pPlane = PxCreatePlane(*m_pPhysics, physx::PxPlane(physx::PxVec3(0,1,0), +5.0f), *pMaterial);        
+        //m_pScene->addActor(*pPlane);
         
         m_pCooking = PxCreateCooking(PX_PHYSICS_VERSION, *m_pFoundation, PxCookingParams());
         if(!m_pCooking)

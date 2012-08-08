@@ -43,7 +43,7 @@ public:
     MarchingCubeGrid(void) : m_pCubes(0) {}
     ~MarchingCubeGrid(void) { SAFE_DELETE(m_pCubes); }
       
-    std::shared_ptr<Geometry> CreateGeometry(void);
+    std::shared_ptr<Geometry> CreateGeometry(bool p_withPhysics);
     bool ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGrid, const XMFLOAT3& m_position, float p_scale);
     
     static void Init(void);
@@ -59,5 +59,24 @@ public:
     static unsigned int sm_terrainVertexNumElements;
 
 
+};
+
+
+class CustomOutputStream :
+    public physx::PxOutputStream
+{
+private:
+    physx::PxU8* m_pData;
+    int m_reservedSize;
+    int m_writtenSize;
+
+public:
+    CustomOutputStream(void) : m_pData(0), m_reservedSize(0), m_writtenSize(0) {  }
+    ~CustomOutputStream(void) { SAFE_DELETE(m_pData); }
+
+    physx::PxU32 write(const void* src, physx::PxU32 count);
+
+    physx::PxU8* GetData(void) const { return m_pData; }
+    int GetSize(void) const { return m_writtenSize; }
 };
 
