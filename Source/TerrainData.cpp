@@ -584,7 +584,7 @@ bool TerrainData::FillGrid(Grid3D& p_weightGrid, Grid3D& p_materialGrid, int p_s
                     }
                 }
                 p_weightGrid.SetValue(x, y, z, density);
-                p_materialGrid.SetValue(x, y, z, material);
+                p_materialGrid.SetValue(x, y, z, (float)material);
             }
         }
     }

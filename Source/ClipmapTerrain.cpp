@@ -462,9 +462,9 @@ void ClipmapTerrain::ClipmapLevel::Update(int p_bottomLeftX, int p_bottomLeftY, 
     m_globalTranslation.y = 0.0f;
     m_globalTranslation.z = (float)p_bottomLeftY;
 
-    for(int y=0; y < m_paramN + 1; ++y)
+    for(unsigned int y=0; y < m_paramN + 1; ++y)
     {
-        for(int x=0; x < m_paramN + 1; ++x)
+        for(unsigned int x=0; x < m_paramN + 1; ++x)
         {
             int clipmapX = (int)(1 << m_level) * (p_bottomLeftX + x - (m_paramN - 1) / 2);
             int clipmapY = (int)(1 << m_level) * (p_bottomLeftY + y - (m_paramN - 1) / 2);

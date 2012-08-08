@@ -208,6 +208,13 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(bool p_withPhysics)
         
         if(p_withPhysics)
         {
+            physx::PxU32* pIndices = new physx::PxU32[m_indices.size()];
+            for(int i=0; i < m_indices.size(); i += 3)
+            {
+                pIndices[i] = m_indices[i];
+                pIndices[i+1] = m_indices[i+2];
+                pIndices[i+2] = m_indices[i+1];
+            }
             physx::PxCooking* pCooking = LostIsland::g_pPhysics->GetCooking();
             physx::PxTriangleMeshDesc desc;
             ZeroMemory(&desc, sizeof(physx::PxTriangleMeshDesc));
@@ -215,7 +222,7 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(bool p_withPhysics)
             desc.points.data = &m_vertices[0];
             desc.points.count = (unsigned int)m_vertices.size();
             desc.points.stride = sizeof(TerrainVertex);
-            desc.triangles.data = &m_indices[0];
+            desc.triangles.data = pIndices;
             desc.triangles.count = (unsigned int)m_indices.size() / 3;
             desc.triangles.stride = 3 * sizeof(unsigned int);
             if(!desc.isValid())
@@ -241,6 +248,7 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(bool p_withPhysics)
                     LostIsland::g_pPhysics->GetScene()->addActor(*pActor);
                 }
             }
+            SAFE_DELETE(pIndices);
         }
         
         return pGeo;
@@ -361,24 +369,3 @@ const unsigned char MarchingCubeGrid::sm_pEdgeTransforms[4][12] = {
 
 
 unsigned char MarchingCubeGrid::sm_pTriangles[256][16];
-
-
-physx::PxU32 CustomOutputStream::write(const void* src, physx::PxU32 count)
-{
-    if(m_reservedSize == 0)
-    {
-        m_pData = new physx::PxU8[count];
-        m_reservedSize = count;
-    }
-    while(m_reservedSize - m_writtenSize < count)
-    {
-        physx::PxU8* pData = new physx::PxU8[2 * m_reservedSize];
-        memcpy(pData, m_pData, m_writtenSize * sizeof(physx::PxU8));
-        m_reservedSize *= 2;
-        SAFE_DELETE(m_pData);
-        m_pData = pData;
-    }
-    memcpy((char*)m_pData + m_writtenSize, src, count * sizeof(physx::PxU8));
-    m_writtenSize += count;
-    return count;
-}

@@ -187,7 +187,7 @@ bool DisplacementData::UnloadTile(unsigned int p_tileX, unsigned int p_tileY)
         if(m_directory.offsets[p_tileY][p_tileX] == 0)
         {
             m_gridFile.seekp(0, std::ios::end);
-            m_directory.offsets[p_tileY][p_tileX] = m_gridFile.tellp();
+            m_directory.offsets[p_tileY][p_tileX] = (unsigned int)m_gridFile.tellp();
             this->SaveDirectory();
         }
         m_gridFile.seekp(m_directory.offsets[p_tileY][p_tileX]);

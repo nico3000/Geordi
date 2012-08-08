@@ -60,23 +60,3 @@ public:
 
 
 };
-
-
-class CustomOutputStream :
-    public physx::PxOutputStream
-{
-private:
-    physx::PxU8* m_pData;
-    int m_reservedSize;
-    int m_writtenSize;
-
-public:
-    CustomOutputStream(void) : m_pData(0), m_reservedSize(0), m_writtenSize(0) {  }
-    ~CustomOutputStream(void) { SAFE_DELETE(m_pData); }
-
-    physx::PxU32 write(const void* src, physx::PxU32 count);
-
-    physx::PxU8* GetData(void) const { return m_pData; }
-    int GetSize(void) const { return m_writtenSize; }
-};
-
