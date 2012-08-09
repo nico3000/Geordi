@@ -231,7 +231,6 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(bool p_withPhysics)
             }
             else
             {
-                //CustomOutputStream output;
                 physx::PxDefaultMemoryOutputStream output;
                 bool status = pCooking->cookTriangleMesh(desc, output);
                 if(!status)

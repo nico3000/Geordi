@@ -95,14 +95,14 @@ bool TerrainNode::TerrainBlock::BuildGeometry(void)
     {
         ++m_pTerrainNode->m_currentBlocksPerFrame;
 
-        int offset = 1 << m_level;
-        int startX = (m_x - 0) * offset * m_pTerrainNode->m_chunksize;
-        int startY = (m_y - 0) * offset * m_pTerrainNode->m_chunksize;
-        int startZ = (m_z - 0) * offset * m_pTerrainNode->m_chunksize;
+        int startX = (m_x - 0) * m_pTerrainNode->m_chunksize;
+        int startY = (m_y - 0) * m_pTerrainNode->m_chunksize;
+        int startZ = (m_z - 0) * m_pTerrainNode->m_chunksize;
 
-        bool hasGeometry = m_pTerrainNode->m_pTerrain->FillGrid(m_pTerrainNode->m_weightGrid, m_pTerrainNode->m_materialGrid, startX - offset, startY - offset, startZ - offset, offset);
+        bool hasGeometry = m_pTerrainNode->m_pTerrain->FillGrid(m_pTerrainNode->m_weightGrid, m_pTerrainNode->m_materialGrid, startX - 1, startY - 1, startZ - 1, m_level);
         if(hasGeometry)
         {    
+            int offset = 1 << m_level;
             hasGeometry = m_pTerrainNode->m_tempMCGrid.ConstructData(m_pTerrainNode->m_weightGrid, m_pTerrainNode->m_materialGrid, XMFLOAT3(
                 (float)(m_x * m_pTerrainNode->m_chunksize),
                 (float)(m_y * m_pTerrainNode->m_chunksize),

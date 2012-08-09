@@ -8,7 +8,7 @@
 
 
 #define LOD_RADIUS 2
-#define NUM_LEVELS 4
+#define NUM_LEVELS 2
 #define NUM_BLOCKS 8
 
 

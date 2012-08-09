@@ -26,7 +26,7 @@ bool TerrainComponent::VInit(tinyxml2::XMLElement* p_pData)
         return false;
     }
     std::string folderStr(pFolderData->Attribute("value"));
-    m_pTerrain.reset(new TerrainData(folderStr));
+    m_pTerrain.reset(new TerrainData);
     
     tinyxml2::XMLElement* pData = p_pData->FirstChildElement("Data");
     unsigned int gridsizeX, gridsizeY, gridsizeZ, chunksize;
@@ -39,12 +39,12 @@ bool TerrainComponent::VInit(tinyxml2::XMLElement* p_pData)
         LI_ERROR("invalid or no Data element in TerrainComponent");
         return false;
     }
-    if(!m_pTerrain->Init(chunksize, 256))
+    if(!m_pTerrain->Init(folderStr, 2, 256))
     {
         LI_ERROR("terrain initialization failed");
         return false;
     }
-    //m_pTerrain->GenerateTestData();
+    m_pTerrain->GenerateTestData();
      
     tinyxml2::XMLElement* pVisualData = p_pData->FirstChildElement("Visual");
     unsigned int smallradius;
