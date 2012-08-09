@@ -206,7 +206,7 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(bool p_withPhysics)
         pGeo->SetIndices(pIndexBuffer);
         pGeo->SetVertices(pVertexBuffer);
         
-        if(p_withPhysics)
+        if(true || p_withPhysics)
         {
             physx::PxU32* pIndices = new physx::PxU32[m_indices.size()];
             for(int i=0; i < m_indices.size(); i += 3)

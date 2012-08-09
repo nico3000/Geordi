@@ -182,12 +182,13 @@ bool TerrainNode::TerrainBlock::BuildGeometry(void)
 
 
 TerrainNode::TerrainNode(std::shared_ptr<TerrainData> p_pTerrain, int p_chunksize, int p_smallradius):
-m_pTerrain(p_pTerrain), m_chunksize(p_chunksize), m_scale(0.25f), m_maxBlocksPerFrame(1), m_pDiffuseTex(0), m_pBumpTex(0), m_pNormalTex(0)
+m_pTerrain(p_pTerrain), m_chunksize(p_chunksize), m_scale(0.25f), m_maxBlocksPerFrame(1), m_pDiffuseTex(0), m_pBumpTex(0), m_pNormalTex(0), m_pGeometryData(0)
 {
+    m_pGeometryData = new Octree[p_pTerrain->GetLevelCount()];
     m_weightGrid.Init(p_chunksize + 3);
     m_materialGrid.Init(p_chunksize + 3);
-    int size = NUM_BLOCKS * (1 << NUM_LEVELS);
-    for(int i=0; i < NUM_LEVELS; ++i)
+    int size = NUM_BLOCKS * (1 << m_pTerrain->GetLevelCount());
+    for(int i=0; i < m_pTerrain->GetLevelCount(); ++i)
     {
         m_pGeometryData[i].Init(-size / 2, -size / 2, -size / 2, size);
         size /= 2;
@@ -199,7 +200,7 @@ m_pTerrain(p_pTerrain), m_chunksize(p_chunksize), m_scale(0.25f), m_maxBlocksPer
         {
             for(int z=0; z < NUM_BLOCKS; ++z)
             {
-                m_pTest[z * NUM_BLOCKS * NUM_BLOCKS + y * NUM_BLOCKS + x].reset(new TerrainBlock(x - NUM_BLOCKS / 2, y - NUM_BLOCKS / 2, z - NUM_BLOCKS / 2, NUM_LEVELS - 1, this));
+                m_pTest[z * NUM_BLOCKS * NUM_BLOCKS + y * NUM_BLOCKS + x].reset(new TerrainBlock(x - NUM_BLOCKS / 2, y - NUM_BLOCKS / 2, z - NUM_BLOCKS / 2, m_pTerrain->GetLevelCount() - 1, this));
             }
         }
     }
@@ -209,10 +210,7 @@ m_pTerrain(p_pTerrain), m_chunksize(p_chunksize), m_scale(0.25f), m_maxBlocksPer
 
 TerrainNode::~TerrainNode(void)
 {
-    for(int i=0; i < NUM_LEVELS; ++i)
-    {
-        m_pGeometryData[i].Clear();
-    }
+    SAFE_DELETE_ARRAY(m_pGeometryData);
     SAFE_RELEASE(m_pDiffuseTex);
     SAFE_RELEASE(m_pBumpTex);
     SAFE_RELEASE(m_pNormalTex);

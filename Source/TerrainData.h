@@ -30,6 +30,8 @@ public:
     bool FillGrid(Grid3D& p_weightGrid, Grid3D& p_materialGrid, int p_startX, int p_startY, int p_startZ, int p_level);
     void SaveAllData(void) const;
 
+    unsigned int GetLevelCount(void) const { return (unsigned int)m_levels.size(); }
+
     void Test(void);
     void GenerateTestData(void);
     void PrintOctFileContents(std::string p_filename) const;

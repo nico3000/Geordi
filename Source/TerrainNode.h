@@ -8,8 +8,7 @@
 
 
 #define LOD_RADIUS 2
-#define NUM_LEVELS 2
-#define NUM_BLOCKS 8
+#define NUM_BLOCKS 2
 
 
 class TerrainNode :
@@ -49,7 +48,7 @@ private:
     std::shared_ptr<TerrainBlock> m_pTest[NUM_BLOCKS * NUM_BLOCKS * NUM_BLOCKS];
     GeometryList m_blockList;
     GeometryList m_wireframeList;
-    Octree m_pGeometryData[NUM_LEVELS];
+    Octree* m_pGeometryData;
     int m_chunksize;
     ShaderProgram m_program;
     Grid3D m_weightGrid;

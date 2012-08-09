@@ -199,6 +199,7 @@ bool LevelData::SaveOctree(Octree* pTree) const
                 {
                     success = true;
                 }
+                LI_INFO("saving octree \"" + octreeStream.str() + "\"");
             }
             else
             {
@@ -239,6 +240,7 @@ bool LevelData::LoadOctree(int p_x, int p_y, int p_z)
             LI_ERROR("Failed to load octree from stream: " + octreeStream.str());
             success = false;
         }
+        LI_INFO("loading octree \"" + octreeStream.str() + "\"");
         fileStream.close();
     }
     else
@@ -341,7 +343,8 @@ void TerrainData::GenerateTestData(void)
     noise[0].LoadNoise();
     noise[1].LoadNoise();
     noise[2].LoadNoise();
-    static const int presetSize = 256;
+    static const int presetOctreeRadius = 2;
+    static const int octreeSize = m_levels[0].m_octreeSize;
     
     int lastPercentage = -1;
     int timerID = LostIsland::g_pTimer->Tick(IMMEDIATE);
@@ -356,76 +359,79 @@ void TerrainData::GenerateTestData(void)
     float cosa3 = cos(noise[0].GetValue(1));
     float sina3 = sin(noise[0].GetValue(1));
     ULONGLONG i = 0;
-    ULONGLONG wholesize = 2 * presetSize;
+    ULONGLONG wholesize = 2 * presetOctreeRadius * octreeSize;
     wholesize = wholesize * wholesize * wholesize;
     
-    for(int x=-presetSize; x < presetSize; ++x)
+    for(int ox=-presetOctreeRadius; ox < presetOctreeRadius; ++ox)
     {
-        for(int y=-presetSize; y < presetSize; ++y)
+        for(int oy=-presetOctreeRadius; oy < presetOctreeRadius; ++oy)
         {
-            for(int z=-presetSize; z < presetSize; ++z)
+            for(int oz=-presetOctreeRadius; oz < presetOctreeRadius; ++oz)
             {
-                float worldX = (float)x / 2.0f;
-                float worldY = (float)y / 2.0f;
-                float worldZ = (float)z / 2.0f;
-
-                float rotatedX0 = cosa0 * worldX - sina0 * worldZ;
-                float rotatedZ0 = sina0 * worldX + cosa0 * worldZ;
-                float rotatedX1 = cosa1 * worldX - sina1 * worldZ;
-                float rotatedZ1 = sina1 * worldX + cosa1 * worldZ;
-                float rotatedX2 = cosa2 * worldX - sina2 * worldZ;
-                float rotatedZ2 = sina2 * worldX + cosa2 * worldZ;
-                float rotatedX3 = cosa3 * worldX - sina3 * worldZ;
-                float rotatedZ3 = sina3 * worldX + cosa3 * worldZ;
-
-                float density = -worldY;
-                            
-
-//                             XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
-//                                 noise[1].SampleLinear(worldX, worldY, worldZ, 0.004f, 16.0f), 
-//                                 noise[2].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f));
-//                             worldX += warp.x;
-//                             worldY += warp.y;
-//                             worldZ += warp.z;
-
-                //density += noise[0].SampleLinear(worldX, worldY, worldZ, 4.03f, 0.25f);
-                density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
-                density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
-                density += noise[0].SampleLinear(rotatedX0, worldY, rotatedZ0, 0.53f, 2.00f);
-                density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
-                density += noise[1].SampleLinear(rotatedX1, worldY, rotatedZ1, 0.126f, 8.00f);
-                density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
-                density += noise[0].SampleLinear(rotatedX2, worldY, rotatedZ2, 0.03137f, 32.00f);
-                density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.015625f, 64.00f);
-                density += noise[2].SampleLinear(rotatedX3, worldY, rotatedZ3, 0.0078125f, 128.00f);
-
-                //this->SetDensity(x, y, z, density, false);
-                //int densityToStore = (short)(CLAMP(density, -1.0f, 1.0f) * (float)SHORT_MAX);
-                //tree.SetValue(x, y, z, densityToStore, true);
-                int material = worldY > 0 ? 0 : 1;
-                this->SetRawValue(x, y, z, this->Implode(density, material), false);
-
-                float percentage = 100.0f * (float)++i / (float)wholesize;
-//                             if((int)(percentage) > lastPercentage)
-//                             {
-//                                 lastPercentage = (int)percentage;
-//                                 std::ostringstream percentageStream;
-//                                 percentageStream << (int)(percentage) << "%\n";
-//                                 OutputDebugStringA(percentageStream.str().c_str());
-//                             }
-                if(LostIsland::g_pTimer->Tock(outID, KEEPRUNNING) > 5000)
+                for(int x=ox * octreeSize; x < (ox + 1) * octreeSize; ++x)
                 {
-                    LostIsland::g_pTimer->Tock(outID, RESET);
-                    float elapsed = (float)LostIsland::g_pTimer->Tock(timerID, KEEPRUNNING);
-                    std::ostringstream stats;
-                    float minutes = (1e-3f * (100.0f * elapsed / percentage - elapsed) / 60.0f);
-                    float seconds = 60.0f * (minutes - floor(minutes));
-                    stats << "Terrain Generation: " << ((float)(int)(100.0f * percentage) / 100.0f) << "%. " << floor(minutes) << " minutes and " << floor(seconds) << " seconds remaining\n";
-                    OutputDebugStringA(stats.str().c_str());
+                    for(int y=oy * octreeSize; y < (oy + 1) * octreeSize; ++y)
+                    {
+                        for(int z=oz * octreeSize; z < (oz + 1) * octreeSize; ++z)
+                        {
+                            float worldX = (float)x / 2.0f;
+                            float worldY = (float)y / 2.0f;
+                            float worldZ = (float)z / 2.0f;
+
+                            float rotatedX0 = cosa0 * worldX - sina0 * worldZ;
+                            float rotatedZ0 = sina0 * worldX + cosa0 * worldZ;
+                            float rotatedX1 = cosa1 * worldX - sina1 * worldZ;
+                            float rotatedZ1 = sina1 * worldX + cosa1 * worldZ;
+                            float rotatedX2 = cosa2 * worldX - sina2 * worldZ;
+                            float rotatedZ2 = sina2 * worldX + cosa2 * worldZ;
+                            float rotatedX3 = cosa3 * worldX - sina3 * worldZ;
+                            float rotatedZ3 = sina3 * worldX + cosa3 * worldZ;
+
+                            float density = -worldY;
+
+
+                            XMFLOAT3 warp(noise[0].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f), 
+                                noise[1].SampleLinear(worldX, worldY, worldZ, 0.004f, 16.0f), 
+                                noise[2].SampleLinear(worldX, worldY, worldZ, 0.004f, 8.0f));
+                            worldX += warp.x;
+                            worldY += warp.y;
+                            worldZ += warp.z;
+
+                            //density += noise[0].SampleLinear(worldX, worldY, worldZ, 4.03f, 0.25f);
+                            density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
+                            density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
+                            density += noise[0].SampleLinear(rotatedX0, worldY, rotatedZ0, 0.53f, 2.00f);
+                            density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
+                            density += noise[1].SampleLinear(rotatedX1, worldY, rotatedZ1, 0.126f, 8.00f);
+                            density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
+                            density += noise[0].SampleLinear(rotatedX2, worldY, rotatedZ2, 0.03137f, 32.00f);
+                            density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.015625f, 64.00f);
+                            density += noise[2].SampleLinear(rotatedX3, worldY, rotatedZ3, 0.0078125f, 128.00f);
+
+                            //this->SetDensity(x, y, z, density, false);
+                            //int densityToStore = (short)(CLAMP(density, -1.0f, 1.0f) * (float)SHORT_MAX);
+                            //tree.SetValue(x, y, z, densityToStore, true);
+                            int material = worldY > 0 ? 0 : 1;
+                            this->SetRawValue(x, y, z, this->Implode(density, material), false);
+
+                            float percentage = 100.0f * (float)++i / (float)wholesize;
+                            if(LostIsland::g_pTimer->Tock(outID, KEEPRUNNING) > 5000)
+                            {
+                                LostIsland::g_pTimer->Tock(outID, RESET);
+                                float elapsed = (float)LostIsland::g_pTimer->Tock(timerID, KEEPRUNNING);
+                                std::ostringstream stats;
+                                float minutes = (1e-3f * (100.0f * elapsed / percentage - elapsed) / 60.0f);
+                                float seconds = 60.0f * (minutes - floor(minutes));
+                                stats << "Terrain Generation: " << ((float)(int)(100.0f * percentage) / 100.0f) << "%. " << floor(minutes) << " minutes and " << floor(seconds) << " seconds remaining\n";
+                                OutputDebugStringA(stats.str().c_str());
+                            }
+                        }
+                    }
                 }
             }
         }
     }
+    
     this->SaveAllData();
 }
 
