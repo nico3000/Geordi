@@ -86,12 +86,12 @@ void MarchingCubeGrid::AddEdge(char p_edge, unsigned short p_index, short p_x, s
 
 void SetMaterial(int p_material1, int p_material2, float p_t, XMFLOAT4X4& p_target)
 {
-    p_target.m[p_material1 / 4][p_material1 % 4] += 1.0f - p_t;
-    p_target.m[p_material2 / 4][p_material2 % 4] += p_t;
+    //p_target.m[p_material1 / 4][p_material1 % 4] += 1.0f - p_t;
+    //p_target.m[p_material2 / 4][p_material2 % 4] += p_t;
 }
 
 
-bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGrid, const XMFLOAT3& m_position, float p_scale)
+bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGrid, const XMFLOAT3& m_position, float p_scale, int p_level)
 {
     static const XMFLOAT4 color(0.5f, 1.5f, 0.5f, 1.0f);
 
@@ -123,6 +123,14 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGri
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
                             XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
+                        switch(p_level)
+                        {
+                        case 0: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
+                        case 1: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
+                        case 2: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 0.0f; break;
+                        case 3: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
+                        case 4: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
+                        }
                         SetMaterial(baseMaterial, m, t, v.materialWeight);
                         p_weightGrid.GenerateGradient((float)(x + 1) + t, (float)(y + 1), (float)(z + 1), v.normalMC);
                         this->AddEdge(0, (unsigned short)m_vertices.size(), x, y, z);
@@ -142,6 +150,14 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGri
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
                             XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
+                        switch(p_level)
+                        {
+                        case 0: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
+                        case 1: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
+                        case 2: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 0.0f; break;
+                        case 3: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
+                        case 4: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
+                        }
                         SetMaterial(baseMaterial, m, t, v.materialWeight);
                         p_weightGrid.GenerateGradient((float)(x + 1), (float)(y + 1) + t, (float)(z + 1), v.normalMC);
                         this->AddEdge(4, (unsigned short)m_vertices.size(), x, y, z);
@@ -161,6 +177,14 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGri
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
                             XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
                         };
+                        switch(p_level)
+                        {
+                        case 0: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
+                        case 1: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
+                        case 2: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 0.0f; break;
+                        case 3: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
+                        case 4: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
+                        }
                         SetMaterial(baseMaterial, m, t, v.materialWeight);
                         p_weightGrid.GenerateGradient((float)(x + 1), (float)(y + 1), (float)(z + 1) + t, v.normalMC);
                         this->AddEdge(8, (unsigned short)m_vertices.size(), x, y, z);

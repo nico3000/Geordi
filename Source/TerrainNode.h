@@ -8,7 +8,7 @@
 
 
 #define LOD_RADIUS 2
-#define NUM_BLOCKS 2
+#define NUM_BLOCKS 4
 
 
 class TerrainNode :

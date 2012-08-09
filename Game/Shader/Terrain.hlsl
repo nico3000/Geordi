@@ -96,7 +96,7 @@ DeferredShadingOutput TerrainNormalMappingPS(TerrainVertexProjected input)
     ColorAndNormal con = GetFromMaterial(0, input.positionWC, normal);
 
     // Apply bump vector to vertex-interpolated normal vector.  
-	output.diffuse = con.color;
+	output.diffuse = input.material[0];//con.color;
     output.normal = float4(normalize(normal + con.normal), 0.0);
 	output.world = float4(input.positionWC, 1.0);
     return output;

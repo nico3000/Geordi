@@ -107,7 +107,7 @@ bool TerrainNode::TerrainBlock::BuildGeometry(void)
                 (float)(m_x * m_pTerrainNode->m_chunksize),
                 (float)(m_y * m_pTerrainNode->m_chunksize),
                 (float)(m_z * m_pTerrainNode->m_chunksize)),
-                (float)offset * m_pTerrainNode->m_scale);
+                (float)offset * m_pTerrainNode->m_scale, m_level);
         }
         if(hasGeometry)
         {

@@ -55,8 +55,8 @@
         <Actor type="Empty" id="terrain">
             <TerrainComponent>
                 <Folder value="octree_test" />
-                <Data gridsize_x="4" gridsize_y="2" gridsize_z="4" chunksize="128" />
-                <Visual smallradius="8" chunksize="32" />
+                <Data octreesize="256" levels="6" />
+                <Visual chunksize="32" smallradius="2" />
             </TerrainComponent>
         </Actor>
     </ActorList>

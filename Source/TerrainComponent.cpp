@@ -29,17 +29,15 @@ bool TerrainComponent::VInit(tinyxml2::XMLElement* p_pData)
     m_pTerrain.reset(new TerrainData);
     
     tinyxml2::XMLElement* pData = p_pData->FirstChildElement("Data");
-    unsigned int gridsizeX, gridsizeY, gridsizeZ, chunksize;
+    unsigned int levels, octreesize;
     if(!pData ||
-        pData->QueryUnsignedAttribute("gridsize_x", &gridsizeX) != tinyxml2::XML_NO_ERROR ||
-        pData->QueryUnsignedAttribute("gridsize_y", &gridsizeY) != tinyxml2::XML_NO_ERROR ||
-        pData->QueryUnsignedAttribute("gridsize_z", &gridsizeZ) != tinyxml2::XML_NO_ERROR ||
-        pData->QueryUnsignedAttribute("chunksize", &chunksize) != tinyxml2::XML_NO_ERROR)
+        pData->QueryUnsignedAttribute("levels", &levels) != tinyxml2::XML_NO_ERROR ||
+        pData->QueryUnsignedAttribute("octreesize", &octreesize) != tinyxml2::XML_NO_ERROR)
     {
         LI_ERROR("invalid or no Data element in TerrainComponent");
         return false;
     }
-    if(!m_pTerrain->Init(folderStr, 4, 256))
+    if(!m_pTerrain->Init(folderStr, levels, octreesize))
     {
         LI_ERROR("terrain initialization failed");
         return false;
@@ -47,10 +45,10 @@ bool TerrainComponent::VInit(tinyxml2::XMLElement* p_pData)
     m_pTerrain->GenerateTestData();
      
     tinyxml2::XMLElement* pVisualData = p_pData->FirstChildElement("Visual");
-    unsigned int smallradius;
+    unsigned int  chunksize, smallradius;
     if(!pVisualData ||
-        pVisualData->QueryUnsignedAttribute("smallradius", &smallradius) != tinyxml2::XML_NO_ERROR ||
-        pVisualData->QueryUnsignedAttribute("chunksize", &chunksize) != tinyxml2::XML_NO_ERROR)
+        pVisualData->QueryUnsignedAttribute("chunksize", &chunksize) != tinyxml2::XML_NO_ERROR ||
+        pVisualData->QueryUnsignedAttribute("smallradius", &smallradius) != tinyxml2::XML_NO_ERROR)        
     {
         LI_ERROR("invalid or no Visual element in TerrainComponent");
         return false;
