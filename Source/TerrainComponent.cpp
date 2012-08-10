@@ -37,13 +37,6 @@ bool TerrainComponent::VInit(tinyxml2::XMLElement* p_pData)
         LI_ERROR("invalid or no Data element in TerrainComponent");
         return false;
     }
-    if(!m_pTerrain->Init(folderStr, levels, octreesize))
-    {
-        LI_ERROR("terrain initialization failed");
-        return false;
-    }
-    m_pTerrain->GenerateTestData();
-     
     tinyxml2::XMLElement* pVisualData = p_pData->FirstChildElement("Visual");
     unsigned int  chunksize, smallradius;
     if(!pVisualData ||
@@ -53,7 +46,14 @@ bool TerrainComponent::VInit(tinyxml2::XMLElement* p_pData)
         LI_ERROR("invalid or no Visual element in TerrainComponent");
         return false;
     }
-    m_pSceneNode.reset(new TerrainNode(m_pTerrain, chunksize, smallradius));    
+
+    if(!m_pTerrain->Init(folderStr, levels, octreesize, chunksize))
+    {
+        LI_ERROR("terrain initialization failed");
+        return false;
+    }
+    m_pTerrain->GenerateTestData();
+    m_pSceneNode.reset(new TerrainNode(m_pTerrain));    
     
     return true;
 }

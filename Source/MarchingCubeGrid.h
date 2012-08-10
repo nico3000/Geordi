@@ -43,7 +43,8 @@ public:
     MarchingCubeGrid(void) : m_pCubes(0) {}
     ~MarchingCubeGrid(void) { SAFE_DELETE(m_pCubes); }
       
-    std::shared_ptr<Geometry> CreateGeometry(bool p_withPhysics);
+    std::shared_ptr<Geometry> CreateGeometry(void);
+    physx::PxActor* CreatePhysicsActor(void) const;
     bool ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGrid, const XMFLOAT3& m_position, float p_scale, int p_level);
     
     static void Init(void);

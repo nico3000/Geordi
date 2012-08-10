@@ -1,22 +1,43 @@
 #include "StdAfx.h"
 #include "TerrainData.h"
+#include "Geometry.h"
 
 #define HEIGHT_MASK 0x0000ffff
 #define MATERIAL_MASK 0x000f0000
 #define MAX_ACTIVE_OCTREES_PER_LEVEL 8
 
+#define GEOMETRY_UNKNOWN OCTREE_DEFAULT_VALUE
+#define GEOMETRY_EMPTY 1
+#define GEOMETRY_NOTEMPTY 2
+
+#define LOD_RADIUS 2
+#define MAX_SIZE (1 << 14)
+
 //////////////////////////////////////////////////////////////////////////
 //                              TerrainData                             //
 //////////////////////////////////////////////////////////////////////////
-TerrainData::TerrainData(void)
+TerrainData::TerrainData(void):
+m_chunksize(0), m_pChunkData(0), m_scale(0.25f), m_terrainFolder("")
 {
-
 }
 
 
 TerrainData::~TerrainData(void)
 {
     this->SaveAllData();
+    for(int level=0; level < m_levels.size(); ++level)
+    {
+        std::ostringstream filename;
+        filename << "./" << m_terrainFolder << "/chunks." << level << "." << m_chunksize << ".oct";
+        std::fstream dataStream(filename.str(), std::ios::out | std::ios::binary | std::ios::trunc);
+        bool success = m_pChunkData[level].Save(dataStream);
+        if(!success)
+        {
+            LI_WARNING("Failed to save chunk data to " + filename.str());
+        }
+        m_pChunkData[level].Clear();
+    }
+    SAFE_DELETE_ARRAY(m_pChunkData);
 }
 
 
@@ -33,25 +54,50 @@ void TerrainData::Explode(int p_value, float& p_density, int& p_material)
 }
 
 
-bool TerrainData::Init(std::string p_terrainFolder, unsigned char p_levels, unsigned short p_octreeSize)
+bool TerrainData::Init(std::string p_terrainFolder, unsigned char p_levels, unsigned short p_octreeSize, int p_chunksize)
 {
-    bool success = true;
     if(!Octree::InitMemoryPool(MAX_ACTIVE_OCTREES_PER_LEVEL * p_octreeSize * p_octreeSize)) // TODO: educated guess :P
     {
         LI_ERROR("Failed to initialize memory pool for octrees");
     }
-    for(unsigned char level=0; success && level < p_levels; ++level)
+
+    m_weightGrid.Init(p_chunksize + 3);
+    m_materialGrid.Init(p_chunksize + 3);
+
+    m_pChunkData = new Octree[p_levels];
+    int size = MAX_SIZE;
+    for(unsigned char level=0; level < p_levels; ++level)
     {
+        std::ostringstream filename;
+        filename << "./" << m_terrainFolder << "/chunks." << level << "." << p_chunksize << ".oct";
+        std::fstream dataStream(filename.str(), std::ios::in | std::ios::binary);
+        bool success = false;
+        if(dataStream.is_open())
+        {
+            if(m_pChunkData[level].Init(dataStream))
+            {
+                success = true;
+            }
+        }
+        if(!success)
+        {
+            m_pChunkData[level].Init(-size / 2, -size / 2, -size / 2, size);
+        }
+        size /= 2;
+
         m_levels.push_back(LevelData());
         if(!m_levels.back().Init(p_terrainFolder, level, p_octreeSize))
         {
             std::ostringstream info;
             info << "Failed to initialize level " << level;
             LI_ERROR(info.str());
-            success = false;
+            return false;
         }
     }
-    return success;
+    
+    m_terrainFolder = p_terrainFolder;
+    m_chunksize = p_chunksize;
+    return true;
 }
 
 
@@ -119,6 +165,12 @@ void TerrainData::SaveAllData(void) const
 }
 
 
+std::shared_ptr<TerrainBlock> TerrainData::GetTerrainBlock(int p_x, int p_y, int p_z)
+{
+    return std::shared_ptr<TerrainBlock>(new TerrainBlock(p_x, p_y, p_z, (int)m_levels.size() - 1, this));
+}
+
+
 //////////////////////////////////////////////////////////////////////////
 //                               LevelData                              //
 //////////////////////////////////////////////////////////////////////////
@@ -131,10 +183,10 @@ LevelData::LevelData(void)
 
 LevelData::~LevelData(void)
 {
-    for(auto iter=m_loadedTiles.begin(); iter != m_loadedTiles.end(); ++iter)
+    while(!m_loadedTrees.empty())
     {
-        this->SaveOctree(*iter);
-        SAFE_DELETE(*iter);
+        this->SaveOctree(0);
+        this->DestroyOctree(0);
     }
 }
 
@@ -150,39 +202,60 @@ bool LevelData::Init(std::string p_terrainFolder, int p_level, unsigned short p_
 
 void LevelData::PushTileToBack(int p_x, int p_y, int p_z)
 {
-    if(!m_loadedTiles.empty() && m_loadedTiles.back()->IsIn(p_x, p_y, p_z))
+    if(!m_loadedTrees.empty() && m_loadedTrees.back().pTree->IsIn(p_x, p_y, p_z))
     {
         return;
     }
-    for(auto iter=m_loadedTiles.begin(); iter != m_loadedTiles.end(); ++iter)
+    for(auto iter=m_loadedTrees.begin(); iter != m_loadedTrees.end(); ++iter)
     {
-        if((*iter)->IsIn(p_x, p_y, p_z))
+        if((*iter).pTree->IsIn(p_x, p_y, p_z))
         {
-            Octree* pTree = *iter;
-            m_loadedTiles.erase(iter);
-            m_loadedTiles.push_back(pTree);
+            LoadedOctree& loaded = (*iter);
+            m_loadedTrees.push_back(loaded);
+            m_loadedTrees.erase(iter);
             return;
         }
     }
-    while(m_loadedTiles.size() > MAX_ACTIVE_OCTREES_PER_LEVEL)
+    while(m_loadedTrees.size() > MAX_ACTIVE_OCTREES_PER_LEVEL)
     {
-        if(!this->SaveOctree(*m_loadedTiles.begin()))
+        if(!this->SaveOctree(0))
         {
             LI_ERROR("Saving octree failed");
         }
-        m_loadedTiles.front()->Clear();
-        SAFE_DELETE(*m_loadedTiles.begin());
-        m_loadedTiles.pop_front();
+        this->DestroyOctree(0);
+        m_loadedTrees.pop_front();
     }
     this->LoadOctree(p_x, p_y, p_z);
 }
 
 
-bool LevelData::SaveOctree(Octree* pTree) const
+void LevelData::DestroyOctree(unsigned int p_index)
 {
-    bool success = false;
-    if(pTree)
+    auto iter = m_loadedTrees.begin();
+    while(p_index != 0)
     {
+        ++iter;
+        --p_index;
+    }
+    (*iter).pTree->Clear();
+    SAFE_DELETE((*iter).pTree);
+    m_loadedTrees.erase(iter);
+}
+
+
+bool LevelData::SaveOctree(unsigned int p_index) const
+{
+    bool success = true;
+    auto iter = m_loadedTrees.begin();
+    while(p_index != 0)
+    {
+        ++iter;
+        --p_index;
+    }
+    const LoadedOctree& loaded = (*iter);
+    if(loaded.changed)
+    {
+        Octree* pTree = loaded.pTree;
         pTree->OptimizeStructure();
         if(!pTree->IsEmpty())
         {
@@ -191,15 +264,12 @@ bool LevelData::SaveOctree(Octree* pTree) const
             std::fstream fileStream(octreeStream.str().c_str(), std::ios::out | std::ios::binary | std::ios::trunc);
             if(fileStream.is_open())
             {
+                LI_INFO("saving octree \"" + octreeStream.str() + "\"");
                 if(!pTree->Save(fileStream))
                 {
                     LI_ERROR("Failed to save octree to stream: " + octreeStream.str());
+                    success = false;
                 }
-                else
-                {
-                    success = true;
-                }
-                LI_INFO("saving octree \"" + octreeStream.str() + "\"");
             }
             else
             {
@@ -209,13 +279,12 @@ bool LevelData::SaveOctree(Octree* pTree) const
         }
         else
         {
-            success = true;
-            //LI_INFO("Saving of empty octree skipped");
+            LI_INFO("Saving of empty octree skipped");
         }
     }
     else
     {
-        LI_ERROR("Trying to save empty octree tile");
+        LI_INFO("Saving of non-changed octree skipped");
     }
     return success;
 }
@@ -227,7 +296,9 @@ bool LevelData::LoadOctree(int p_x, int p_y, int p_z)
     int tileStartY = (int)floor((float)p_y / (float)m_octreeSize) * m_octreeSize;
     int tileStartZ = (int)floor((float)p_z / (float)m_octreeSize) * m_octreeSize;
 
-    Octree* pTree = new Octree;
+    LoadedOctree loaded;
+    loaded.pTree = new Octree;
+    loaded.changed = false;
 
     bool success = true;
     std::stringstream octreeStream;
@@ -235,7 +306,7 @@ bool LevelData::LoadOctree(int p_x, int p_y, int p_z)
     std::fstream fileStream(octreeStream.str().c_str(), std::ios::in | std::ios::binary);
     if(fileStream.is_open())
     {
-        if(!pTree->Init(fileStream))
+        if(!loaded.pTree->Init(fileStream))
         {
             LI_ERROR("Failed to load octree from stream: " + octreeStream.str());
             success = false;
@@ -245,12 +316,12 @@ bool LevelData::LoadOctree(int p_x, int p_y, int p_z)
     }
     else
     {
-        pTree->Init(tileStartX, tileStartY, tileStartZ, m_octreeSize);
+        loaded.pTree->Init(tileStartX, tileStartY, tileStartZ, m_octreeSize);
     }
 
     if(success)
     {
-        m_loadedTiles.push_back(pTree);
+        m_loadedTrees.push_back(loaded);
     }
     return success;
 }
@@ -259,31 +330,32 @@ bool LevelData::LoadOctree(int p_x, int p_y, int p_z)
 int LevelData::GetRawValue(int p_x, int p_y, int p_z)
 {
     this->PushTileToBack(p_x, p_y, p_z);
-    return m_loadedTiles.back()->GetValue(p_x, p_y, p_z);
+    return m_loadedTrees.back().pTree->GetValue(p_x, p_y, p_z);
 }
 
 
 void LevelData::SetRawValue(int p_x, int p_y, int p_z, int p_value, bool p_autoOptimizeStructure /* = true */)
 {
     this->PushTileToBack(p_x, p_y, p_z);
-    m_loadedTiles.back()->SetValue(p_x, p_y, p_z, p_value, p_autoOptimizeStructure);
+    LoadedOctree& loaded = m_loadedTrees.back();
+    loaded.changed |= loaded.pTree->SetValue(p_x, p_y, p_z, p_value, p_autoOptimizeStructure);
 }
 
 
 void LevelData::SaveAllOctrees(void) const
 {
-    for(auto iter=m_loadedTiles.begin(); iter != m_loadedTiles.end(); ++iter)
+    for(int i=0; i < m_loadedTrees.size(); ++i)
     {
-        this->SaveOctree(*iter);
+        this->SaveOctree(i);
     }
 }
 
 
 void LevelData::OptimizeAllOctrees(void) const
 {
-    for(auto iter=m_loadedTiles.begin(); iter != m_loadedTiles.end(); ++iter)
+    for(auto iter=m_loadedTrees.begin(); iter != m_loadedTrees.end(); ++iter)
     {
-        (*iter)->OptimizeStructure();
+        (*iter).pTree->OptimizeStructure();
     }
 }
 
@@ -328,6 +400,201 @@ bool LevelData::FillGrid(Grid3D& p_weightGrid, Grid3D& p_materialGrid, int p_sta
     }
     return geo == 3;
 }
+
+
+//////////////////////////////////////////////////////////////////////////
+//                              TerrainBlock                            //
+//////////////////////////////////////////////////////////////////////////
+
+TerrainBlock::TerrainBlock(int p_x, int p_y, int p_z, int p_level, TerrainData* p_pData):
+m_x(p_x), m_y(p_y), m_z(p_z), m_level(p_level), m_isRefined(false), m_pData(p_pData), m_pPhysicsActor(0)
+{
+    if(p_level != 0)
+    {
+        m_pRefined[0].reset(new TerrainBlock(2 * p_x,     2 * p_y,     2 * p_z,     p_level - 1, p_pData));
+        m_pRefined[1].reset(new TerrainBlock(2 * p_x,     2 * p_y,     2 * p_z + 1, p_level - 1, p_pData));
+        m_pRefined[2].reset(new TerrainBlock(2 * p_x,     2 * p_y + 1, 2 * p_z,     p_level - 1, p_pData));
+        m_pRefined[3].reset(new TerrainBlock(2 * p_x,     2 * p_y + 1, 2 * p_z + 1, p_level - 1, p_pData));
+        m_pRefined[4].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y,     2 * p_z,     p_level - 1, p_pData));
+        m_pRefined[5].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y,     2 * p_z + 1, p_level - 1, p_pData));
+        m_pRefined[6].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y + 1, 2 * p_z,     p_level - 1, p_pData));
+        m_pRefined[7].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y + 1, 2 * p_z + 1, p_level - 1, p_pData));
+    }
+    m_flag = m_pData->m_pChunkData->GetValue(p_x, p_y, p_z);
+}
+
+
+TerrainBlock::~TerrainBlock(void)
+{
+}
+
+
+bool TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z, int p_maxMillis)
+{
+    static int timerID = LostIsland::g_pTimer->Tick(IMMEDIATE);
+    LostIsland::g_pTimer->Tock(timerID, RESET);
+    bool done = this->SetPointOfReference(p_x, p_y, p_z, timerID, p_maxMillis);
+    unsigned long elapsed = LostIsland::g_pTimer->Tock(timerID, RESET);
+    std::ostringstream info;
+    info << elapsed << "ms of " << p_maxMillis << "ms used" << std::endl;
+    OutputDebugStringA(info.str().c_str());
+    return done;
+}
+
+
+bool TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z, int p_timerID, int p_maxMillis)
+{
+    bool done = true;
+    int x = (int)floor((float)p_x / (float)(1 << m_level));
+    int y = (int)floor((float)p_y / (float)(1 << m_level));
+    int z = (int)floor((float)p_z / (float)(1 << m_level));
+    if(m_level != 0 && MAX3(abs(x - m_x), abs(y - m_y), abs(z - m_z)) < LOD_RADIUS)
+    {
+        // refine block
+        m_isRefined = true;
+        for(int i=0; i < 8; ++i)
+        {
+            done &= m_pRefined[i]->SetPointOfReference(p_x, p_y, p_z, p_timerID, p_maxMillis);
+        }
+        if(done && m_pGeometry)
+        {
+            this->ReleaseGeometry(false);
+        }
+    }
+    else
+    {
+        // do not refine
+        m_isRefined = false;
+        if(m_level != 0)
+        {
+            for(int i=0; i < 8; ++i)
+            {
+                m_pRefined[i]->ReleaseGeometry(true);
+            }
+        }
+        unsigned long elapsed = LostIsland::g_pTimer->Tock(p_timerID, KEEPRUNNING);
+        done = this->BuildGeometry(p_maxMillis - (int)elapsed);
+    }
+    return done;
+}
+
+
+void TerrainBlock::ReleaseGeometry(bool p_releaseChildren)
+{
+    if(m_pGeometry)
+    {
+        m_pGeometry.reset((Geometry*)0);
+    }
+    else if(p_releaseChildren && m_level != 0)
+    {
+        for(int i=0; i < 8; ++i)
+        {
+            m_pRefined[i]->ReleaseGeometry(true);
+        }
+    }
+}
+
+
+bool TerrainBlock::UseGeometryFromBackup(void)
+{
+    if(!m_pGeometry && m_pBackup)
+    {
+        m_pGeometry.reset(new Geometry(*m_pBackup));
+        m_pData->m_blockList.push_back(m_pGeometry);
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+bool TerrainBlock::BuildGeometry(int p_remainingMillis)
+{
+    if(m_flag == GEOMETRY_EMPTY)
+    {
+        return true;
+    }
+    if(!m_pGeometry && !this->UseGeometryFromBackup())
+    {
+        if(p_remainingMillis < 0)
+        {
+            return false;
+        }
+        else
+        {
+            int startX = (m_x - 0) * m_pData->m_chunksize;
+            int startY = (m_y - 0) * m_pData->m_chunksize;
+            int startZ = (m_z - 0) * m_pData->m_chunksize;
+
+            bool hasGeometry = m_pData->FillGrid(m_pData->m_weightGrid, m_pData->m_materialGrid, startX - 1, startY - 1, startZ - 1, m_level);
+            if(hasGeometry)
+            {    
+                int offset = 1 << m_level;
+                hasGeometry = m_pData->m_tempMCGrid.ConstructData(m_pData->m_weightGrid, m_pData->m_materialGrid, XMFLOAT3(
+                    (float)(m_x * m_pData->m_chunksize),
+                    (float)(m_y * m_pData->m_chunksize),
+                    (float)(m_z * m_pData->m_chunksize)),
+                    (float)offset * m_pData->m_scale, m_level);
+            }
+            if(hasGeometry)
+            {
+                m_pBackup = m_pData->m_tempMCGrid.CreateGeometry();
+                this->UseGeometryFromBackup();
+            }
+            if(m_flag != GEOMETRY_UNKNOWN)
+            {
+                m_flag = hasGeometry ? GEOMETRY_NOTEMPTY : GEOMETRY_EMPTY;
+                m_pData->m_pChunkData[m_level].SetValue(m_x, m_y, m_z, m_flag);
+            }
+        }
+    }
+    return true;
+
+
+    //         if(hasGeometry)
+    //         {
+    //             // wireframe
+    //             XMFLOAT4 pColors[] =
+    //             {
+    //                 XMFLOAT4(1.0f, 0.0f, 0.5f, 1.0f),
+    //                 XMFLOAT4(0.0f, 1.0f, 0.0f, 1.0f),
+    //                 XMFLOAT4(1.0f, 1.0f, 0.0f, 1.0f),
+    //                 XMFLOAT4(1.0f, 0.5f, 0.0f, 1.0f),
+    //                 XMFLOAT4(1.0f, 0.0f, 0.0f, 1.0f),
+    //             };
+    // 
+    //             float scale = m_pTerrainNode->m_scale;
+    //             int chunksize = m_pTerrainNode->m_chunksize;
+    //             VertexBuffer::SimpleVertex pVertices[8] = {
+    //                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.01f)), scale * (float)(chunksize * offset * (m_y + 0.01f)), scale * (float)(chunksize * offset * (m_z + 0.01f))), XMFLOAT3(0,1,0), pColors[m_level],
+    //                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.99f)), scale * (float)(chunksize * offset * (m_y + 0.01f)), scale * (float)(chunksize * offset * (m_z + 0.01f))), XMFLOAT3(0,1,0), pColors[m_level],
+    //                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.99f)), scale * (float)(chunksize * offset * (m_y + 0.99f)), scale * (float)(chunksize * offset * (m_z + 0.01f))), XMFLOAT3(0,1,0), pColors[m_level],
+    //                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.01f)), scale * (float)(chunksize * offset * (m_y + 0.99f)), scale * (float)(chunksize * offset * (m_z + 0.01f))), XMFLOAT3(0,1,0), pColors[m_level],
+    //                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.01f)), scale * (float)(chunksize * offset * (m_y + 0.01f)), scale * (float)(chunksize * offset * (m_z + 0.99f))), XMFLOAT3(0,1,0), pColors[m_level],
+    //                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.99f)), scale * (float)(chunksize * offset * (m_y + 0.01f)), scale * (float)(chunksize * offset * (m_z + 0.99f))), XMFLOAT3(0,1,0), pColors[m_level],
+    //                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.99f)), scale * (float)(chunksize * offset * (m_y + 0.99f)), scale * (float)(chunksize * offset * (m_z + 0.99f))), XMFLOAT3(0,1,0), pColors[m_level],
+    //                 XMFLOAT3(scale * (float)(chunksize * offset * (m_x + 0.01f)), scale * (float)(chunksize * offset * (m_y + 0.99f)), scale * (float)(chunksize * offset * (m_z + 0.99f))), XMFLOAT3(0,1,0), pColors[m_level],
+    //             };
+    //             unsigned int pIndices[] = {
+    //                 0, 1, 2, 3, 0, 4, 5, 6, 7, 4, 0xffffffff,
+    //                 3, 7, 0xffffffff,
+    //                 2, 6, 0xffffffff,
+    //                 1, 5, 
+    //             };
+    //             Geometry::VertexBufferPtr pVertexBuffer(new VertexBuffer);
+    //             pVertexBuffer->Build(pVertices, ARRAYSIZE(pVertices), sizeof(VertexBuffer::SimpleVertex));
+    //             Geometry::IndexBufferPtr pIndexBuffer(new IndexBuffer);
+    //             pIndexBuffer->Build(pIndices, ARRAYSIZE(pIndices), D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP);
+    //             m_pWireframe.reset(new Geometry);
+    //             m_pWireframe->SetIndices(pIndexBuffer);
+    //             m_pWireframe->SetVertices(pVertexBuffer);
+    //             m_pTerrainNode->m_wireframeList.push_back(m_pWireframe);
+    //             // end wireframe
+    //         }
+}
+
 
 
 

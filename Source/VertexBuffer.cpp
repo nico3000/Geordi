@@ -27,7 +27,7 @@ VertexBuffer::~VertexBuffer(void)
 }
 
 
-bool VertexBuffer::Build(void* p_data, unsigned int p_numVertices, unsigned int p_byteStride)
+bool VertexBuffer::Build(const void* p_data, unsigned int p_numVertices, unsigned int p_byteStride)
 {
     SAFE_RELEASE(m_pBuffer);
 

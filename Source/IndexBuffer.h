@@ -11,7 +11,7 @@ public:
     IndexBuffer(void);
     ~IndexBuffer(void);
 
-    bool Build(unsigned int* p_data, unsigned int p_indexCount, D3D11_PRIMITIVE_TOPOLOGY p_topology);
+    bool Build(const unsigned int* p_data, unsigned int p_indexCount, D3D11_PRIMITIVE_TOPOLOGY p_topology);
     void Bind(void) const;
 
     unsigned int GetIndexCount(void) const { return m_indexCount; }

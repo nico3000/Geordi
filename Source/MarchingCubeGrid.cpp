@@ -198,7 +198,7 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGri
 }
 
 
-std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(bool p_withPhysics)
+std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(void)
 {
     if(m_vertices.empty())
     {
@@ -230,52 +230,53 @@ std::shared_ptr<Geometry> MarchingCubeGrid::CreateGeometry(bool p_withPhysics)
         pGeo->SetIndices(pIndexBuffer);
         pGeo->SetVertices(pVertexBuffer);
         
-        if(true || p_withPhysics)
-        {
-            physx::PxU32* pIndices = new physx::PxU32[m_indices.size()];
-            for(int i=0; i < m_indices.size(); i += 3)
-            {
-                pIndices[i] = m_indices[i];
-                pIndices[i+1] = m_indices[i+2];
-                pIndices[i+2] = m_indices[i+1];
-            }
-            physx::PxCooking* pCooking = LostIsland::g_pPhysics->GetCooking();
-            physx::PxTriangleMeshDesc desc;
-            ZeroMemory(&desc, sizeof(physx::PxTriangleMeshDesc));
-            desc.setToDefault();
-            desc.points.data = &m_vertices[0];
-            desc.points.count = (unsigned int)m_vertices.size();
-            desc.points.stride = sizeof(TerrainVertex);
-            desc.triangles.data = pIndices;
-            desc.triangles.count = (unsigned int)m_indices.size() / 3;
-            desc.triangles.stride = 3 * sizeof(unsigned int);
-            if(!desc.isValid())
-            {
-                LI_ERROR("PxTriangleMeshDesc invalid");
-            }
-            else
-            {
-                physx::PxDefaultMemoryOutputStream output;
-                bool status = pCooking->cookTriangleMesh(desc, output);
-                if(!status)
-                {
-                    LI_ERROR("cookTriangleMesh() failed");
-                }
-                else
-                {
-                    physx::PxDefaultMemoryInputData input(output.getData(), output.getSize());
-                    physx::PxTriangleMesh* pMesh = LostIsland::g_pPhysics->GetPhysics()->createTriangleMesh(input);
-                    physx::PxMaterial* pMaterial = LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.1f);
-                    physx::PxRigidStatic* pActor = LostIsland::g_pPhysics->GetPhysics()->createRigidStatic(physx::PxTransform::createIdentity());
-                    physx::PxShape* pShape = pActor->createShape(physx::PxTriangleMeshGeometry(pMesh), *pMaterial);
-                    LostIsland::g_pPhysics->GetScene()->addActor(*pActor);
-                }
-            }
-            SAFE_DELETE(pIndices);
-        }
-        
         return pGeo;
     }
+}
+
+
+physx::PxActor* MarchingCubeGrid::CreatePhysicsActor(void) const
+{
+    physx::PxU32* pIndices = new physx::PxU32[m_indices.size()];
+    for(int i=0; i < m_indices.size(); i += 3)
+    {
+        pIndices[i] = m_indices[i];
+        pIndices[i+1] = m_indices[i+2];
+        pIndices[i+2] = m_indices[i+1];
+    }
+    physx::PxCooking* pCooking = LostIsland::g_pPhysics->GetCooking();
+    physx::PxTriangleMeshDesc desc;
+    ZeroMemory(&desc, sizeof(physx::PxTriangleMeshDesc));
+    desc.setToDefault();
+    desc.points.data = &m_vertices[0];
+    desc.points.count = (unsigned int)m_vertices.size();
+    desc.points.stride = sizeof(TerrainVertex);
+    desc.triangles.data = pIndices;
+    desc.triangles.count = (unsigned int)m_indices.size() / 3;
+    desc.triangles.stride = 3 * sizeof(unsigned int);
+    if(!desc.isValid())
+    {
+        LI_ERROR("PxTriangleMeshDesc invalid");
+    }
+    else
+    {
+        physx::PxDefaultMemoryOutputStream output;
+        bool status = pCooking->cookTriangleMesh(desc, output);
+        if(!status)
+        {
+            LI_ERROR("cookTriangleMesh() failed");
+        }
+        else
+        {
+            physx::PxDefaultMemoryInputData input(output.getData(), output.getSize());
+            physx::PxTriangleMesh* pMesh = LostIsland::g_pPhysics->GetPhysics()->createTriangleMesh(input);
+            physx::PxMaterial* pMaterial = LostIsland::g_pPhysics->GetPhysics()->createMaterial(0.5f, 0.5f, 0.1f);
+            physx::PxRigidStatic* pActor = LostIsland::g_pPhysics->GetPhysics()->createRigidStatic(physx::PxTransform::createIdentity());
+            physx::PxShape* pShape = pActor->createShape(physx::PxTriangleMeshGeometry(pMesh), *pMaterial);
+            return pActor;
+        }
+    }
+    SAFE_DELETE(pIndices);
 }
 
 

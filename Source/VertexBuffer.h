@@ -10,7 +10,7 @@ public:
     VertexBuffer(void);
     ~VertexBuffer(void);
 
-    bool Build(void* p_data, unsigned int p_numVertices, unsigned int p_byteStride);
+    bool Build(const void* p_data, unsigned int p_numVertices, unsigned int p_byteStride);
     void Bind(void);
 
     struct SimpleVertex

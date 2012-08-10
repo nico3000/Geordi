@@ -14,7 +14,7 @@ IndexBuffer::~IndexBuffer(void)
 }
 
 
-bool IndexBuffer::Build(unsigned int* p_data, unsigned int p_indexCount, D3D11_PRIMITIVE_TOPOLOGY p_topology)
+bool IndexBuffer::Build(const unsigned int* p_data, unsigned int p_indexCount, D3D11_PRIMITIVE_TOPOLOGY p_topology)
 {
     SAFE_RELEASE(m_pBuffer);
 
