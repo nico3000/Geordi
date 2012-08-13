@@ -2,6 +2,7 @@
 #include "TerrainNode.h"
 #include "Scene.h"
 
+#define LOAD_MILLIS 20
 
 TerrainNode::TerrainNode(std::shared_ptr<TerrainData> p_pData):
 m_pTerrain(p_pData), m_pDiffuseTex(0), m_pBumpTex(0), m_pNormalTex(0)
@@ -13,7 +14,7 @@ m_pTerrain(p_pData), m_pDiffuseTex(0), m_pBumpTex(0), m_pNormalTex(0)
         {
             for(int z=0; z < NUM_BLOCKS; ++z)
             {
-                m_pTest[z * NUM_BLOCKS * NUM_BLOCKS + y * NUM_BLOCKS + x] = m_pTerrain->GetTerrainBlock(x - NUM_BLOCKS / 2, y - NUM_BLOCKS / 2, z - NUM_BLOCKS / 2);
+                m_pTerrain->CreateTerrainBlock(x - NUM_BLOCKS / 2, y - NUM_BLOCKS / 2, z - NUM_BLOCKS / 2);
             }
         }
     }
@@ -72,37 +73,10 @@ HRESULT TerrainNode::VOnLostDevice(void)
 
 HRESULT TerrainNode::VOnUpdate(Scene* p_pScene, unsigned long p_deltaMillis)
 {
-//     static unsigned long elapsed = 0;
-//     elapsed += p_deltaMillis;
-//     if(elapsed < 100)
-//     {
-//         return S_OK;
-//     }
-//     elapsed = 0;
-
     //const XMFLOAT3& campos = XMFLOAT3(0.0f, 0.0f, 0.0f);
     const XMFLOAT3& campos = p_pScene->GetCurrentCamera()->GetPosition();
-
-    static int lastCamPos[3] = { 0, 0, 0, };
-    static bool done = false;
-
-    float levelZeroBlockSize = m_pTerrain->GetLevelZeroBlockSize();
-    int camX = (int)floor(campos.x / levelZeroBlockSize);
-    int camY = (int)floor(campos.y / levelZeroBlockSize);
-    int camZ = (int)floor(campos.z / levelZeroBlockSize);
-
-     if(!done || camX != lastCamPos[0] || camY != lastCamPos[1] || camZ != lastCamPos[2])
-     {
-         done = true;
-
-         for(int i=0; i < NUM_BLOCKS * NUM_BLOCKS * NUM_BLOCKS/* && m_currentBlocksPerFrame < m_maxBlocksPerFrame*/; ++i)
-         {
-             done &= m_pTest[i]->SetPointOfReference(camX, camY, camZ, 10);
-         }
-         lastCamPos[0] = camX;
-         lastCamPos[1] = camY;
-         lastCamPos[2] = camZ;
-     }   
+    m_pTerrain->SetPointOfReference(campos.x, campos.y, campos.z);
+    m_pTerrain->Update(LOAD_MILLIS);
     return S_OK;
 }
 

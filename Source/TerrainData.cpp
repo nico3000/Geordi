@@ -10,14 +10,16 @@
 #define GEOMETRY_EMPTY 1
 #define GEOMETRY_NOTEMPTY 2
 
-#define LOD_RADIUS 2
+#define LOD_RADIUS 4
 #define MAX_SIZE (1 << 14)
+
+static int g_geometriesPerFrame = 0;
 
 //////////////////////////////////////////////////////////////////////////
 //                              TerrainData                             //
 //////////////////////////////////////////////////////////////////////////
 TerrainData::TerrainData(void):
-m_chunksize(0), m_pChunkData(0), m_scale(0.25f), m_terrainFolder("")
+m_chunksize(0), m_pChunkData(0), m_scale(0.25f), m_terrainFolder(""), m_referenceX(0), m_referenceY(0), m_referenceZ(0), m_referenceChanged(false)
 {
 }
 
@@ -69,7 +71,7 @@ bool TerrainData::Init(std::string p_terrainFolder, unsigned char p_levels, unsi
     for(unsigned char level=0; level < p_levels; ++level)
     {
         std::ostringstream filename;
-        filename << "./" << m_terrainFolder << "/chunks." << level << "." << p_chunksize << ".oct";
+        filename << "./" << p_terrainFolder << "/chunks." << (int)level << "." << p_chunksize << ".oct";
         std::fstream dataStream(filename.str(), std::ios::in | std::ios::binary);
         bool success = false;
         if(dataStream.is_open())
@@ -81,6 +83,7 @@ bool TerrainData::Init(std::string p_terrainFolder, unsigned char p_levels, unsi
         }
         if(!success)
         {
+            LI_INFO("could not load chunkfile " + filename.str());
             m_pChunkData[level].Init(-size / 2, -size / 2, -size / 2, size);
         }
         size /= 2;
@@ -165,9 +168,59 @@ void TerrainData::SaveAllData(void) const
 }
 
 
-std::shared_ptr<TerrainBlock> TerrainData::GetTerrainBlock(int p_x, int p_y, int p_z)
+void TerrainData::CreateTerrainBlock(int p_x, int p_y, int p_z)
 {
-    return std::shared_ptr<TerrainBlock>(new TerrainBlock(p_x, p_y, p_z, (int)m_levels.size() - 1, this));
+    BlockInfo info = { std::shared_ptr<TerrainBlock>(new TerrainBlock(p_x, p_y, p_z, (int)m_levels.size() - 1, this)), false };
+    m_blockVector.push_back(info);
+}
+
+
+void TerrainData::SetPointOfReference(float p_worldX, float p_worldY, float p_worldZ)
+{
+    float levelZeroBlockSize = m_scale * (float)m_chunksize;
+    int newReferenceX = (int)floor(p_worldX / levelZeroBlockSize);
+    int newReferenceY = (int)floor(p_worldY / levelZeroBlockSize);
+    int newReferenceZ = (int)floor(p_worldZ / levelZeroBlockSize);
+    if(m_referenceX != newReferenceX || m_referenceY != newReferenceY || m_referenceZ != newReferenceZ)
+    {
+        m_referenceX = newReferenceX;
+        m_referenceY = newReferenceY;
+        m_referenceZ = newReferenceZ;
+        m_referenceChanged = true;
+    }
+}
+
+
+void TerrainData::Update(unsigned long p_maxMillis)
+{
+    g_geometriesPerFrame = 0;
+    static int timerID = LostIsland::g_pTimer->Tick(IMMEDIATE);
+    LostIsland::g_pTimer->Tock(timerID, RESET);
+    bool timeOut = false;
+    for(auto iter=m_blockVector.begin(); iter != m_blockVector.end(); ++iter)
+    {
+        BlockInfo& info = (*iter);
+        if(!timeOut)
+        {
+            timeOut = p_maxMillis < LostIsland::g_pTimer->Tock(timerID, KEEPRUNNING);
+        }
+        if(m_referenceChanged || !info.done)
+        {
+            if(!timeOut)
+            {
+                info.done = info.pBlock->Update(m_referenceX, m_referenceY, m_referenceZ, timerID, p_maxMillis);
+            }
+            else
+            {
+                info.done = false;
+            }
+        }
+    }
+    m_referenceChanged = false;
+
+    std::ostringstream info;
+    info << g_geometriesPerFrame << " chunks checked, remaining time: " << ((int)p_maxMillis - (int)LostIsland::g_pTimer->Tock(timerID, RESET)) << "ms";
+    LI_INFO(info.str());
 }
 
 
@@ -420,7 +473,7 @@ m_x(p_x), m_y(p_y), m_z(p_z), m_level(p_level), m_isRefined(false), m_pData(p_pD
         m_pRefined[6].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y + 1, 2 * p_z,     p_level - 1, p_pData));
         m_pRefined[7].reset(new TerrainBlock(2 * p_x + 1, 2 * p_y + 1, 2 * p_z + 1, p_level - 1, p_pData));
     }
-    m_flag = m_pData->m_pChunkData->GetValue(p_x, p_y, p_z);
+    m_flag = m_pData->m_pChunkData[p_level].GetValue(p_x, p_y, p_z);
 }
 
 
@@ -429,37 +482,25 @@ TerrainBlock::~TerrainBlock(void)
 }
 
 
-bool TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z, int p_maxMillis)
+bool TerrainBlock::Update(int p_referenceX, int p_referenceY, int p_referenceZ, int p_timerID, unsigned long p_maxMillis)
 {
-    static int timerID = LostIsland::g_pTimer->Tick(IMMEDIATE);
-    LostIsland::g_pTimer->Tock(timerID, RESET);
-    bool done = this->SetPointOfReference(p_x, p_y, p_z, timerID, p_maxMillis);
-    unsigned long elapsed = LostIsland::g_pTimer->Tock(timerID, RESET);
-    std::ostringstream info;
-    info << elapsed << "ms of " << p_maxMillis << "ms used" << std::endl;
-    OutputDebugStringA(info.str().c_str());
-    return done;
-}
-
-
-bool TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z, int p_timerID, int p_maxMillis)
-{
-    bool done = true;
-    int x = (int)floor((float)p_x / (float)(1 << m_level));
-    int y = (int)floor((float)p_y / (float)(1 << m_level));
-    int z = (int)floor((float)p_z / (float)(1 << m_level));
+    int x = (int)floor((float)p_referenceX / (float)(1 << m_level));
+    int y = (int)floor((float)p_referenceY / (float)(1 << m_level));
+    int z = (int)floor((float)p_referenceZ / (float)(1 << m_level));
     if(m_level != 0 && MAX3(abs(x - m_x), abs(y - m_y), abs(z - m_z)) < LOD_RADIUS)
     {
         // refine block
+        bool done = true;
         m_isRefined = true;
         for(int i=0; i < 8; ++i)
         {
-            done &= m_pRefined[i]->SetPointOfReference(p_x, p_y, p_z, p_timerID, p_maxMillis);
+            done &= m_pRefined[i]->Update(p_referenceX, p_referenceY, p_referenceZ, p_timerID, p_maxMillis);
         }
-        if(done && m_pGeometry)
+        if(done)
         {
-            this->ReleaseGeometry(false);
+            m_pGeometry.reset((Geometry*)0);
         }
+        return done;
     }
     else
     {
@@ -472,10 +513,8 @@ bool TerrainBlock::SetPointOfReference(int p_x, int p_y, int p_z, int p_timerID,
                 m_pRefined[i]->ReleaseGeometry(true);
             }
         }
-        unsigned long elapsed = LostIsland::g_pTimer->Tock(p_timerID, KEEPRUNNING);
-        done = this->BuildGeometry(p_maxMillis - (int)elapsed);
+        return this->BuildGeometry(p_timerID, p_maxMillis);
     }
-    return done;
 }
 
 
@@ -500,7 +539,7 @@ bool TerrainBlock::UseGeometryFromBackup(void)
     if(!m_pGeometry && m_pBackup)
     {
         m_pGeometry.reset(new Geometry(*m_pBackup));
-        m_pData->m_blockList.push_back(m_pGeometry);
+        m_pData->m_chunkList.push_back(m_pGeometry);
         return true;
     }
     else
@@ -510,7 +549,7 @@ bool TerrainBlock::UseGeometryFromBackup(void)
 }
 
 
-bool TerrainBlock::BuildGeometry(int p_remainingMillis)
+bool TerrainBlock::BuildGeometry(int p_timerID, unsigned long p_maxMillis)
 {
     if(m_flag == GEOMETRY_EMPTY)
     {
@@ -518,19 +557,23 @@ bool TerrainBlock::BuildGeometry(int p_remainingMillis)
     }
     if(!m_pGeometry && !this->UseGeometryFromBackup())
     {
-        if(p_remainingMillis < 0)
+        if(p_maxMillis < LostIsland::g_pTimer->Tock(p_timerID, KEEPRUNNING))
         {
             return false;
         }
         else
         {
-            int startX = (m_x - 0) * m_pData->m_chunksize;
-            int startY = (m_y - 0) * m_pData->m_chunksize;
-            int startZ = (m_z - 0) * m_pData->m_chunksize;
+            ++g_geometriesPerFrame;
+            std::ostringstream info;
+            info << "now building " << m_x << "," << m_y << "," << m_z << " on level " <<m_level;
+            LI_INFO(info.str());
+            int startX = m_x * m_pData->m_chunksize;
+            int startY = m_y * m_pData->m_chunksize;
+            int startZ = m_z * m_pData->m_chunksize;
 
             bool hasGeometry = m_pData->FillGrid(m_pData->m_weightGrid, m_pData->m_materialGrid, startX - 1, startY - 1, startZ - 1, m_level);
             if(hasGeometry)
-            {    
+            {
                 int offset = 1 << m_level;
                 hasGeometry = m_pData->m_tempMCGrid.ConstructData(m_pData->m_weightGrid, m_pData->m_materialGrid, XMFLOAT3(
                     (float)(m_x * m_pData->m_chunksize),
@@ -543,7 +586,12 @@ bool TerrainBlock::BuildGeometry(int p_remainingMillis)
                 m_pBackup = m_pData->m_tempMCGrid.CreateGeometry();
                 this->UseGeometryFromBackup();
             }
-            if(m_flag != GEOMETRY_UNKNOWN)
+            if(!hasGeometry && m_flag == GEOMETRY_NOTEMPTY)
+            {
+                LI_INFO("wtf");
+            }
+            //bool hasGeometry = false;
+            if(m_flag == GEOMETRY_UNKNOWN)
             {
                 m_flag = hasGeometry ? GEOMETRY_NOTEMPTY : GEOMETRY_EMPTY;
                 m_pData->m_pChunkData[m_level].SetValue(m_x, m_y, m_z, m_flag);

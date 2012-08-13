@@ -13,20 +13,29 @@ class TerrainData
     friend class TerrainBlock;
 
 public:
+    struct BlockInfo
+    {
+        std::shared_ptr<TerrainBlock> pBlock;
+        bool done;
+    };
     typedef std::list<std::weak_ptr<Geometry>> GeometryList;
+    typedef std::vector<BlockInfo> BlockVector;
 
 private:
     typedef std::vector<LevelData> LevelList;
 
     LevelList m_levels;
     std::string m_terrainFolder;
-    GeometryList m_blockList;
+    GeometryList m_chunkList;
     Octree* m_pChunkData;
     unsigned short m_chunksize;
     Grid3D m_weightGrid;
     Grid3D m_materialGrid;
     MarchingCubeGrid m_tempMCGrid;
     float m_scale;
+    int m_referenceX, m_referenceY, m_referenceZ;
+    bool m_referenceChanged;
+    BlockVector m_blockVector;
 
     void SetRawValue(int p_x, int p_y, int p_z, int p_rawValue, bool p_autoOptimizeStructure);
 
@@ -44,11 +53,12 @@ public:
     int GetMaterial(int p_x, int p_y, int p_z);
     bool FillGrid(Grid3D& p_weightGrid, Grid3D& p_materialGrid, int p_startX, int p_startY, int p_startZ, int p_level);
     void SaveAllData(void) const;
-    std::shared_ptr<TerrainBlock> GetTerrainBlock(int p_x, int p_y, int p_z);
+    void CreateTerrainBlock(int p_x, int p_y, int p_z);
+    void SetPointOfReference(float p_worldX, float p_worldY, float p_worldZ);
+    void Update(unsigned long m_maxMillis);
 
     unsigned int GetLevelCount(void) const { return (unsigned int)m_levels.size(); }
-    GeometryList& GetGeometryList(void) { return m_blockList; }
-    float GetLevelZeroBlockSize(void) const { return m_scale * (float)m_chunksize; }
+    GeometryList& GetGeometryList(void) { return m_chunkList; }
 
     void Test(void);
     void GenerateTestData(void);
@@ -112,14 +122,13 @@ private:
 
     TerrainBlock(int p_x, int p_y, int p_z, int p_level, TerrainData* p_pData);
 
-    bool BuildGeometry(int p_remainingMillis);
+    bool BuildGeometry(int p_timerID, unsigned long p_maxMillis);
     void ReleaseGeometry(bool p_releaseChildren);
     bool UseGeometryFromBackup(void);
-    bool SetPointOfReference(int p_x, int p_y, int p_z, int p_timerID, int p_maxMillis);    
 
 public:
     ~TerrainBlock(void);
 
-    bool SetPointOfReference(int p_x, int p_y, int p_z, int p_maxMillis);
+    bool Update(int p_referenceX, int p_referenceY, int p_referenceZ, int p_timerID, unsigned long p_maxMillis);
 
 };
