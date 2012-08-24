@@ -52,7 +52,14 @@ namespace Logger
 
     void Log(const std::string& p_tag, const std::string& p_errorMsg, bool p_isFatal, LPCSTR p_function, LPCSTR p_file, unsigned int p_line)
     {
-        g_pLogMgr->Log(p_tag, p_errorMsg, p_isFatal, p_function, p_file, p_line);
+        if(g_pLogMgr)
+        {
+            g_pLogMgr->Log(p_tag, p_errorMsg, p_isFatal, p_function, p_file, p_line);
+        }
+        else
+        {
+            OutputDebugStringA(std::string("[" + p_tag + "] " + p_errorMsg).c_str());
+        }
     }
 
 

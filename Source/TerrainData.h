@@ -22,7 +22,7 @@ public:
     typedef std::vector<BlockInfo> BlockVector;
 
 private:
-    typedef std::vector<LevelData> LevelList;
+    typedef std::vector<LevelData*> LevelList;
 
     LevelList m_levels;
     std::string m_terrainFolder;

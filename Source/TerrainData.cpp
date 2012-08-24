@@ -38,6 +38,7 @@ TerrainData::~TerrainData(void)
             LI_WARNING("Failed to save chunk data to " + filename.str());
         }
         m_pChunkData[level].Clear();
+        SAFE_DELETE(m_levels[level]);
     }
     SAFE_DELETE_ARRAY(m_pChunkData);
 }
@@ -88,8 +89,8 @@ bool TerrainData::Init(std::string p_terrainFolder, unsigned char p_levels, unsi
         }
         size /= 2;
 
-        m_levels.push_back(LevelData());
-        if(!m_levels.back().Init(p_terrainFolder, level, p_octreeSize))
+        m_levels.push_back(new LevelData);
+        if(!m_levels.back()->Init(p_terrainFolder, level, p_octreeSize))
         {
             std::ostringstream info;
             info << "Failed to initialize level " << level;
@@ -108,7 +109,7 @@ void TerrainData::SetRawValue(int p_x, int p_y, int p_z, int p_rawValue, bool p_
 {
     for(auto iter=m_levels.begin(); iter != m_levels.end(); ++iter)
     {
-        (*iter).SetRawValue(p_x, p_y, p_z, p_rawValue, p_autoOptimizeStructure);
+        (*iter)->SetRawValue(p_x, p_y, p_z, p_rawValue, p_autoOptimizeStructure);
         if(p_x % 2 != 0 || p_y % 2 != 0 || p_z % 2 != 0) break;
         p_x /= 2;
         p_y /= 2;
@@ -121,7 +122,7 @@ void TerrainData::SetDensity(int p_x, int p_y, int p_z, float p_density, bool p_
 {
     float density;
     int material;
-    this->Explode(m_levels[0].GetRawValue(p_x, p_y, p_z), density, material);
+    this->Explode(m_levels[0]->GetRawValue(p_x, p_y, p_z), density, material);
     this->SetRawValue(p_x, p_y, p_z, this->Implode(p_density, material), p_autoOptimizeStructure);
 }
 
@@ -130,7 +131,7 @@ float TerrainData::GetDensity(int p_x, int p_y, int p_z)
 {
     float density;
     int material;
-    this->Explode(m_levels[0].GetRawValue(p_x, p_y, p_z), density, material);
+    this->Explode(m_levels[0]->GetRawValue(p_x, p_y, p_z), density, material);
     return density;
 }
 
@@ -139,7 +140,7 @@ void TerrainData::SetMaterial(int p_x, int p_y, int p_z, int p_material, bool p_
 {
     float density;
     int material;
-    this->Explode(m_levels[0].GetRawValue(p_x, p_y, p_z), density, material);
+    this->Explode(m_levels[0]->GetRawValue(p_x, p_y, p_z), density, material);
     this->SetRawValue(p_x, p_y, p_z, this->Implode(density, p_material), p_autoOptimizeStructure);
 }
 
@@ -148,14 +149,14 @@ int TerrainData::GetMaterial(int p_x, int p_y, int p_z)
 {
     float density;
     int material;
-    this->Explode(m_levels[0].GetRawValue(p_x, p_y, p_z), density, material);
+    this->Explode(m_levels[0]->GetRawValue(p_x, p_y, p_z), density, material);
     return material;
 }
 
 
 bool TerrainData::FillGrid(Grid3D& p_weightGrid, Grid3D& p_materialGrid, int p_startX, int p_startY, int p_startZ, int p_level)
 {
-    return m_levels[p_level].FillGrid(p_weightGrid, p_materialGrid, p_startX, p_startY, p_startZ);
+    return m_levels[p_level]->FillGrid(p_weightGrid, p_materialGrid, p_startX, p_startY, p_startZ);
 }
 
 
@@ -163,7 +164,7 @@ void TerrainData::SaveAllData(void) const
 {
     for(auto iter=m_levels.begin(); iter != m_levels.end(); ++iter)
     {
-        (*iter).SaveAllOctrees();
+        (*iter)->SaveAllOctrees();
     }
 }
 
@@ -281,6 +282,8 @@ void LevelData::PushTileToBack(int p_x, int p_y, int p_z)
     this->LoadOctree(p_x, p_y, p_z);
 }
 
+static unsigned int created = 0;
+static unsigned int destroyed = 0;
 
 void LevelData::DestroyOctree(unsigned int p_index)
 {
@@ -293,6 +296,7 @@ void LevelData::DestroyOctree(unsigned int p_index)
     (*iter).pTree->Clear();
     SAFE_DELETE((*iter).pTree);
     m_loadedTrees.erase(iter);
+    ++destroyed;
 }
 
 
@@ -351,6 +355,10 @@ bool LevelData::LoadOctree(int p_x, int p_y, int p_z)
 
     LoadedOctree loaded;
     loaded.pTree = new Octree;
+    std::ostringstream info;
+    info << p_x << " " << p_y << " " << p_z << " " << m_level << " " << loaded.pTree;
+    LI_INFO(info.str());
+    ++created;
     loaded.changed = false;
 
     bool success = true;
@@ -375,6 +383,10 @@ bool LevelData::LoadOctree(int p_x, int p_y, int p_z)
     if(success)
     {
         m_loadedTrees.push_back(loaded);
+    }
+    else
+    {
+        SAFE_DELETE(loaded.pTree);
     }
     return success;
 }
@@ -659,7 +671,7 @@ void TerrainData::GenerateTestData(void)
     noise[1].LoadNoise();
     noise[2].LoadNoise();
     static const int presetOctreeRadius = 2;
-    static const int octreeSize = m_levels[0].m_octreeSize;
+    static const int octreeSize = m_levels[0]->m_octreeSize;
     
     int lastPercentage = -1;
     int timerID = LostIsland::g_pTimer->Tick(IMMEDIATE);
