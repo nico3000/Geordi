@@ -219,9 +219,9 @@ void TerrainData::Update(unsigned long p_maxMillis)
     }
     m_referenceChanged = false;
 
-    std::ostringstream info;
-    info << g_geometriesPerFrame << " chunks checked, remaining time: " << ((int)p_maxMillis - (int)LostIsland::g_pTimer->Tock(timerID, RESET)) << "ms";
-    LI_INFO(info.str());
+//     std::ostringstream info;
+//     info << g_geometriesPerFrame << " chunks checked, remaining time: " << ((int)p_maxMillis - (int)LostIsland::g_pTimer->Tock(timerID, RESET)) << "ms";
+//     LI_INFO(info.str());
 }
 
 
@@ -277,13 +277,10 @@ void LevelData::PushTileToBack(int p_x, int p_y, int p_z)
             LI_ERROR("Saving octree failed");
         }
         this->DestroyOctree(0);
-        m_loadedTrees.pop_front();
     }
     this->LoadOctree(p_x, p_y, p_z);
 }
 
-static unsigned int created = 0;
-static unsigned int destroyed = 0;
 
 void LevelData::DestroyOctree(unsigned int p_index)
 {
@@ -296,7 +293,6 @@ void LevelData::DestroyOctree(unsigned int p_index)
     (*iter).pTree->Clear();
     SAFE_DELETE((*iter).pTree);
     m_loadedTrees.erase(iter);
-    ++destroyed;
 }
 
 
@@ -355,10 +351,6 @@ bool LevelData::LoadOctree(int p_x, int p_y, int p_z)
 
     LoadedOctree loaded;
     loaded.pTree = new Octree;
-    std::ostringstream info;
-    info << p_x << " " << p_y << " " << p_z << " " << m_level << " " << loaded.pTree;
-    LI_INFO(info.str());
-    ++created;
     loaded.changed = false;
 
     bool success = true;
