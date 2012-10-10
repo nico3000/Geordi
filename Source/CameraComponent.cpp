@@ -10,6 +10,11 @@ bool CameraComponent::VInit(tinyxml2::XMLElement* p_pData)
     tinyxml2::XMLElement* pSettings = p_pData->FirstChildElement("Settings");
     if(pSettings)
     {
+        if(!pSettings->Attribute("fov") || !pSettings->Attribute("aspect") || !pSettings->Attribute("minZ") || !pSettings->Attribute("maxZ"))
+        {
+            LI_ERROR("CameraComponent with invalid Settings element (fov, aspect, minZ and maxZ needed");
+            return false;
+        }
         m_fov = XM_PI * pSettings->FloatAttribute("fov") / 180.0f;
         if(std::string("auto").compare(pSettings->Attribute("aspect")))
         {

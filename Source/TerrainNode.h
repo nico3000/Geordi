@@ -4,7 +4,7 @@
 #include "ShaderProgram.h"
 
 
-#define NUM_BLOCKS 4
+#define NUM_BLOCKS 16
 
 
 class TerrainNode :

@@ -4,7 +4,7 @@
 
 #define HEIGHT_MASK 0x0000ffff
 #define MATERIAL_MASK 0x000f0000
-#define MAX_ACTIVE_OCTREES_PER_LEVEL 8
+#define MAX_ACTIVE_OCTREES_PER_LEVEL 24
 
 #define GEOMETRY_UNKNOWN OCTREE_DEFAULT_VALUE
 #define GEOMETRY_EMPTY 1
@@ -74,15 +74,7 @@ bool TerrainData::Init(std::string p_terrainFolder, unsigned char p_levels, unsi
         std::ostringstream filename;
         filename << "./" << p_terrainFolder << "/chunks." << (int)level << "." << p_chunksize << ".oct";
         std::fstream dataStream(filename.str(), std::ios::in | std::ios::binary);
-        bool success = false;
-        if(dataStream.is_open())
-        {
-            if(m_pChunkData[level].Init(dataStream))
-            {
-                success = true;
-            }
-        }
-        if(!success)
+        if(!dataStream.is_open() || !m_pChunkData[level].Init(dataStream))
         {
             LI_INFO("could not load chunkfile " + filename.str());
             m_pChunkData[level].Init(-size / 2, -size / 2, -size / 2, size);
@@ -194,6 +186,7 @@ void TerrainData::SetPointOfReference(float p_worldX, float p_worldY, float p_wo
 
 void TerrainData::Update(unsigned long p_maxMillis)
 {
+//     p_maxMillis = 1000;
     g_geometriesPerFrame = 0;
     static int timerID = LostIsland::g_pTimer->Tick(IMMEDIATE);
     LostIsland::g_pTimer->Tock(timerID, RESET);
@@ -491,6 +484,10 @@ bool TerrainBlock::Update(int p_referenceX, int p_referenceY, int p_referenceZ, 
     int x = (int)floor((float)p_referenceX / (float)(1 << m_level));
     int y = (int)floor((float)p_referenceY / (float)(1 << m_level));
     int z = (int)floor((float)p_referenceZ / (float)(1 << m_level));
+//     if(!this->m_pGeometry)
+//     {
+//         this->BuildGeometry(p_timerID, p_maxMillis);
+//     }
     if(m_level != 0 && MAX3(abs(x - m_x), abs(y - m_y), abs(z - m_z)) < LOD_RADIUS)
     {
         // refine block
@@ -502,7 +499,7 @@ bool TerrainBlock::Update(int p_referenceX, int p_referenceY, int p_referenceZ, 
         }
         if(done)
         {
-            m_pGeometry.reset((Geometry*)0);
+            this->ReleaseGeometry(false);
         }
         return done;
     }
@@ -527,6 +524,7 @@ void TerrainBlock::ReleaseGeometry(bool p_releaseChildren)
     if(m_pGeometry)
     {
         m_pGeometry.reset((Geometry*)0);
+        m_pBackup.reset((Geometry*)0);
     }
     else if(p_releaseChildren && m_level != 0)
     {
@@ -555,6 +553,16 @@ bool TerrainBlock::UseGeometryFromBackup(void)
 
 bool TerrainBlock::BuildGeometry(int p_timerID, unsigned long p_maxMillis)
 {
+    if(m_flag == GEOMETRY_UNKNOWN)
+    {
+        std::ostringstream info;
+        info << "unknwon chunk: level " << m_level << ", x=" << m_x << ", y=" << m_y << ", z=" << m_z;
+        LI_INFO(info.str());
+    }
+    else if(m_level > 0)
+    {
+        //LI_INFO("known chunk");
+    }
     if(m_flag == GEOMETRY_EMPTY)
     {
         return true;
@@ -568,9 +576,9 @@ bool TerrainBlock::BuildGeometry(int p_timerID, unsigned long p_maxMillis)
         else
         {
             ++g_geometriesPerFrame;
-            std::ostringstream info;
-            info << "now building " << m_x << "," << m_y << "," << m_z << " on level " <<m_level;
-            LI_INFO(info.str());
+            //std::ostringstream info;
+            //info << "now building " << m_x << "," << m_y << "," << m_z << " on level " <<m_level;
+            //LI_INFO(info.str());
             int startX = m_x * m_pData->m_chunksize;
             int startY = m_y * m_pData->m_chunksize;
             int startZ = m_z * m_pData->m_chunksize;
@@ -662,7 +670,7 @@ void TerrainData::GenerateTestData(void)
     noise[0].LoadNoise();
     noise[1].LoadNoise();
     noise[2].LoadNoise();
-    static const int presetOctreeRadius = 2;
+    static const int presetOctreeRadius = 4;
     static const int octreeSize = m_levels[0]->m_octreeSize;
     
     int lastPercentage = -1;
@@ -717,7 +725,7 @@ void TerrainData::GenerateTestData(void)
                             worldZ += warp.z;
 
                             //density += noise[0].SampleLinear(worldX, worldY, worldZ, 4.03f, 0.25f);
-                            density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
+                            //density += noise[1].SampleLinear(worldX, worldY, worldZ, 1.96f, 0.50f);
                             density += noise[2].SampleLinear(worldX, worldY, worldZ, 1.01f, 1.00f);
                             density += noise[0].SampleLinear(rotatedX0, worldY, rotatedZ0, 0.53f, 2.00f);
                             density += noise[0].SampleLinear(worldX, worldY, worldZ, 0.23f, 4.00f);
@@ -725,7 +733,7 @@ void TerrainData::GenerateTestData(void)
                             density += noise[2].SampleLinear(worldX, worldY, worldZ, 0.0624f, 16.00f);
                             density += noise[0].SampleLinear(rotatedX2, worldY, rotatedZ2, 0.03137f, 32.00f);
                             density += noise[1].SampleLinear(worldX, worldY, worldZ, 0.015625f, 64.00f);
-                            density += noise[2].SampleLinear(rotatedX3, worldY, rotatedZ3, 0.0078125f, 128.00f);
+                            //density += noise[2].SampleLinear(rotatedX3, worldY, rotatedZ3, 0.0078125f, 128.00f);
 
                             //this->SetDensity(x, y, z, density, false);
                             //int densityToStore = (short)(CLAMP(density, -1.0f, 1.0f) * (float)SHORT_MAX);

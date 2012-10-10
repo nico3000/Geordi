@@ -47,16 +47,18 @@ public:
     physx::PxActor* CreatePhysicsActor(void) const;
     bool ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGrid, const XMFLOAT3& m_position, float p_scale, int p_level);
     
-    static void Init(void);
+    static bool Init(void);
 
 
     struct TerrainVertex
     {
         XMFLOAT3 positionMC;
         XMFLOAT3 normalMC;
-        XMFLOAT4X4 materialWeight;
+        float materialMix;
+        unsigned char material1;
+        unsigned char material2;
     };
-    static D3D11_INPUT_ELEMENT_DESC sm_pTerrainVertexElementDesc[6];
+    static D3D11_INPUT_ELEMENT_DESC sm_pTerrainVertexElementDesc[5];
     static unsigned int sm_terrainVertexNumElements;
 
 

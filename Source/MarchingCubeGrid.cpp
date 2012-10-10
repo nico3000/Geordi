@@ -4,14 +4,13 @@
 #define MATERIAL_MAX 16
 
 
-unsigned int MarchingCubeGrid::sm_terrainVertexNumElements = 6;
-D3D11_INPUT_ELEMENT_DESC MarchingCubeGrid::sm_pTerrainVertexElementDesc[6] = {
-    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "MATERIAL", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "MATERIAL", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 40, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "MATERIAL", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 56, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-    { "MATERIAL", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 72, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+unsigned int MarchingCubeGrid::sm_terrainVertexNumElements = 5;
+D3D11_INPUT_ELEMENT_DESC MarchingCubeGrid::sm_pTerrainVertexElementDesc[5] = {
+    { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATMIX",   0, DXGI_FORMAT_R32_FLOAT,       0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 0, DXGI_FORMAT_R8_UINT,         0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    { "MATERIAL", 1, DXGI_FORMAT_R8_UINT,         0, 29, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 };
 
 
@@ -121,17 +120,10 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGri
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)(x + t)), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
+                            t,
+                            (unsigned char)p_level,
+                            (unsigned char)p_level,
                         };
-                        switch(p_level)
-                        {
-                        case 0: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
-                        case 1: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
-                        case 2: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 0.0f; break;
-                        case 3: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
-                        case 4: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
-                        }
-                        SetMaterial(baseMaterial, m, t, v.materialWeight);
                         p_weightGrid.GenerateGradient((float)(x + 1) + t, (float)(y + 1), (float)(z + 1), v.normalMC);
                         this->AddEdge(0, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
@@ -148,17 +140,10 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGri
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)(y + t)), p_scale * (m_position.z + (float)z)),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
+                            t,
+                            (unsigned char)p_level,
+                            (unsigned char)p_level,
                         };
-                        switch(p_level)
-                        {
-                        case 0: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
-                        case 1: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
-                        case 2: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 0.0f; break;
-                        case 3: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
-                        case 4: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
-                        }
-                        SetMaterial(baseMaterial, m, t, v.materialWeight);
                         p_weightGrid.GenerateGradient((float)(x + 1), (float)(y + 1) + t, (float)(z + 1), v.normalMC);
                         this->AddEdge(4, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
@@ -175,17 +160,10 @@ bool MarchingCubeGrid::ConstructData(Grid3D& p_weightGrid, Grid3D& p_materialGri
                         {
                             XMFLOAT3(p_scale * (m_position.x + (float)x), p_scale * (m_position.y + (float)y), p_scale * (m_position.z + (float)(z + t))),
                             XMFLOAT3(0.0f, 0.0f, 0.0f),
-                            XMFLOAT4X4(0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f),
+                            t,
+                            (unsigned char)p_level,
+                            (unsigned char)p_level,
                         };
-                        switch(p_level)
-                        {
-                        case 0: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
-                        case 1: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 1.0f; v.materialWeight._31 = 0.0f; break;
-                        case 2: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 0.0f; break;
-                        case 3: v.materialWeight._11 = 1.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
-                        case 4: v.materialWeight._11 = 0.0f; v.materialWeight._21 = 0.0f; v.materialWeight._31 = 1.0f; break;
-                        }
-                        SetMaterial(baseMaterial, m, t, v.materialWeight);
                         p_weightGrid.GenerateGradient((float)(x + 1), (float)(y + 1), (float)(z + 1) + t, v.normalMC);
                         this->AddEdge(8, (unsigned short)m_vertices.size(), x, y, z);
                         m_vertices.push_back(v);
@@ -277,6 +255,7 @@ physx::PxActor* MarchingCubeGrid::CreatePhysicsActor(void) const
         }
     }
     SAFE_DELETE(pIndices);
+    return 0;
 }
 
 
@@ -286,7 +265,7 @@ physx::PxActor* MarchingCubeGrid::CreatePhysicsActor(void) const
 #define ROT_Z 2
 #define MIRROR 3
 
-void MarchingCubeGrid::Init(void)
+bool MarchingCubeGrid::Init(void)
 {
     ZeroMemory(sm_pTriangles, 256 * 16 * sizeof(unsigned char));
     unsigned char pCodes[NUM_BASE_CUBES] = {
@@ -320,6 +299,17 @@ void MarchingCubeGrid::Init(void)
     {
         ProcessBaseCube(pCodes[i], pTriangles[i]);
     }
+
+//     D3D11_BUFFER_DESC vertexBufferDesc;
+//     vertexBufferDesc.BindFlags = D3D11_BIND_UNORDERED_ACCESS | D3D11_BIND_SHADER_RESOURCE;
+//     vertexBufferDesc.ByteWidth = 0;
+//     vertexBufferDesc.CPUAccessFlags = 0;
+//     vertexBufferDesc.MiscFlags = 0;
+//     vertexBufferDesc.StructureByteStride = sizeof(TerrainVertex);
+//     vertexBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+//     RETURN_IF_FAILED(LostIsland::g_pGraphics->GetDevice()->CreateBuffer(&vertexBufferDesc, 0, &sm_pVertexBuffer));
+
+    return true;
 }
 
 

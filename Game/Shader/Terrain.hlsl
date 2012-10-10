@@ -4,7 +4,9 @@ struct TerrainVertex
 {
     float3 positionWC : POSITION0;
     float3 normalWC : NORMAL0;
-    float4x4 material : MATERIAL;
+    float matmix : MATMIX;
+    int material0 : MATERIAL0;
+    int material1 : MATERIAL1;
 };
 
 struct TerrainVertexProjected
@@ -82,7 +84,22 @@ TerrainVertexProjected TerrainVS(TerrainVertex input)
     output.positionWC = input.positionWC;
     output.projected = mul(g_projectionView, float4(input.positionWC, 1.0));
     output.normalWC = input.normalWC;
-    output.material = input.material;
+    output.material._m00 += (input.material0 == 0 ? input.matmix : 0.0) + (input.material1 == 0 ? 1.0 - input.matmix : 0.0);
+    output.material._m01 += (input.material0 == 1 ? input.matmix : 0.0) + (input.material1 == 1 ? 1.0 - input.matmix : 0.0);
+    output.material._m02 += (input.material0 == 2 ? input.matmix : 0.0) + (input.material1 == 2 ? 1.0 - input.matmix : 0.0);
+    output.material._m03 += (input.material0 == 3 ? input.matmix : 0.0) + (input.material1 == 3 ? 1.0 - input.matmix : 0.0);
+    output.material._m10 += (input.material0 == 4 ? input.matmix : 0.0) + (input.material1 == 4 ? 1.0 - input.matmix : 0.0);
+    output.material._m11 += (input.material0 == 5 ? input.matmix : 0.0) + (input.material1 == 5 ? 1.0 - input.matmix : 0.0);
+    output.material._m12 += (input.material0 == 6 ? input.matmix : 0.0) + (input.material1 == 6 ? 1.0 - input.matmix : 0.0);
+    output.material._m13 += (input.material0 == 7 ? input.matmix : 0.0) + (input.material1 == 7 ? 1.0 - input.matmix : 0.0);
+    output.material._m20 += (input.material0 == 8 ? input.matmix : 0.0) + (input.material1 == 8 ? 1.0 - input.matmix : 0.0);
+    output.material._m21 += (input.material0 == 9 ? input.matmix : 0.0) + (input.material1 == 9 ? 1.0 - input.matmix : 0.0);
+    output.material._m22 += (input.material0 == 10 ? input.matmix : 0.0) + (input.material1 == 10 ? 1.0 - input.matmix : 0.0);
+    output.material._m23 += (input.material0 == 11 ? input.matmix : 0.0) + (input.material1 == 11 ? 1.0 - input.matmix : 0.0);
+    output.material._m30 += (input.material0 == 12 ? input.matmix : 0.0) + (input.material1 == 12 ? 1.0 - input.matmix : 0.0);
+    output.material._m31 += (input.material0 == 13 ? input.matmix : 0.0) + (input.material1 == 13 ? 1.0 - input.matmix : 0.0);
+    output.material._m32 += (input.material0 == 14 ? input.matmix : 0.0) + (input.material1 == 14 ? 1.0 - input.matmix : 0.0);
+    output.material._m33 += (input.material0 == 15 ? input.matmix : 0.0) + (input.material1 == 15 ? 1.0 - input.matmix : 0.0);
     return output;
 }
 
@@ -96,7 +113,10 @@ DeferredShadingOutput TerrainNormalMappingPS(TerrainVertexProjected input)
     ColorAndNormal con = GetFromMaterial(0, input.positionWC, normal);
 
     // Apply bump vector to vertex-interpolated normal vector.  
-	output.diffuse = input.material[0];//con.color;
+	output.diffuse = input.material._m00 * float4(0.0, 1.0, 0.0, 1.0) + 
+                     input.material._m01 * float4(1.0, 1.0, 0.0, 1.0) + 
+                     input.material._m02 * float4(1.0, 0.0, 0.0, 1.0) + 
+                     input.material._m03 * float4(0.0, 0.0, 1.0, 1.0);//*/con.color;
     output.normal = float4(normalize(normal + con.normal), 0.0);
 	output.world = float4(input.positionWC, 1.0);
     return output;

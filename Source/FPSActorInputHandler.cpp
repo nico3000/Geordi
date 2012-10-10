@@ -26,7 +26,7 @@ void FPSActorInputHandler::VOnUpdate(unsigned long p_deltaMillis)
     XMFLOAT3 moveDir(0.0f, 0.0f, 0.0f);
     if(m_keys[VK_SHIFT])
     {
-        distance *= 2.0f;
+        distance *= 20.0f;
     }
     if(m_keys['W'])
     {
